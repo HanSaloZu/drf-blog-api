@@ -16,3 +16,4 @@ class UserModelTests(ExtendedTestCase):
 
         self.assertTrue(isinstance(superuser, self.UserModel))
         self.assertTrue(superuser.is_superuser)
+        self.assertTrue(superuser.is_staff)

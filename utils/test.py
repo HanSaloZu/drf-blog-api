@@ -8,7 +8,7 @@ class ExtendedTestCase(TestCase):
     def _create_user(self, login, email, password, is_superuser):
         if is_superuser:
             return self.UserModel.objects.create_superuser(
-                login=login, email=email, password=password, is_superuser=True)
+                login=login, email=email, password=password, is_superuser=True, is_staff=True)
 
         return self.UserModel.objects.create_user(
             login=login, email=email, password=password)
