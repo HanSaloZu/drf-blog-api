@@ -76,6 +76,9 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
+
+
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Europe/Moscow'
