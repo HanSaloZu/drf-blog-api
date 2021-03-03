@@ -57,3 +57,11 @@ class PhotosExtendedProfileSerializer(ProfileSerializer):
         model = Profile
         fields = ["userId", "lookingForAJob",
                   "lookingForAJobDescription", "fullName", "contacts", "photos", "aboutMe"]
+
+
+class StatusSerializer(serializers.ModelSerializer):
+    status = serializers.CharField(required=True)
+
+    class Meta:
+        model = Profile
+        fields = ["status"]

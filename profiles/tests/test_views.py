@@ -3,6 +3,7 @@ from rest_framework import status
 import json
 
 from utils.test import ViewTestCase
+from profiles.views import profile_status_update
 
 
 class ProfileStatusDetailViewTest(ViewTestCase):
@@ -30,6 +31,51 @@ class ProfileStatusDetailViewTest(ViewTestCase):
         self.user.profile.status = "test"
         self.user.save()
         common_status_detail_view_tests(self.client.get(url))
+
+
+class ProfileStatusUpdateViewTest(ViewTestCase):
+    def setUp(self):
+        user = self._create_user(login="NewUser", email="new@user.com",
+                                 password="pass", is_superuser=False)
+        self.client.post(reverse("authentication"), {
+            "email": user.email,
+            "password": "pass"
+        })
+        self.url = reverse("profile_status_update")
+
+    def test_valid_status_update(self):
+        response = self.client.put(
+            self.url, {"status": "Test"}, content_type="application/json")
+
+        self._common_view_tests(response)
+        user = self.UserModel.objects.get(id=1)
+        self.assertEqual(user.profile.status, "Test")
+
+    def test_invalid_status_update(self):
+        response = self.client.put(
+            self.url, {"status": None}, content_type="application/json")
+        self.assertEqual(response.status_code,
+                         status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.data["message"], "An error has occurred.")
+
+        response = self.client.put(
+            self.url, {"status": "a"*320}, content_type="application/json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["messages"]
+                         [0], "Max Status length is 300 symbols")
+
+        response = self.client.put(self.url)
+        self.assertEqual(response.status_code,
+                         status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.data["message"], "An error has occurred.")
+
+        request = self.request_factory.put(
+            self.url, {"status": "New status"}, content_type="application/json")
+        response = profile_status_update(request)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            response.data["message"], "Authorization has been denied for this request.")
 
 
 class ProfileDetailViewTest(ViewTestCase):
