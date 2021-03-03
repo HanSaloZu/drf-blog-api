@@ -39,6 +39,7 @@ MIDDLEWARE = [
 ]
 
 REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "utils.handlers.custom_exception_handler",
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "utils.authentication.CsrfExemptSessionAuthentication",
         "rest_framework.authentication.BasicAuthentication"
