@@ -31,6 +31,12 @@ def profile_status_update(request):
         user.save()
 
         return response.complete()
+    elif serialized_data.errors["status"][0].code == "max_length":
+        response = APIResponse()
+        response.result_code = 1
+        response.messages.append(serialized_data.errors["status"][0])
+
+        return response.complete()
 
     return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
