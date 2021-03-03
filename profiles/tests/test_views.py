@@ -28,4 +28,5 @@ class ProfileStatusDetailViewTest(ViewTestCase):
         common_status_detail_view_tests(self.client.get(url))
 
         self.user.profile.status = "test"
+        self.user.save()
         common_status_detail_view_tests(self.client.get(url))
