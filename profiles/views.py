@@ -6,7 +6,7 @@ import json
 
 from .selectors import get_profile_by_user_id
 from utils.response import APIResponse
-from .serializers import PhotosExtendedProfileSerializer, StatusSerializer
+from .serializers import PhotosExtendedProfileSerializer, StatusSerializer, PhotosSerializer
 
 
 @api_view(["GET"])
@@ -53,3 +53,34 @@ def profile_detail(request, user_id):
         photos["large"] = host + photos["large"]
 
     return Response(deserialized_data)
+
+
+@api_view(["PUT"])
+def profile_photo_update(request):
+    if not request.user.is_authenticated:
+        return Response({"message": "Authorization has been denied for this request."},
+                        status.HTTP_401_UNAUTHORIZED)
+
+    response = APIResponse()
+    data = {
+        "small": request.data.get("image"),
+        "large": request.data.get("image")
+    }
+    serialized_data = PhotosSerializer(
+        request.user.profile.photos, data=data)
+
+    if serialized_data.is_valid():
+        photos = serialized_data.save()
+        host = request.scheme + "://" + request.get_host()
+        response.data = {
+            "photos": {
+                "small": host + photos.small.url,
+                "large": host + photos.large.url
+            }
+        }
+
+        return response.complete()
+    elif serialized_data.errors and serialized_data.errors:
+        response.result_code = 1
+        response.messages.append(serialized_data.errors["small"][0])
+        return response.complete()
