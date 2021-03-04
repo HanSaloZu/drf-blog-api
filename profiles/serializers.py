@@ -4,6 +4,12 @@ from .models import Profile, Photos, Contacts
 
 
 class PhotosSerializer(serializers.ModelSerializer):
+    small, large = [serializers.ImageField(
+        required=False, allow_null=False, error_messages={
+            "invalid": "Choose Image file",
+            "null": "Choose Image file"
+        }) for i in range(2)]
+
     class Meta:
         model = Photos
         fields = ["small", "large"]
