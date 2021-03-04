@@ -40,7 +40,6 @@ class Photos(models.Model):
 
     def save(self, *args, **kwargs):
         super().save()
-
         if (self.small and self.large):
             photos_data = [
                 {"size": (100, 100), "path": self.small.path},  # small photo
@@ -48,9 +47,9 @@ class Photos(models.Model):
 
             for current_photo in photos_data:
                 photo = Image.open(current_photo["path"])
-                photo.resize(current_photo["size"])
-                photo.save(current_photo["path"],
-                           quality="web_maximum", subsampling=0)
+                resized_photo = photo.resize(current_photo["size"])
+                resized_photo.save(current_photo["path"],
+                                   quality="web_maximum", subsampling=0)
 
     class Meta:
         verbose_name = "profile photos"
