@@ -44,4 +44,12 @@ def profile_status_update(request):
 @api_view(["GET"])
 def profile_detail(request, user_id):
     profile = get_profile_by_user_id(user_id)
-    return Response(PhotosExtendedProfileSerializer(profile).data)
+    deserialized_data = PhotosExtendedProfileSerializer(profile).data
+    photos = deserialized_data["photos"]
+
+    if photos["small"] and photos["large"]:
+        host = request.scheme + "://" + request.get_host()
+        photos["small"] = host + photos["small"]
+        photos["large"] = host + photos["large"]
+
+    return Response(deserialized_data)
