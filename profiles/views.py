@@ -2,16 +2,21 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
+from django.core.exceptions import ObjectDoesNotExist
 import json
 
 from .selectors import get_profile_by_user_id
 from utils.response import APIResponse
-from .serializers import PhotosExtendedProfileSerializer, StatusSerializer, PhotosSerializer
+from .serializers import (ProfileSerializer, StatusSerializer,
+                          PhotosSerializer)
 
 
 @api_view(["GET"])
 def profile_status_detail(request, user_id):
-    profile = get_profile_by_user_id(user_id)
+    try:
+        profile = get_profile_by_user_id(user_id)
+    except ObjectDoesNotExist:
+        return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return HttpResponse(json.dumps(profile.status), content_type="application/json")
 
@@ -43,8 +48,12 @@ def profile_status_update(request):
 
 @api_view(["GET"])
 def profile_detail(request, user_id):
-    profile = get_profile_by_user_id(user_id)
-    deserialized_data = PhotosExtendedProfileSerializer(profile).data
+    try:
+        profile = get_profile_by_user_id(user_id)
+    except ObjectDoesNotExist:
+        return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    deserialized_data = ProfileSerializer(profile).data
     photos = deserialized_data["photos"]
 
     if photos["small"] and photos["large"]:

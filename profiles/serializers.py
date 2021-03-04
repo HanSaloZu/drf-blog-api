@@ -34,6 +34,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     fullName = serializers.SerializerMethodField()
     aboutMe = serializers.SerializerMethodField()
     contacts = ContactsSerializer()
+    photos = PhotosSerializer()
 
     def get_userId(self, obj):
         return obj.user.id
@@ -53,16 +54,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ["userId", "lookingForAJob",
-                  "lookingForAJobDescription", "fullName", "contacts", "aboutMe"]
-
-
-class PhotosExtendedProfileSerializer(ProfileSerializer):
-    photos = PhotosSerializer()
-
-    class Meta:
-        model = Profile
-        fields = ["userId", "lookingForAJob",
-                  "lookingForAJobDescription", "fullName", "contacts", "photos", "aboutMe"]
+                  "lookingForAJobDescription", "fullName", "contacts", "aboutMe", "photos"]
 
 
 class StatusSerializer(serializers.ModelSerializer):
