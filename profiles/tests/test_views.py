@@ -3,7 +3,7 @@ from rest_framework import status
 import json
 
 from utils.test import ViewTestCase
-from profiles.views import profile_status_update
+from profiles.views import profile_status_update, profile_photo_update
 
 
 class ProfileStatusDetailViewTest(ViewTestCase):
@@ -113,3 +113,25 @@ class ProfileDetailViewTest(ViewTestCase):
 
         self.assertEqual(response.status_code,
                          status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ProfilePhotoUpdateViewTest(ViewTestCase):
+    def setUp(self):
+        self.user = self._create_user(login="NewUser", email="new@user.com",
+                                      password="pass", is_superuser=False)
+        self.url = reverse("profile_photo_update")
+
+    def test_invalid_photo_update(self):
+        request = self.request_factory.put(self.url)
+        request.user = self.user
+        response = profile_photo_update(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["messages"]), 1)
+        self.assertEqual(response.data["messages"][0], "Choose Image file")
+
+        response = self.client.put(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            response.data["message"], "Authorization has been denied for this request.")
