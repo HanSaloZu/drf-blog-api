@@ -22,3 +22,4 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = "user"
         db_table = "users"
+        ordering = ["-id"]
