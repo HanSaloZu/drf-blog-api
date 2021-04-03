@@ -27,9 +27,11 @@ def user_detail(request, format=None):  # auth/me
 @api_view(["POST", "DELETE"])
 def user_authentication(request):
     response = APIResponse()
-
     if request.method == "POST":  # login
-        serializer = LoginSerializer(data=request.data)
+        if request.data:
+            serializer = LoginSerializer(data=request.data)
+        else:
+            serializer = LoginSerializer(data=request.query_params)
 
         if serializer.is_valid():
             validated_data = serializer.validated_data
@@ -102,8 +104,11 @@ def users_list(request):
 
     for obj in page.object_list:
         user_data = UsersListSerializer(obj).data
-        user_data.update(
-            {"followed": is_following(request.user, user_data["id"])})
+        followed = False
+        if request.user.is_authenticated:
+            followed = is_following(request.user, user_data["id"])
+
+        user_data.update({"followed": followed})
         user_photos = user_data["photos"]
         if user_photos["small"] and user_photos["large"]:
             user_photos["small"] = request.scheme + "://" + \
