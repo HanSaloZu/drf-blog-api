@@ -5,10 +5,11 @@ from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 import json
 
-from .selectors import get_profile_by_user_id
+from .models import Contacts
+from .selectors import get_profile_by_user_id, get_contacts_by_user_id
 from utils.response import APIResponse
 from .serializers import (ProfileSerializer, StatusSerializer,
-                          PhotosSerializer)
+                          PhotosSerializer, UpdateProfileSerializer)
 
 
 @api_view(["GET"])
@@ -93,3 +94,42 @@ def profile_photo_update(request):
         response.result_code = 1
         response.messages.append(serialized_data.errors["small"][0])
         return response.complete()
+
+
+@api_view(["PUT"])
+def profile_update(request):
+    if not request.user.is_authenticated:
+        return Response({"message": "Authorization has been denied for this request."},
+                        status.HTTP_401_UNAUTHORIZED)
+    response = APIResponse()
+
+    serialized_data = UpdateProfileSerializer(data=request.data)
+    if serialized_data.is_valid():
+        profile = request.user.profile
+        data = serialized_data.data
+        contacts = get_contacts_by_user_id(request.user.id)
+
+        profile.looking_for_a_job = data["lookingForAJob"]
+        profile.looking_for_a_job_description = data["LookingForAJobDescription"]
+        profile.fullname = data["fullName"]
+        profile.about_me = data["aboutMe"]
+        data["contacts"]["main_link"] = data["contacts"].pop("mainLink")
+        contacts.update(**dict(data["contacts"]))
+
+        request.user.save()
+
+        return response.complete()
+
+    errors = serialized_data.errors
+    for error_field in errors:
+        if error_field != "contacts":
+            message = errors[error_field][0]
+            response.messages.append(message)
+        else:
+            contacts_errors = errors.get("contacts", [])
+            for contact_error in contacts_errors:
+                response.messages.append(
+                    f"Invalid url format (Contacts->{contact_error.capitalize()})")
+
+    response.result_code = 1
+    return response.complete()
