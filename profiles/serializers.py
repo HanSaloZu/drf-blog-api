@@ -57,6 +57,37 @@ class ProfileSerializer(serializers.ModelSerializer):
                   "lookingForAJobDescription", "fullName", "contacts", "aboutMe", "photos"]
 
 
+class UpdateContactsSerializer(serializers.Serializer):
+    github, vk, facebook, instagram, twitter, website, youtube, mainLink = [serializers.URLField(
+        max_length=300, default=None, required=False, allow_blank=True, allow_null=True) for i in range(8)]
+
+
+def get_error_messages(field_name, data_type):
+    res = dict.fromkeys(["null", "required", "blank"],
+                        f"The {field_name} field is required. ({field_name})")
+    res.update(
+        {"invalid": f"Invalid {data_type}. ({field_name})"})
+    return res
+
+
+class UpdateProfileSerializer(serializers.Serializer):
+    lookingForAJob = serializers.BooleanField(
+        required=True, allow_null=False, error_messages=get_error_messages("lookingForAJob", "string"))
+
+    LookingForAJobDescription = serializers.CharField(
+        required=True, allow_blank=False, allow_null=False, error_messages=get_error_messages("LookingForAJobDescription", "string"))
+
+    fullName = serializers.CharField(
+        max_length=300, required=True, allow_blank=False,
+        allow_null=False, error_messages=get_error_messages("FullName", "string"))
+
+    aboutMe = serializers.CharField(
+        max_length=300, required=True, allow_blank=False, allow_null=False, error_messages=get_error_messages("AboutMe", "string"))
+
+    contacts = UpdateContactsSerializer(
+        default=UpdateContactsSerializer(), required=False, allow_null=True)
+
+
 class StatusSerializer(serializers.ModelSerializer):
     status = serializers.CharField(required=True, max_length=300, allow_null=False, error_messages={
         "max_length": "Max Status length is 300 symbols"
