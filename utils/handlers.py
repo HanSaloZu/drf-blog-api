@@ -8,7 +8,7 @@ def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
     if (settings.DEBUG):
-        raise exc
+        print(exc)
 
     if not response:
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
