@@ -23,7 +23,7 @@ class ProfileModelTests(ExtendedTestCase):
         self.assertEqual(profile.looking_for_a_job, False)
         self.assertEqual(profile.looking_for_a_job_description, None)
 
-        self.assertEqual(profile.status, None)
+        self.assertEqual(profile.status, "")
         self.assertEqual(profile.about_me, None)
 
 

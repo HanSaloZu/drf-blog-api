@@ -51,12 +51,17 @@ class ProfileStatusUpdateViewTest(ViewTestCase):
         user = self.UserModel.objects.get(id=1)
         self.assertEqual(user.profile.status, "Test")
 
+        response = self.client.put(
+            self.url, {"status": ""}, content_type="application/json")
+        self._common_view_tests(response)
+        user = self.UserModel.objects.get(id=1)
+        self.assertEqual(user.profile.status, "")
+
     def test_invalid_status_update(self):
         response = self.client.put(
             self.url, {"status": None}, content_type="application/json")
         self.assertEqual(response.status_code,
                          status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(response.data["message"], "An error has occurred.")
 
         response = self.client.put(
             self.url, {"status": "a"*320}, content_type="application/json")
