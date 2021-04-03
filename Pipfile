@@ -8,6 +8,7 @@ django = "*"
 djangorestframework = "*"
 django-cors-middleware = "*"
 pillow = "*"
+django-split-settings = "*"
 
 [dev-packages]
 autopep8 = "*"
