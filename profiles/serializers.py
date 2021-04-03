@@ -89,7 +89,7 @@ class UpdateProfileSerializer(serializers.Serializer):
 
 
 class StatusSerializer(serializers.ModelSerializer):
-    status = serializers.CharField(required=True, max_length=300, allow_null=False, error_messages={
+    status = serializers.CharField(required=False, max_length=300, allow_null=False, allow_blank=True, error_messages={
         "max_length": "Max Status length is 300 symbols"
     })
 

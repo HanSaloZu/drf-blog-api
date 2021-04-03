@@ -15,7 +15,7 @@ class Profile(models.Model):
 
     fullname = models.CharField(max_length=300)
     status = models.CharField(
-        default=None, max_length=300, blank=True, null=True)
+        default="", max_length=300, blank=True, null=False)
     about_me = models.TextField(default=None, null=True)
 
     def __str__(self):
