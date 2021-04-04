@@ -3,7 +3,7 @@ from os import environ
 
 SECRET_KEY = environ["SECRET_KEY"]
 
-DEBUG = environ["DEBUG"]
+DEBUG = bool(int(environ["DEBUG"]))
 
 ALLOWED_HOSTS = []
 
