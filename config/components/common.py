@@ -23,7 +23,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "middlewares.slash_ignore.SlashIgnoreMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -61,7 +60,6 @@ REST_FRAMEWORK = {
     )
 }
 
-APPEND_SLASH = False
 
 WSGI_APPLICATION = "config.wsgi.application"
 
