@@ -137,3 +137,6 @@ dmypy.json
 
 # VScode
 .vscode
+
+# Google Drive Storage Private Key File
+gds.json
