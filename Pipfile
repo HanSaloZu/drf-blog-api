@@ -9,6 +9,7 @@ djangorestframework = "*"
 django-cors-middleware = "*"
 pillow = "*"
 django-split-settings = "*"
+google-api-python-client = "*"
 
 [dev-packages]
 autopep8 = "*"
