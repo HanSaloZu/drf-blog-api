@@ -10,6 +10,7 @@ django-cors-middleware = "*"
 pillow = "*"
 django-split-settings = "*"
 google-api-python-client = "*"
+six = "*"
 
 [dev-packages]
 autopep8 = "*"
