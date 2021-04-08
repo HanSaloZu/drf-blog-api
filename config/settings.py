@@ -10,6 +10,7 @@ base_settings = [
     "components/database.py",
     "components/cors.py",
     "components/cookies.py",
+    "components/google_drive.py"
 ]
 
 include(*base_settings)
