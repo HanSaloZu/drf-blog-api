@@ -110,7 +110,7 @@ class ProfileDetailViewTest(ViewTestCase):
         self.assertEqual(data["aboutMe"], profile.about_me)
         self.assertEqual(len(data["contacts"]), 8)
         self.assertEqual(data["contacts"]["github"], profile.contacts.github)
-        self.assertEqual(len(data["photos"]), 2)
+        self.assertEqual(data["photo"], profile.photo.link)
 
     def test_invalid_profile_detail(self):
         url = reverse("profile_detail", kwargs={"user_id": 9})
@@ -131,9 +131,8 @@ class ProfilePhotoUpdateViewTest(ViewTestCase):
         request.user = self.user
         response = profile_photo_update(request)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["messages"]), 1)
-        self.assertEqual(response.data["messages"][0], "Choose Image file")
+        self.assertEqual(response.status_code,
+                         status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         response = self.client.put(self.url)
 

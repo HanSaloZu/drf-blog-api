@@ -1,6 +1,6 @@
 from utils.test import ExtendedTestCase
 
-from profiles.models import Profile, Contacts, Photos
+from profiles.models import Profile, Contacts, Photo
 
 
 class ProfileModelTests(ExtendedTestCase):
@@ -45,19 +45,19 @@ class ContactsModelTests(ExtendedTestCase):
         self.assertEqual(contacts.github, None)
 
 
-class PhotosModelTests(ExtendedTestCase):
-    PhotosModel = Photos
+class PhotoModelTests(ExtendedTestCase):
+    PhotoModel = Photo
 
     def setUp(self):
         user = self._create_user(
             login="NewUser", email="new@user.com", password="pass", is_superuser=False)
-        self.photos = user.profile.photos
+        self.photo = user.profile.photo
 
     def test_photos_instance(self):
-        self.assertTrue(isinstance(self.photos, self.PhotosModel))
+        self.assertTrue(isinstance(self.photo, self.PhotoModel))
 
     def test_photos_data(self):
-        photos = self.photos
+        photo = self.photo
 
-        self.assertEqual(photos.small, None)
-        self.assertEqual(photos.large, None)
+        self.assertEqual(photo.file_id, None)
+        self.assertEqual(photo.link, None)
