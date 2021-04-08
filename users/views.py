@@ -109,13 +109,6 @@ def users_list(request):
             followed = is_following(request.user, user_data["id"])
 
         user_data.update({"followed": followed})
-        user_photos = user_data["photos"]
-        if user_photos["small"] and user_photos["large"]:
-            user_photos["small"] = request.scheme + "://" + \
-                request.get_host() + user_photos["small"]
-            user_photos["large"] = request.scheme + "://" + \
-                request.get_host() + user_photos["large"]
-
         response_data["items"].append(user_data)
 
     response_data["totalCount"] = total_count
