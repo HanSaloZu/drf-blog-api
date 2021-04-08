@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Profile, Photos, Contacts
+from .models import Profile, Photo, Contacts
 
 
 class NoAddPermissionAdminModel(admin.ModelAdmin):
@@ -24,12 +24,15 @@ class ProfileAdmin(NoAddPermissionAdminModel):
     )
 
 
-@admin.register(Photos)
+@admin.register(Photo)
 class PhotosAdmin(NoAddPermissionAdminModel):
-    list_display = ("profile", "small", "large")
-    list_display_links = ("profile", "small", "large")
+    list_display = ("profile", "file_id", "link")
+    list_display_links = ("profile", "file_id", "link")
     search_fields = ("profile",)
-    fields = ("small", "large")
+    fields = ("file_id", "link")
+
+    def has_change_permission(self, request):
+        return False
 
 
 @admin.register(Contacts)
