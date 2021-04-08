@@ -1,18 +1,6 @@
 from rest_framework import serializers
 
-from .models import Profile, Photos, Contacts
-
-
-class PhotosSerializer(serializers.ModelSerializer):
-    small, large = [serializers.ImageField(
-        required=False, allow_null=False, error_messages={
-            "invalid": "Choose Image file",
-            "null": "Choose Image file"
-        }) for i in range(2)]
-
-    class Meta:
-        model = Photos
-        fields = ["small", "large"]
+from .models import Profile, Contacts
 
 
 class ContactsSerializer(serializers.ModelSerializer):
@@ -27,14 +15,14 @@ class ContactsSerializer(serializers.ModelSerializer):
                   "instagram", "twitter", "website", "youtube", "mainLink"]
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.Serializer):
     userId = serializers.SerializerMethodField()
     lookingForAJob = serializers.SerializerMethodField()
     lookingForAJobDescription = serializers.SerializerMethodField()
     fullName = serializers.SerializerMethodField()
     aboutMe = serializers.SerializerMethodField()
+    photo = serializers.SerializerMethodField()
     contacts = ContactsSerializer()
-    photos = PhotosSerializer()
 
     def get_userId(self, obj):
         return obj.user.id
@@ -51,10 +39,13 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_aboutMe(self, obj):
         return obj.about_me
 
+    def get_photo(self, obj):
+        return obj.photo.link
+
     class Meta:
         model = Profile
         fields = ["userId", "lookingForAJob",
-                  "lookingForAJobDescription", "fullName", "contacts", "aboutMe", "photos"]
+                  "lookingForAJobDescription", "fullName", "contacts", "aboutMe", "photo"]
 
 
 class UpdateContactsSerializer(serializers.Serializer):
