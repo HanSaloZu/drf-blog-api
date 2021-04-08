@@ -16,8 +16,6 @@ class Profile(models.Model):
         default="", max_length=300, blank=True, null=False)
     about_me = models.TextField(default=None, null=True)
 
-    photo = models.URLField(default=None, max_length=300, null=True)
-
     def __str__(self):
         return f"{self.user.login} profile"
 
@@ -25,6 +23,21 @@ class Profile(models.Model):
         verbose_name = "profile"
         verbose_name_plural = "profiles"
         db_table = "profiles"
+
+
+class Photo(models.Model):
+    profile = models.OneToOneField(
+        Profile, on_delete=models.CASCADE, unique=True)
+    file_id = models.CharField(max_length=50, null=True, default=None)
+    link = models.URLField(default=None, max_length=300, null=True)
+
+    def __str__(self):
+        return f"{self.profile.user.login} photo"
+
+    class Meta:
+        verbose_name = "profile photo"
+        verbose_name_plural = "profile photos"
+        db_table = "profile_photos"
 
 
 class Contacts(models.Model):
