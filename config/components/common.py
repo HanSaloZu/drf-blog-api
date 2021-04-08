@@ -60,6 +60,7 @@ REST_FRAMEWORK = {
     )
 }
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 WSGI_APPLICATION = "config.wsgi.application"
 
