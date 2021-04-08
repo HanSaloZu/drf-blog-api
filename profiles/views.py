@@ -6,10 +6,11 @@ from django.core.exceptions import ObjectDoesNotExist
 import json
 
 from .models import Contacts
+from .services import save_photo, delete_image
 from .selectors import get_profile_by_user_id, get_contacts_by_user_id
 from utils.response import APIResponse
 from .serializers import (ProfileSerializer, StatusSerializer,
-                          PhotosSerializer, UpdateProfileSerializer)
+                          UpdateProfileSerializer)
 
 
 @api_view(["GET"])
@@ -55,13 +56,6 @@ def profile_detail(request, user_id):
         return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     deserialized_data = ProfileSerializer(profile).data
-    photos = deserialized_data["photos"]
-
-    if photos["small"] and photos["large"]:
-        host = request.scheme + "://" + request.get_host()
-        photos["small"] = host + photos["small"]
-        photos["large"] = host + photos["large"]
-
     return Response(deserialized_data)
 
 
@@ -72,28 +66,19 @@ def profile_photo_update(request):
                         status.HTTP_401_UNAUTHORIZED)
 
     response = APIResponse()
-    data = {
-        "small": request.data.get("image"),
-        "large": request.data.get("image")
-    }
-    serialized_data = PhotosSerializer(
-        request.user.profile.photos, data=data)
+    image = request.data.get("image")
 
-    if serialized_data.is_valid():
-        photos = serialized_data.save()
-        host = request.scheme + "://" + request.get_host()
+    if image is not None:
+        profile = request.user.profile
+        if profile.photo.file_id is not None:
+            delete_image(profile.photo.file_id)
+        link = save_photo(image, profile)
         response.data = {
-            "photos": {
-                "small": host + photos.small.url,
-                "large": host + photos.large.url
-            }
+            "photo": link
         }
-
         return response.complete()
-    elif serialized_data.errors and serialized_data.errors:
-        response.result_code = 1
-        response.messages.append(serialized_data.errors["small"][0])
-        return response.complete()
+    else:
+        return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["PUT"])
