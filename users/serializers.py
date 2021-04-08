@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from profiles.serializers import PhotosSerializer
 from .models import User
 
 
@@ -38,18 +37,18 @@ class LoginSerializer(serializers.Serializer):
 
 class UsersListSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
-    photos = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    photo = serializers.SerializerMethodField()
 
     def get_name(self, obj):
         return obj.login
 
-    def get_photos(self, obj):
-        return PhotosSerializer(obj.profile.photos).data
-
     def get_status(self, obj):
         return obj.profile.status
 
+    def get_photo(self, obj):
+        return obj.profile.photo.link
+
     class Meta:
         model = User
-        fields = ["name", "id", "photos", "status"]
+        fields = ["name", "id", "status", "photo"]
