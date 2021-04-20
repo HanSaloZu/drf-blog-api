@@ -13,7 +13,7 @@ class ProfileAdmin(NoAddPermissionAdminModel):
     list_display = ("user", "fullname", "looking_for_a_job", "status")
     list_display_links = ("user", "fullname", "looking_for_a_job")
     list_filter = ("looking_for_a_job",)
-    search_fields = ("user", "fullname")
+    search_fields = ("user__login", "fullname")
     fieldsets = (
         (None, {
             "fields": ("fullname", "status", "about_me")
@@ -28,7 +28,8 @@ class ProfileAdmin(NoAddPermissionAdminModel):
 class PhotosAdmin(NoAddPermissionAdminModel):
     list_display = ("profile", "file_id", "link")
     list_display_links = ("profile", "file_id", "link")
-    search_fields = ("profile",)
+    search_fields = ("profile__user__login",
+                     "profile__user__email", "profile__fullname")
     fields = ("file_id", "link")
 
     def has_change_permission(self, request):
@@ -41,6 +42,7 @@ class ContactsAdmin(NoAddPermissionAdminModel):
                     "main_link", "twitter", "vk", "website", "youtube")
     list_display_links = ("profile", "facebook", "github", "instagram",
                           "main_link", "twitter", "vk", "website", "youtube")
-    search_fields = ("profile",)
+    search_fields = ("profile__user__login",
+                     "profile__user__email", "profile__fullname")
     fields = ("facebook", "github", "instagram",
               "main_link", "twitter", "vk", "website", "youtube")
