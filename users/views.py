@@ -1,4 +1,4 @@
-from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator
 from rest_framework.response import Response
@@ -10,18 +10,18 @@ from following.selectors import get_all_user_followings
 from following.service import is_following
 
 
-@api_view(["GET"])
-def user_detail(request, format=None):  # auth/me
-    user = request.user
-    response = APIResponse()
+class UserDetail(APIView):
+    def get(self, request, format=None):
+        user = request.user
+        response = APIResponse()
 
-    if user.is_anonymous:
-        response.result_code = 1
-        response.messages.append("You are not authorized")
+        if user.is_anonymous:
+            response.result_code = 1
+            response.messages.append("You are not authorized")
+            return response.complete()
+
+        response.data = UserSerializer(user).data
         return response.complete()
-
-    response.data = UserSerializer(user).data
-    return response.complete()
 
 
 @api_view(["POST", "DELETE"])
