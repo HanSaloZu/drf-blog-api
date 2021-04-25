@@ -9,7 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "login", "email"]
 
 
-class LoginSerializer(serializers.Serializer):
+class LoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
         error_messages={
@@ -23,16 +23,10 @@ class LoginSerializer(serializers.Serializer):
             "required": "Enter your password",
             "null": "Enter your password"
         })
-    rememberMe = serializers.BooleanField(
-        required=False,
-        default=False,
-        error_messages={
-            "invalid": "Invalid value for rememberMe"
-        })
 
     class Meta:
         model = User
-        fields = ["email", "password", "rememberMe"]
+        fields = ["email", "password"]
 
 
 class UsersListSerializer(serializers.ModelSerializer):

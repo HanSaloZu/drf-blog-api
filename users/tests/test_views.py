@@ -45,21 +45,10 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
     def tearDown(self):
         self.user.delete()
 
-    def test_valid_authentication_with_rememberMe_flag(self):
+    def test_authentication_with_valid_data(self):
         response = self.client.post(
             self.url, {
                 "email": self.email,
-                "password": self.password,
-                "rememberMe": True
-            })
-
-        self._common_api_response_tests(response)
-        self.assertEqual(response.data["data"]["userId"], self.user.id)
-
-    def test_valid_authentication_without_rememberMe_flag(self):
-        response = self.client.post(
-            self.url, {
-                "email": self.user.email,
                 "password": self.password
             })
 
@@ -91,19 +80,6 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
                                         messages_list_len=1, fields_errors_list_len=0)
         self.assertEqual(response.data["messages"]
                          [0], "Incorrect Email or Password")
-
-    def test_authentication_with_invalid_rememberMe_flag(self):
-        response = self.client.post(
-            self.url, {
-                "email": self.user.email,
-                "password": self.password,
-                "rememberMe": "123"
-            })
-
-        self._common_api_response_tests(response, result_code=1,
-                                        messages_list_len=1, fields_errors_list_len=1)
-        self.assertEqual(response.data["messages"]
-                         [0], "Invalid value for rememberMe")
 
     def test_authentication_wihout_credentials(self):
         response = self.client.post(self.url)

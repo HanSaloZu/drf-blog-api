@@ -36,9 +36,6 @@ class UserAuthentication(APIView):
             if user:
                 login(request, user)
 
-                if not validated_data["rememberMe"]:
-                    request.session.set_expiry(0)
-
                 response.data = {"userId": user.id}
                 return response.complete()
 
