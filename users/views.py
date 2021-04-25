@@ -24,20 +24,15 @@ class UserDetail(APIView):
         return response.complete()
 
 
-@api_view(["POST", "DELETE"])
-def user_authentication(request):
-    response = APIResponse()
-    if request.method == "POST":  # login
-        if request.data:
-            serializer = LoginSerializer(data=request.data)
-        else:
-            serializer = LoginSerializer(data=request.query_params)
+class UserAuthentication(APIView):
+    def post(self, request):
+        response = APIResponse()
+        serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
             validated_data = serializer.validated_data
             user = authenticate(
                 email=validated_data["email"], password=validated_data["password"])
-
             if user:
                 login(request, user)
 
@@ -46,10 +41,10 @@ def user_authentication(request):
 
                 response.data = {"userId": user.id}
                 return response.complete()
-            else:
-                response.result_code = 1
-                response.messages.append("Incorrect Email or Password")
-                return response.complete()
+
+            response.result_code = 1
+            response.messages.append("Incorrect Email or Password")
+            return response.complete()
 
         fields_errors = serializer.errors
         for field in fields_errors:
@@ -63,7 +58,8 @@ def user_authentication(request):
         response.result_code = 1
         return response.complete()
 
-    elif request.method == "DELETE":  # logout
+    def delete(self, request):
+        response = APIResponse()
         logout(request)
         return response.complete()
 
