@@ -1,19 +1,29 @@
 from utils.test import ExtendedTestCase
 
 
-class UserModelTests(ExtendedTestCase):
+class UserModelTest(ExtendedTestCase):
     def test_user(self):
+        user_email = "new@user.com"
+        user_login = "NewUser"
         user = self._create_user(
-            login="NewUser", email="new@user.com", password="pass", is_superuser=False)
+            login=user_login, email=user_email, password="pass", is_superuser=False)
 
-        self.assertTrue(isinstance(user, self.UserModel))
-        self.assertEqual(user.login, "NewUser")
-        self.assertEqual(user.email, "new@user.com")
+        self.assertIsInstance(user, self.UserModel)
+
+        self.assertEqual(user.login, user_login)
+        self.assertEqual(user.email, user_email)
+        self.assertFalse(user.is_superuser)
+        self.assertFalse(user.is_staff)
 
     def test_superuser(self):
-        superuser = self._create_user(login="NewSuperuser", email="new@superuser.com",
+        superuser_email = "new@superuser.com"
+        superuser_login = "NewSuperuser"
+        superuser = self._create_user(login=superuser_login, email=superuser_email,
                                       password="pass", is_superuser=True)
 
-        self.assertTrue(isinstance(superuser, self.UserModel))
+        self.assertIsInstance(superuser, self.UserModel)
+
+        self.assertEqual(superuser.login, superuser_login)
+        self.assertEqual(superuser.email, superuser_email)
         self.assertTrue(superuser.is_superuser)
         self.assertTrue(superuser.is_staff)
