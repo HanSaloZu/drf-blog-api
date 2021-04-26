@@ -3,28 +3,23 @@ from utils.test import ExtendedTestCase
 from profiles.models import Profile, Contacts, Photo
 
 
-class ProfileModelTests(ExtendedTestCase):
-    ProfileModel = Profile
+class ProfileModelTest(ExtendedTestCase):
+    model = Profile
 
-    def setUp(self):
+    def test_profile(self):
         user = self._create_user(
-            login="NewUser", email="new@user.com", password="pass", is_superuser=False)
-        self.profile = user.profile
+            login="NewUser", email="new@user.com", password="pass")
+        profile = user.profile
 
-    def test_profile_instance(self):
-        self.assertTrue(isinstance(self.profile, self.ProfileModel))
-
-    def test_profile_data(self):
-        profile = self.profile
-        user = profile.user
+        self.assertIsInstance(profile, self.model)
 
         self.assertEqual(profile.fullname, user.login)
 
-        self.assertEqual(profile.looking_for_a_job, False)
-        self.assertEqual(profile.looking_for_a_job_description, None)
+        self.assertFalse(profile.looking_for_a_job)
+        self.assertIsNone(profile.looking_for_a_job_description)
 
         self.assertEqual(profile.status, "")
-        self.assertEqual(profile.about_me, None)
+        self.assertIsNone(profile.about_me)
 
 
 class ContactsModelTests(ExtendedTestCase):
