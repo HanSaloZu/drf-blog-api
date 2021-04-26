@@ -22,22 +22,24 @@ class ProfileModelTest(ExtendedTestCase):
         self.assertIsNone(profile.about_me)
 
 
-class ContactsModelTests(ExtendedTestCase):
-    ContactsModel = Contacts
+class ContactsModelTest(ExtendedTestCase):
+    model = Contacts
 
-    def setUp(self):
+    def test_contacts(self):
         user = self._create_user(
-            login="NewUser", email="new@user.com", password="pass", is_superuser=False)
-        self.contacts = user.profile.contacts
+            login="NewUser", email="new@user.com", password="pass")
+        contacts = user.profile.contacts
 
-    def test_contacts_instance(self):
-        self.assertTrue(isinstance(self.contacts, self.ContactsModel))
+        self.assertIsInstance(contacts, self.model)
 
-    def test_contacts_data(self):
-        contacts = self.contacts
-
-        self.assertEqual(contacts.vk, None)
-        self.assertEqual(contacts.github, None)
+        self.assertIsNone(contacts.vk)
+        self.assertIsNone(contacts.github)
+        self.assertIsNone(contacts.facebook)
+        self.assertIsNone(contacts.instagram)
+        self.assertIsNone(contacts.main_link)
+        self.assertIsNone(contacts.twitter)
+        self.assertIsNone(contacts.website)
+        self.assertIsNone(contacts.youtube)
 
 
 class PhotoModelTests(ExtendedTestCase):
