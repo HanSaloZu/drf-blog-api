@@ -42,19 +42,15 @@ class ContactsModelTest(ExtendedTestCase):
         self.assertIsNone(contacts.youtube)
 
 
-class PhotoModelTests(ExtendedTestCase):
-    PhotoModel = Photo
+class PhotoModelTest(ExtendedTestCase):
+    model = Photo
 
-    def setUp(self):
+    def test_photo(self):
         user = self._create_user(
-            login="NewUser", email="new@user.com", password="pass", is_superuser=False)
-        self.photo = user.profile.photo
+            login="NewUser", email="new@user.com", password="pass")
+        photo = user.profile.photo
 
-    def test_photos_instance(self):
-        self.assertTrue(isinstance(self.photo, self.PhotoModel))
+        self.assertIsInstance(photo, self.model)
 
-    def test_photos_data(self):
-        photo = self.photo
-
-        self.assertEqual(photo.file_id, None)
-        self.assertEqual(photo.link, None)
+        self.assertIsNone(photo.file_id)
+        self.assertIsNone(photo.link)
