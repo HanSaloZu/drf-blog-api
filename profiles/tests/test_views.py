@@ -2,17 +2,15 @@ from django.urls import reverse
 from rest_framework import status
 import json
 
-from utils.test import ViewTestCase
-from profiles.views import profile_status_update, profile_photo_update
+from utils.test import APIViewTestCase
 
 
-class ProfileStatusDetailViewTest(ViewTestCase):
-    def setUp(self):
-        self.user = self._create_user(login="NewUser", email="new@user.com",
-                                      password="pass", is_superuser=False)
+class ProfileStatusDetailAPIViewTest(APIViewTestCase):
+    def url(self, kwargs):
+        return reverse("profile_status_detail", kwargs=kwargs)
 
-    def test_invalid_status_detail(self):
-        url = reverse("profile_status_detail", kwargs={"user_id": 9})
+    def test_status_detail_with_invalid_user_id(self):
+        url = self.url({"user_id": 9})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code,
@@ -20,70 +18,76 @@ class ProfileStatusDetailViewTest(ViewTestCase):
         self.assertEqual(response.data["message"], "An error has occurred.")
 
     def test_valid_status_detail(self):
-        def common_status_detail_view_tests(response):
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(json.loads(response.content),
-                             self.user.profile.status)
-
-        url = reverse("profile_status_detail", kwargs={"user_id": 1})
-        common_status_detail_view_tests(self.client.get(url))
-
-        self.user.profile.status = "test"
-        self.user.save()
-        common_status_detail_view_tests(self.client.get(url))
-
-
-class ProfileStatusUpdateViewTest(ViewTestCase):
-    def setUp(self):
         user = self._create_user(login="NewUser", email="new@user.com",
                                  password="pass", is_superuser=False)
-        self.client.post(reverse("authentication"), {
-            "email": user.email,
-            "password": "pass"
-        })
-        self.url = reverse("profile_status_update")
+        user.profile.status = "test"
+        user.save()
+
+        url = self.url({"user_id": 1})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json.loads(response.content),
+                         user.profile.status)
+
+
+class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
+    url = reverse("profile_status_update")
+    credentials = {"email": "new@user.com", "password": "pass"}
+
+    def setUp(self):
+        self._create_user(login="NewUser", **self.credentials)
+        self.client.login(**self.credentials)
 
     def test_valid_status_update(self):
         response = self.client.put(
             self.url, {"status": "Test"}, content_type="application/json")
 
-        self._common_view_tests(response)
+        self._common_api_response_tests(response)
         user = self.UserModel.objects.get(id=1)
         self.assertEqual(user.profile.status, "Test")
 
+    def test_status_update_with_blank_value(self):
         response = self.client.put(
             self.url, {"status": ""}, content_type="application/json")
-        self._common_view_tests(response)
+
+        self._common_api_response_tests(response)
         user = self.UserModel.objects.get(id=1)
         self.assertEqual(user.profile.status, "")
 
-    def test_invalid_status_update(self):
+    def test_status_update_with_none_value(self):
         response = self.client.put(
             self.url, {"status": None}, content_type="application/json")
         self.assertEqual(response.status_code,
                          status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def test_status_update_with_long_value(self):
         response = self.client.put(
             self.url, {"status": "a"*320}, content_type="application/json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["messages"]
                          [0], "Max Status length is 300 symbols")
 
+    def test_status_update_without_value(self):
         response = self.client.put(self.url)
         self.assertEqual(response.status_code,
                          status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(response.data["message"], "An error has occurred.")
 
-        request = self.request_factory.put(
+    def test_status_update_by_unauthorized_user(self):
+        self.client.logout()
+        response = self.client.put(
             self.url, {"status": "New status"}, content_type="application/json")
-        response = profile_status_update(request)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(
             response.data["message"], "Authorization has been denied for this request.")
 
 
-class ProfileDetailViewTest(ViewTestCase):
+class ProfileDetailAPIViewTest(APIViewTestCase):
+    def url(self, kwargs):
+        return reverse("profile_detail", kwargs=kwargs)
+
     def setUp(self):
         user = self._create_user(login="NewUser", email="new@user.com",
                                  password="pass", is_superuser=False)
@@ -97,22 +101,23 @@ class ProfileDetailViewTest(ViewTestCase):
         self.profile = profile
 
     def test_valid_profile_detail(self):
-        url = reverse("profile_detail", kwargs={"user_id": 1})
+        url = self.url({"user_id": 1})
         response = self.client.get(url)
         data = response.data
         profile = self.profile
 
         self.assertEqual(data["userId"], profile.user.id)
-        self.assertEqual(data["lookingForAJob"], True)
+        self.assertTrue(data["lookingForAJob"])
         self.assertEqual(data["lookingForAJobDescription"],
                          profile.looking_for_a_job_description)
         self.assertEqual(data["fullName"], profile.fullname)
+        self.assertEqual(data["fullName"], profile.user.login)
         self.assertEqual(data["aboutMe"], profile.about_me)
         self.assertEqual(len(data["contacts"]), 8)
         self.assertEqual(data["contacts"]["github"], profile.contacts.github)
         self.assertEqual(data["photo"], profile.photo.link)
 
-    def test_invalid_profile_detail(self):
+    def test_profile_detail_with_invalid_user_id(self):
         url = reverse("profile_detail", kwargs={"user_id": 9})
         response = self.client.get(url)
 
@@ -120,22 +125,23 @@ class ProfileDetailViewTest(ViewTestCase):
                          status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class ProfilePhotoUpdateViewTest(ViewTestCase):
+class ProfilePhotoUpdateViewTest(APIViewTestCase):
+    url = reverse("profile_photo_update")
+    credentials = {"email": "new@user.com", "password": "pass"}
+
     def setUp(self):
-        self.user = self._create_user(login="NewUser", email="new@user.com",
-                                      password="pass", is_superuser=False)
-        self.url = reverse("profile_photo_update")
+        self.user = self._create_user(login="NewUser", **self.credentials)
 
-    def test_invalid_photo_update(self):
-        request = self.request_factory.put(self.url)
-        request.user = self.user
-        response = profile_photo_update(request)
-
-        self.assertEqual(response.status_code,
-                         status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    def test_photo_update_by_unauthorized_user(self):
         response = self.client.put(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(
             response.data["message"], "Authorization has been denied for this request.")
+
+    def test_photo_update_without_file(self):
+        self.client.login(**self.credentials)
+        response = self.client.put(self.url)
+
+        self.assertEqual(response.status_code,
+                         status.HTTP_500_INTERNAL_SERVER_ERROR)
