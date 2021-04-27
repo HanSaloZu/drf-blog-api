@@ -1,13 +1,13 @@
 from django.urls import path
 
-from .views import (profile_status_detail, profile_detail,
-                    profile_status_update, profile_photo_update, profile_update)
+from .views import (ProfileStatusDetail, ProfileDetail,
+                    ProfileStatusUpdate, ProfilePhotoUpdate, ProfileUpdate)
 
 urlpatterns = [
-    path("", profile_update, name="profile_update"),
-    path("status/<int:user_id>/", profile_status_detail,
+    path("", ProfileUpdate.as_view(), name="profile_update"),
+    path("status/<int:user_id>/", ProfileStatusDetail.as_view(),
          name="profile_status_detail"),
-    path("status/", profile_status_update, name="profile_status_update"),
-    path("<int:user_id>/", profile_detail, name="profile_detail"),
-    path("photo/", profile_photo_update, name="profile_photo_update")
+    path("status/", ProfileStatusUpdate.as_view(), name="profile_status_update"),
+    path("<int:user_id>/", ProfileDetail.as_view(), name="profile_detail"),
+    path("photo/", ProfilePhotoUpdate.as_view(), name="profile_photo_update")
 ]

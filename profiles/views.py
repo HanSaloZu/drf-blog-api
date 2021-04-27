@@ -1,4 +1,4 @@
-from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
@@ -8,113 +8,103 @@ import json
 from .models import Contacts
 from .services import save_photo, delete_image
 from .selectors import get_profile_by_user_id, get_contacts_by_user_id
-from utils.response import APIResponse
 from .serializers import (ProfileSerializer, StatusSerializer,
                           UpdateProfileSerializer)
+from utils.response import APIResponse
+from utils.views import CustomLoginRequiredMixin
 
 
-@api_view(["GET"])
-def profile_status_detail(request, user_id):
-    try:
-        profile = get_profile_by_user_id(user_id)
-    except ObjectDoesNotExist:
-        return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+class ProfileStatusDetail(APIView):
+    def get(self, request, user_id):
+        try:
+            profile = get_profile_by_user_id(user_id)
+        except ObjectDoesNotExist:
+            return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return HttpResponse(json.dumps(profile.status), content_type="application/json")
+        return HttpResponse(json.dumps(profile.status), content_type="application/json")
 
 
-@api_view(["PUT"])
-def profile_status_update(request):
-    if not request.user.is_authenticated:
-        return Response({"message": "Authorization has been denied for this request."},
-                        status.HTTP_401_UNAUTHORIZED)
-
-    serialized_data = StatusSerializer(data=request.data)
-    response = APIResponse()
-
-    if serialized_data.is_valid():
-        user = request.user
-        user.profile.status = serialized_data.data["status"]
-        user.save()
-
-        return response.complete()
-    elif serialized_data.errors["status"][0].code == "max_length":
+class ProfileStatusUpdate(CustomLoginRequiredMixin, APIView):
+    def put(self, request):
+        serialized_data = StatusSerializer(data=request.data)
         response = APIResponse()
-        response.result_code = 1
-        response.messages.append(serialized_data.errors["status"][0])
 
-        return response.complete()
+        if serialized_data.is_valid():
+            user = request.user
+            user.profile.status = serialized_data.data["status"]
+            user.save()
 
-    return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return response.complete()
+        elif serialized_data.errors["status"][0].code == "max_length":
+            response = APIResponse()
+            response.result_code = 1
+            response.messages.append(serialized_data.errors["status"][0])
 
+            return response.complete()
 
-@api_view(["GET"])
-def profile_detail(request, user_id):
-    try:
-        profile = get_profile_by_user_id(user_id)
-    except ObjectDoesNotExist:
-        return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    deserialized_data = ProfileSerializer(profile).data
-    return Response(deserialized_data)
-
-
-@api_view(["PUT"])
-def profile_photo_update(request):
-    if not request.user.is_authenticated:
-        return Response({"message": "Authorization has been denied for this request."},
-                        status.HTTP_401_UNAUTHORIZED)
-
-    response = APIResponse()
-    image = request.data.get("image")
-
-    if image is not None:
-        profile = request.user.profile
-        if profile.photo.file_id is not None:
-            delete_image(profile.photo.file_id)
-        link = save_photo(image, profile)
-        response.data = {
-            "photo": link
-        }
-        return response.complete()
-    else:
         return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(["PUT"])
-def profile_update(request):
-    if not request.user.is_authenticated:
-        return Response({"message": "Authorization has been denied for this request."},
-                        status.HTTP_401_UNAUTHORIZED)
-    response = APIResponse()
+class ProfileDetail(APIView):
+    def get(self, request, user_id):
+        try:
+            profile = get_profile_by_user_id(user_id)
+        except ObjectDoesNotExist:
+            return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    serialized_data = UpdateProfileSerializer(data=request.data)
-    if serialized_data.is_valid():
-        profile = request.user.profile
-        data = serialized_data.data
-        contacts = get_contacts_by_user_id(request.user.id)
+        deserialized_data = ProfileSerializer(profile).data
+        return Response(deserialized_data)
 
-        profile.looking_for_a_job = data["lookingForAJob"]
-        profile.looking_for_a_job_description = data["LookingForAJobDescription"]
-        profile.fullname = data["fullName"]
-        profile.about_me = data["aboutMe"]
-        data["contacts"]["main_link"] = data["contacts"].pop("mainLink")
-        contacts.update(**dict(data["contacts"]))
 
-        request.user.save()
+class ProfilePhotoUpdate(CustomLoginRequiredMixin, APIView):
+    def put(self, request):
+        response = APIResponse()
+        image = request.data.get("image")
 
-        return response.complete()
-
-    errors = serialized_data.errors
-    for error_field in errors:
-        if error_field != "contacts":
-            message = errors[error_field][0]
-            response.messages.append(message)
+        if image is not None:
+            profile = request.user.profile
+            if profile.photo.file_id is not None:
+                delete_image(profile.photo.file_id)
+            link = save_photo(image, profile)
+            response.data = {
+                "photo": link
+            }
+            return response.complete()
         else:
-            contacts_errors = errors.get("contacts", [])
-            for contact_error in contacts_errors:
-                response.messages.append(
-                    f"Invalid url format (Contacts->{contact_error.capitalize()})")
+            return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    response.result_code = 1
-    return response.complete()
+
+class ProfileUpdate(CustomLoginRequiredMixin, APIView):
+    def put(self, request):
+        response = APIResponse()
+        serialized_data = UpdateProfileSerializer(data=request.data)
+
+        if serialized_data.is_valid():
+            profile = request.user.profile
+            data = serialized_data.data
+            contacts = get_contacts_by_user_id(request.user.id)
+
+            profile.looking_for_a_job = data["lookingForAJob"]
+            profile.looking_for_a_job_description = data["LookingForAJobDescription"]
+            profile.fullname = data["fullName"]
+            profile.about_me = data["aboutMe"]
+            data["contacts"]["main_link"] = data["contacts"].pop("mainLink")
+            contacts.update(**dict(data["contacts"]))
+
+            request.user.save()
+
+            return response.complete()
+
+        errors = serialized_data.errors
+        for error_field in errors:
+            if error_field != "contacts":
+                message = errors[error_field][0]
+                response.messages.append(message)
+            else:
+                contacts_errors = errors.get("contacts", [])
+                for contact_error in contacts_errors:
+                    response.messages.append(
+                        f"Invalid url format (Contacts->{contact_error.capitalize()})")
+
+        response.result_code = 1
+        return response.complete()
