@@ -1,7 +1,6 @@
 from django.urls import reverse
 
 from utils.test import APIViewTestCase
-from users.views import UserDetail
 
 
 class UserDetailAPIViewTest(APIViewTestCase):
@@ -16,14 +15,10 @@ class UserDetailAPIViewTest(APIViewTestCase):
         self.assertEqual(message, "You are not authorized")
 
     def test_valid_user_detail(self):
-        user = self._create_user(
-            login="NewUser", email="new@user.com", password="pass")
-        request = self.request_factory.get(self.url)
-        view = UserDetail()
-
-        request.user = user
-        view.setup(request)
-        response = view.get(request)
+        credentials = {"email": "new@user.com", "password": "pass"}
+        user = self._create_user(login="NewUser", **credentials)
+        self.client.login(**credentials)
+        response = self.client.get(self.url)
 
         self._common_api_response_tests(response)
         response_user_detail = response.data["data"]
@@ -37,20 +32,11 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
 
     def setUp(self):
         self.login = "NewUser"
-        self.email = "new@user.com"
-        self.password = "pass"
-        self.user = self._create_user(login=self.login, email=self.email,
-                                      password=self.password)
-
-    def tearDown(self):
-        self.user.delete()
+        self.credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self._create_user(login=self.login, **self.credentials)
 
     def test_authentication_with_valid_data(self):
-        response = self.client.post(
-            self.url, {
-                "email": self.email,
-                "password": self.password
-            })
+        response = self.client.post(self.url, self.credentials)
 
         self._common_api_response_tests(response)
         self.assertEqual(response.data["data"]["userId"], self.user.id)
@@ -59,7 +45,7 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
         response = self.client.post(
             self.url, {
                 "email": "123",
-                "password": self.password
+                "password": self.credentials["password"]
             })
 
         self._common_api_response_tests(response, result_code=1,
@@ -72,7 +58,7 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
     def test_authentication_with_invalid_password(self):
         response = self.client.post(
             self.url, {
-                "email": self.user.email,
+                "email": self.credentials["email"],
                 "password": "invalid"
             })
 
@@ -90,11 +76,7 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
         self.assertIn("Enter your password", response.data["messages"])
 
     def test_logging_out(self):
-        self.client.post(
-            self.url, {
-                "email": self.user.email,
-                "password": self.password
-            })
+        self.client.login(**self.credentials)
         response = self.client.delete(self.url)
         self._common_api_response_tests(response)
 
