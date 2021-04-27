@@ -61,48 +61,47 @@ class UserAuthentication(APIView):
         return response.complete()
 
 
-@api_view(["GET"])
-def users_list(request):
-    count = request.GET.get("count", 10)
-    page_number = request.GET.get("page", 1)
-    term = request.GET.get("term", None)
-    friend = request.GET.get("friend", None)
+class UsersList(APIView):
+    def get(self, request):
+        count = request.GET.get("count", 10)
+        page_number = request.GET.get("page", 1)
+        term = request.GET.get("term", None)
+        friend = request.GET.get("friend", None)
 
-    response_data = {
-        "items": [],
-        "totalCount": 0,
-        "error": ""
-    }
+        response_data = {
+            "items": [],
+            "totalCount": 0,
+            "error": ""
+        }
 
-    if int(count) > 100:
-        response_data["error"] = "Max page size is 100 items"
-        return Response(response_data)
-
-    if term:
-        users_list = get_users_by_term(term)
-    else:
-        users_list = get_all_users()
-
-    if friend:
-        if not request.user.is_authenticated:
+        if int(count) > 100:
+            response_data["error"] = "Max page size is 100 items"
             return Response(response_data)
 
-        followings = get_all_user_followings(request.user)
-        followings_ids = [i.following_user.id for i in list(followings)]
-        users_list = users_list.filter(id__in=followings_ids)
+        if term:
+            users_list = get_users_by_term(term)
+        else:
+            users_list = get_all_users()
 
-    total_count = users_list.count()
-    paginator = Paginator(users_list, count)
-    page = paginator.get_page(page_number)
+        if friend:
+            if not request.user.is_authenticated:
+                return Response(response_data)
 
-    for obj in page.object_list:
-        user_data = UsersListSerializer(obj).data
-        followed = False
-        if request.user.is_authenticated:
-            followed = is_following(request.user, user_data["id"])
+            followings = get_all_user_followings(request.user)
+            followings_ids = [i.following_user.id for i in list(followings)]
+            users_list = users_list.filter(id__in=followings_ids)
 
-        user_data.update({"followed": followed})
-        response_data["items"].append(user_data)
+        paginator = Paginator(users_list, count)
+        page = paginator.get_page(page_number)
 
-    response_data["totalCount"] = total_count
-    return Response(response_data)
+        for obj in page.object_list:
+            user_data = UsersListSerializer(obj).data
+            followed = False
+            if request.user.is_authenticated:
+                followed = is_following(request.user, user_data["id"])
+
+            user_data.update({"followed": followed})
+            response_data["items"].append(user_data)
+
+        response_data["totalCount"] = users_list.count()
+        return Response(response_data)
