@@ -1,13 +1,13 @@
 from utils.test import ExtendedTestCase
 
-from profiles.models import Profile, Contacts, Photo
+from ..models import Profile, Contacts, Photo
 
 
 class ProfileModelTest(ExtendedTestCase):
     model = Profile
 
     def test_profile(self):
-        user = self._create_user(
+        user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
         profile = user.profile
 
@@ -26,7 +26,7 @@ class ContactsModelTest(ExtendedTestCase):
     model = Contacts
 
     def test_contacts(self):
-        user = self._create_user(
+        user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
         contacts = user.profile.contacts
 
@@ -46,7 +46,7 @@ class PhotoModelTest(ExtendedTestCase):
     model = Photo
 
     def test_photo(self):
-        user = self._create_user(
+        user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
         photo = user.profile.photo
 

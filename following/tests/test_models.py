@@ -1,6 +1,7 @@
-from utils.test import ExtendedTestCase
 from django.db import IntegrityError, transaction
+from django.contrib.auth import get_user_model
 
+from utils.test import ExtendedTestCase
 from ..models import FollowersModel
 
 
@@ -8,9 +9,9 @@ class FollowersModelTest(ExtendedTestCase):
     model = FollowersModel
 
     def setUp(self):
-        self.f_user = self._create_user(
+        self.f_user = self.UserModel.objects.create_user(
             login="FirstUser", email="first@user.com", password="pass")
-        self.s_user = self._create_user(
+        self.s_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@user.com", password="pass")
 
     def tearDown(self):

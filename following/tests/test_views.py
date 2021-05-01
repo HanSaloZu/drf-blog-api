@@ -1,5 +1,4 @@
 from django.urls import reverse
-from rest_framework import status
 import json
 
 from ..models import FollowersModel
@@ -16,9 +15,9 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         first_user_credentials = {
             "email": "first_user_@gmail.com", "password": "pass"}
 
-        self.first_user = self._create_user(
+        self.first_user = self.UserModel.objects.create_user(
             login="FirstUser", **first_user_credentials)
-        self.second_user = self._create_user(
+        self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second_user_@gmail.com", password="pass")
         self.client.login(**first_user_credentials)
 
@@ -34,7 +33,7 @@ class FollowingAPIViewTestCase(APIViewTestCase):
     def test_self_follow(self):
         response = self.client.post(self.url({"user_id": self.first_user.id}))
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self._common_api_response_tests(
             response, result_code=1, messages_list_len=1)
         self.assertEqual(response.data["messages"]
@@ -71,7 +70,7 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         response = self.client.get(
             self.url(kwargs={"user_id": self.second_user.id}))
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertFalse(json.loads(response.content))
         self.assertEqual(json.loads(response.content),
                          self.model.is_following(self.first_user, self.second_user))
@@ -81,7 +80,7 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         response = self.client.get(
             self.url(kwargs={"user_id": self.second_user.id}))
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertTrue(json.loads(response.content))
         self.assertEqual(json.loads(response.content),
                          self.model.is_following(self.first_user, self.second_user))
@@ -90,18 +89,20 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         response = self.client.get(
             self.url(kwargs={"user_id": 999}))
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["message"], "Bad request")
 
     def test_follow_with_invalid_user_id(self):
         response = self.client.post(self.url(kwargs={"user_id": 999}))
 
         self.assertEqual(response.status_code,
-                         status.HTTP_500_INTERNAL_SERVER_ERROR)
+                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_follow_while_unauthorized(self):
         self.client.logout()
 
         response = self.client.post(
             self.url(kwargs={"user_id": self.second_user.id}))
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_401_UNAUTHORIZED)

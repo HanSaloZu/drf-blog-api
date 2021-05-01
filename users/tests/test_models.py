@@ -5,8 +5,8 @@ class UserModelTest(ExtendedTestCase):
     def test_user(self):
         user_email = "new@user.com"
         user_login = "NewUser"
-        user = self._create_user(
-            login=user_login, email=user_email, password="pass", is_superuser=False)
+        user = self.UserModel.objects.create_user(
+            login=user_login, email=user_email, password="pass")
 
         self.assertIsInstance(user, self.UserModel)
 
@@ -18,8 +18,8 @@ class UserModelTest(ExtendedTestCase):
     def test_superuser(self):
         superuser_email = "new@superuser.com"
         superuser_login = "NewSuperuser"
-        superuser = self._create_user(login=superuser_login, email=superuser_email,
-                                      password="pass", is_superuser=True)
+        superuser = self.UserModel.objects.create_superuser(
+            login=superuser_login, email=superuser_email, password="pass")
 
         self.assertIsInstance(superuser, self.UserModel)
 

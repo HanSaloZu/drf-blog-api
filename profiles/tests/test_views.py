@@ -1,5 +1,4 @@
 from django.urls import reverse
-from rest_framework import status
 import json
 
 from utils.test import APIViewTestCase
@@ -14,28 +13,28 @@ class ProfileStatusDetailAPIViewTest(APIViewTestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code,
-                         status.HTTP_500_INTERNAL_SERVER_ERROR)
+                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(response.data["message"], "An error has occurred.")
 
     def test_valid_status_detail(self):
-        user = self._create_user(login="NewUser", email="new@user.com",
-                                 password="pass", is_superuser=False)
+        user = self.UserModel.objects.create_user(login="NewUser", email="new@user.com",
+                                                  password="pass")
         user.profile.status = "test"
         user.save()
 
         response = self.client.get(self.url({"user_id": 1}))
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(json.loads(response.content),
                          user.profile.status)
 
 
 class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
     url = reverse("profile_status_update")
-    credentials = {"email": "new@user.com", "password": "pass"}
 
     def setUp(self):
-        self._create_user(login="NewUser", **self.credentials)
+        self.credentials = {"email": "new@user.com", "password": "pass"}
+        self.UserModel.objects.create_user(login="NewUser", **self.credentials)
         self.client.login(**self.credentials)
 
     def test_valid_status_update(self):
@@ -58,19 +57,19 @@ class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
         response = self.client.put(
             self.url, {"status": None}, content_type="application/json")
         self.assertEqual(response.status_code,
-                         status.HTTP_500_INTERNAL_SERVER_ERROR)
+                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_status_update_with_long_value(self):
         response = self.client.put(
             self.url, {"status": "a"*320}, content_type="application/json")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(response.data["messages"]
                          [0], "Max Status length is 300 symbols")
 
     def test_status_update_without_value(self):
         response = self.client.put(self.url)
         self.assertEqual(response.status_code,
-                         status.HTTP_500_INTERNAL_SERVER_ERROR)
+                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(response.data["message"], "An error has occurred.")
 
     def test_status_update_by_unauthorized_user(self):
@@ -78,7 +77,8 @@ class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
         response = self.client.put(
             self.url, {"status": "New status"}, content_type="application/json")
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(
             response.data["message"], "Authorization has been denied for this request.")
 
@@ -88,8 +88,8 @@ class ProfileDetailAPIViewTest(APIViewTestCase):
         return reverse("profile_detail", kwargs=kwargs)
 
     def setUp(self):
-        user = self._create_user(login="NewUser", email="new@user.com",
-                                 password="pass", is_superuser=False)
+        user = self.UserModel.objects.create_user(login="NewUser", email="new@user.com",
+                                                  password="pass")
         profile = user.profile
 
         profile.looking_for_a_job = True
@@ -128,20 +128,22 @@ class ProfileDetailAPIViewTest(APIViewTestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code,
-                         status.HTTP_500_INTERNAL_SERVER_ERROR)
+                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ProfilePhotoUpdateViewTest(APIViewTestCase):
     url = reverse("profile_photo_update")
-    credentials = {"email": "new@user.com", "password": "pass"}
 
     def setUp(self):
-        self.user = self._create_user(login="NewUser", **self.credentials)
+        self.credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **self.credentials)
 
     def test_photo_update_by_unauthorized_user(self):
         response = self.client.put(self.url)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(
             response.data["message"], "Authorization has been denied for this request.")
 
@@ -150,4 +152,4 @@ class ProfilePhotoUpdateViewTest(APIViewTestCase):
         response = self.client.put(self.url)
 
         self.assertEqual(response.status_code,
-                         status.HTTP_500_INTERNAL_SERVER_ERROR)
+                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)

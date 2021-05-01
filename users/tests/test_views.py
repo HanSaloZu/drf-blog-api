@@ -1,4 +1,3 @@
-from rest_framework import status
 from urllib.parse import urlencode
 from django.urls import reverse
 
@@ -18,7 +17,8 @@ class UserDetailAPIViewTest(APIViewTestCase):
 
     def test_valid_user_detail(self):
         credentials = {"email": "new@user.com", "password": "pass"}
-        user = self._create_user(login="NewUser", **credentials)
+        user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
         self.client.login(**credentials)
         response = self.client.get(self.url)
 
@@ -34,7 +34,8 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
 
     def setUp(self):
         self.credentials = {"email": "new@user.com", "password": "pass"}
-        self.user = self._create_user(login="NewUser", **self.credentials)
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **self.credentials)
 
     def test_authentication_with_valid_data(self):
         response = self.client.post(self.url, self.credentials)
@@ -94,7 +95,7 @@ class UsersListAPIViewsTest(APIViewTestCase):
 
         return url
 
-    def common_users_list_response_tests(self, response, status_code=status.HTTP_200_OK, items_list_len=0, total_count=3, error=""):
+    def common_users_list_response_tests(self, response, status_code=200, items_list_len=0, total_count=3, error=""):
         self.assertEqual(response.status_code, status_code)
         self.assertEqual(len(response.data["items"]), items_list_len)
         self.assertEqual(response.data["totalCount"], total_count)
@@ -102,11 +103,11 @@ class UsersListAPIViewsTest(APIViewTestCase):
 
     def setUp(self):
         self.credentials = {"email": "first@gmail.com", "password": "pass"}
-        self.first_user = self._create_user(
+        self.first_user = self.UserModel.objects.create_user(
             login="First User", **self.credentials)
-        self.second_user = self._create_user(
+        self.second_user = self.UserModel.objects.create_user(
             login="Second User", email="second@gmail.com", password="pass")
-        self.third_user = self._create_user(
+        self.third_user = self.UserModel.objects.create_user(
             login="Third User", email="third@gmail.com", password="pass")
 
     def test_users_list_without_parameters(self):
@@ -143,7 +144,7 @@ class UsersListAPIViewsTest(APIViewTestCase):
     def test_users_list_with_invalid_count_parameter(self):
         response = self.client.get(self.url({"count": -5}))
         self.assertEqual(response.status_code,
-                         status.HTTP_500_INTERNAL_SERVER_ERROR)
+                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def test_users_list_with_large_count_parameter(self):
         response = self.client.get(self.url({"count": 999}))
