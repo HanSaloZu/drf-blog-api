@@ -23,8 +23,7 @@ class ProfileStatusDetailAPIViewTest(APIViewTestCase):
         user.profile.status = "test"
         user.save()
 
-        url = self.url({"user_id": 1})
-        response = self.client.get(url)
+        response = self.client.get(self.url({"user_id": 1}))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(json.loads(response.content),
@@ -114,8 +113,15 @@ class ProfileDetailAPIViewTest(APIViewTestCase):
         self.assertEqual(data["fullName"], profile.user.login)
         self.assertEqual(data["aboutMe"], profile.about_me)
         self.assertEqual(len(data["contacts"]), 8)
-        self.assertEqual(data["contacts"]["github"], profile.contacts.github)
         self.assertEqual(data["photo"], profile.photo.link)
+        self.assertEqual(data["contacts"]["github"], profile.contacts.github)
+        self.assertIsNone(data["contacts"]["facebook"])
+        self.assertIsNone(data["contacts"]["instagram"])
+        self.assertIsNone(data["contacts"]["mainLink"])
+        self.assertIsNone(data["contacts"]["twitter"])
+        self.assertIsNone(data["contacts"]["vk"])
+        self.assertIsNone(data["contacts"]["website"])
+        self.assertIsNone(data["contacts"]["youtube"])
 
     def test_profile_detail_with_invalid_user_id(self):
         url = reverse("profile_detail", kwargs={"user_id": 9})
