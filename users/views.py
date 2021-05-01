@@ -6,7 +6,6 @@ from rest_framework.response import Response
 from .selectors import get_all_users, get_users_by_term
 from .serializers import UserSerializer, LoginSerializer, UsersListSerializer
 from utils.response import APIResponse
-from following.selectors import get_all_user_followings
 from following.service import is_following
 
 
@@ -87,7 +86,7 @@ class UsersList(APIView):
             if not request.user.is_authenticated:
                 return Response(response_data)
 
-            followings = get_all_user_followings(request.user)
+            followings = request.user.following.only("following_user")
             followings_ids = [i.following_user.id for i in list(followings)]
             users_list = users_list.filter(id__in=followings_ids)
 
