@@ -1,3 +1,5 @@
+from rest_framework import status
+from urllib.parse import urlencode
 from django.urls import reverse
 
 from utils.test import APIViewTestCase
@@ -31,9 +33,8 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
     url = reverse("authentication")
 
     def setUp(self):
-        self.login = "NewUser"
         self.credentials = {"email": "new@user.com", "password": "pass"}
-        self.user = self._create_user(login=self.login, **self.credentials)
+        self.user = self._create_user(login="NewUser", **self.credentials)
 
     def test_authentication_with_valid_data(self):
         response = self.client.post(self.url, self.credentials)
@@ -83,3 +84,99 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
     def test_unauthorized_logging_out(self):
         response = self.client.delete(self.url)
         self._common_api_response_tests(response)
+
+
+class UsersListAPIViewsTest(APIViewTestCase):
+    def url(self, parameters={}):
+        url = reverse("users_list")
+        if parameters:
+            url += "?" + urlencode(parameters)
+
+        return url
+
+    def common_users_list_response_tests(self, response, status_code=status.HTTP_200_OK, items_list_len=0, total_count=3, error=""):
+        self.assertEqual(response.status_code, status_code)
+        self.assertEqual(len(response.data["items"]), items_list_len)
+        self.assertEqual(response.data["totalCount"], total_count)
+        self.assertEqual(response.data["error"], error)
+
+    def setUp(self):
+        self.credentials = {"email": "first@gmail.com", "password": "pass"}
+        self.first_user = self._create_user(
+            login="First User", **self.credentials)
+        self.second_user = self._create_user(
+            login="Second User", email="second@gmail.com", password="pass")
+        self.third_user = self._create_user(
+            login="Third User", email="third@gmail.com", password="pass")
+
+    def test_users_list_without_parameters(self):
+        response = self.client.get(self.url())
+
+        self.common_users_list_response_tests(response, items_list_len=3)
+        user_data = response.data["items"][0]
+        self.assertIn("id", user_data)
+        self.assertIn("name", user_data)
+        self.assertIn("status", user_data)
+        self.assertIn("photo", user_data)
+        self.assertIn("followed", user_data)
+
+    def test_users_list_with_term(self):
+        response = self.client.get(self.url({"term": "First User"}))
+
+        self.common_users_list_response_tests(
+            response, items_list_len=1, total_count=1)
+        user_data = response.data["items"][0]
+        self.assertEqual(user_data["id"], self.first_user.id)
+        self.assertEqual(user_data["name"], self.first_user.login)
+        self.assertFalse(user_data["followed"])
+        self.assertIsNone(user_data["photo"])
+        self.assertEqual(user_data["status"], "")
+
+        response = self.client.get(self.url({"term": "3333"}))
+        self.common_users_list_response_tests(
+            response, items_list_len=0, total_count=0)
+
+    def test_users_list_with_count_parameter(self):
+        response = self.client.get(self.url({"count": 2}))
+        self.common_users_list_response_tests(response, items_list_len=2)
+
+    def test_users_list_with_invalid_count_parameter(self):
+        response = self.client.get(self.url({"count": -5}))
+        self.assertEqual(response.status_code,
+                         status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def test_users_list_with_large_count_parameter(self):
+        response = self.client.get(self.url({"count": 999}))
+        self.common_users_list_response_tests(
+            response, error="Max page size is 100 items", total_count=0)
+
+    def test_users_list_with_page_parameter(self):
+        response = self.client.get(self.url({"count": 1, "page": 1}))
+
+        self.common_users_list_response_tests(response, items_list_len=1)
+        user_data = response.data["items"][0]
+        self.assertEqual(user_data["id"], self.third_user.id)
+
+        response = self.client.get(self.url({"count": 1, "page": 2}))
+
+        self.common_users_list_response_tests(response, items_list_len=1)
+        user_data = response.data["items"][0]
+        self.assertEqual(user_data["id"], self.second_user.id)
+
+    def test_users_list_with_friend_flag(self):
+        self.client.login(**self.credentials)
+        self.first_user.following.create(
+            follower_user=self.first_user, following_user=self.second_user)
+        response = self.client.get(self.url({"friend": True}))
+
+        self.common_users_list_response_tests(
+            response, total_count=1, items_list_len=1)
+        self.assertEqual(response.data["items"][0]["id"], self.second_user.id)
+        self.assertTrue(response.data["items"][0]["followed"])
+
+    def test_users_list_with_friend_flag_while_unauthorized(self):
+        self.second_user.following.create(
+            follower_user=self.second_user, following_user=self.first_user)
+        response = self.client.get(self.url({"friend": True}))
+
+        self.common_users_list_response_tests(response, total_count=0)
