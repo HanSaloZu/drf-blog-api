@@ -82,14 +82,19 @@ class ProfileUpdate(CustomLoginRequiredMixin, APIView):
         if serialized_data.is_valid():
             profile = request.user.profile
             data = serialized_data.data
-            contacts = get_contacts_by_user_id(request.user.id)
+            user_contacts = get_contacts_by_user_id(request.user.id)
 
-            profile.looking_for_a_job = data["lookingForAJob"]
-            profile.looking_for_a_job_description = data["LookingForAJobDescription"]
             profile.fullname = data["fullName"]
             profile.about_me = data["aboutMe"]
-            data["contacts"]["main_link"] = data["contacts"].pop("mainLink")
-            contacts.update(**dict(data["contacts"]))
+            profile.looking_for_a_job = data.get(
+                "lookingForAJob", profile.looking_for_a_job)
+            profile.looking_for_a_job_description = data.get(
+                "lookingForAJobDescription", profile.looking_for_a_job_description)
+
+            if data.get("contacts", False):
+                data["contacts"]["main_link"] = data["contacts"].pop(
+                    "mainLink")
+                user_contacts.update(**dict(data["contacts"]))
 
             request.user.save()
 
