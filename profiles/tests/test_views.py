@@ -131,7 +131,7 @@ class ProfileDetailAPIViewTest(APIViewTestCase):
                          self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class ProfilePhotoUpdateViewTest(APIViewTestCase):
+class ProfilePhotoUpdateAPIViewTest(APIViewTestCase):
     url = reverse("profile_photo_update")
 
     def setUp(self):
@@ -153,3 +153,107 @@ class ProfilePhotoUpdateViewTest(APIViewTestCase):
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ProfileUpdateAPIViewTest(APIViewTestCase):
+    url = reverse("profile_update")
+
+    def setUp(self):
+        credentials = {"email": "new@user.com", "password": "pass"}
+        self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
+        self.client.login(**credentials)
+
+    def test_profile_update_by_unauthorized_user(self):
+        self.client.logout()
+        response = self.client.put(
+            self.url, {"fullName": "New User", "aboutMe": "About me!"}, content_type="application/json")
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            response.data["message"], "Authorization has been denied for this request.")
+
+    def test_profile_update_with_only_required_fields(self):
+        request_data = {"fullName": "New User", "aboutMe": "About me!"}
+        response = self.client.put(
+            self.url, request_data, content_type="application/json")
+        user = self.UserModel.objects.all().first()
+
+        self._common_api_response_tests(response)
+        self.assertEqual(user.profile.fullname, request_data["fullName"])
+        self.assertEqual(user.profile.about_me, request_data["aboutMe"])
+        self.assertFalse(user.profile.looking_for_a_job)
+        self.assertIsNone(user.profile.looking_for_a_job_description)
+
+    def test_profile_update_with_contacts(self):
+        request_data = {"fullName": "New User", "aboutMe": "About me!", "contacts": {
+            "github": "https://github.com/HanSaloZu",
+            "mainLink": "https://github.com/HanSaloZu"
+        }}
+        response = self.client.put(
+            self.url, request_data, content_type="application/json")
+        user = self.UserModel.objects.all().first()
+
+        self._common_api_response_tests(response)
+        self.assertEqual(user.profile.contacts.github,
+                         request_data["contacts"]["github"])
+        self.assertEqual(user.profile.contacts.main_link,
+                         request_data["contacts"]["mainLink"])
+        self.assertIsNone(user.profile.contacts.facebook)
+        self.assertIsNone(user.profile.contacts.instagram)
+        self.assertIsNone(user.profile.contacts.twitter)
+        self.assertIsNone(user.profile.contacts.vk)
+        self.assertIsNone(user.profile.contacts.website)
+        self.assertIsNone(user.profile.contacts.youtube)
+
+    def test_profile_update_without_contacts(self):
+        request_data = {"fullName": "New User", "aboutMe": "About me!",
+                        "lookingForAJob": True, "lookingForAJobDescription": "I need a job!"}
+        response = self.client.put(
+            self.url, request_data, content_type="application/json")
+        user = self.UserModel.objects.all().first()
+
+        self._common_api_response_tests(response)
+        self.assertEqual(user.profile.looking_for_a_job,
+                         request_data["lookingForAJob"])
+        self.assertEqual(user.profile.looking_for_a_job_description,
+                         request_data["lookingForAJobDescription"])
+
+    def test_profile_update_without_data(self):
+        response = self.client.put(self.url)
+
+        self._common_api_response_tests(
+            response, messages_list_len=2, result_code=1)
+        self.assertIn("The FullName field is required. (FullName)",
+                      response.data["messages"])
+        self.assertIn("The AboutMe field is required. (AboutMe)",
+                      response.data["messages"])
+
+    def test_profile_update_with_invalid_data(self):
+        response = self.client.put(
+            self.url, {"fullName": None, "aboutMe": None}, content_type="application/json")
+
+        self._common_api_response_tests(
+            response, messages_list_len=2, result_code=1)
+        self.assertIn("The FullName field is required. (FullName)",
+                      response.data["messages"])
+        self.assertIn("The AboutMe field is required. (AboutMe)",
+                      response.data["messages"])
+
+    def test_profile_update_with_invalid_contacts(self):
+        response = self.client.put(
+            self.url, {"fullName": "New User", "aboutMe": "About me!", "contacts": {
+                "github": "123"
+            }}, content_type="application/json")
+
+        self._common_api_response_tests(
+            response, messages_list_len=1, result_code=1)
+        self.assertEqual(response.data["messages"][0],
+                         "Invalid url format (Contacts->Github)")
+
+    def test_profile_update_with_contacts_equals_none(self):
+        response = self.client.put(
+            self.url, {"fullName": "New User", "aboutMe": "About me!", "contacts": None}, content_type="application/json")
+
+        self._common_api_response_tests(response)
