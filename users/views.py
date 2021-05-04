@@ -62,10 +62,11 @@ class UserAuthentication(APIView):
 
 class UsersList(APIView):
     def get(self, request):
-        count = request.GET.get("count", 10)
-        page_number = request.GET.get("page", 1)
+        count = int(request.GET.get("count", 10))
+        page_number = int(request.GET.get("page", 1))
         term = request.GET.get("term", None)
-        friend = request.GET.get("friend", None)
+        friend = {"true": True, "false": False}[  # the friend parameter can only be "true" or "false"
+            request.GET.get("friend", "false")]
 
         response_data = {
             "items": [],
@@ -73,7 +74,7 @@ class UsersList(APIView):
             "error": ""
         }
 
-        if int(count) > 100:
+        if count > 100:
             response_data["error"] = "Max page size is 100 items"
             return Response(response_data)
 
