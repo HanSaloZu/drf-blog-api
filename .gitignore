@@ -139,4 +139,4 @@ dmypy.json
 .vscode
 
 # Google Drive Storage Private Key File
-gds.json
+google_drive_api.json
