@@ -1,4 +1,4 @@
-from .gd import GoogleDriveAPI
+from .google_drive import GoogleDriveAPI
 from PIL import Image
 from os import remove
 
