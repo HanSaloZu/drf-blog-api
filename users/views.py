@@ -6,7 +6,6 @@ from rest_framework.response import Response
 from .selectors import get_all_users, get_users_by_term
 from .serializers import UserSerializer, LoginSerializer, UsersListSerializer
 from utils.response import APIResponse
-from following.service import is_following
 
 
 class UserDetail(APIView):
@@ -98,7 +97,7 @@ class UsersList(APIView):
             user_data = UsersListSerializer(obj).data
             followed = False
             if request.user.is_authenticated:
-                followed = is_following(request.user, user_data["id"])
+                followed = obj.followers.all().filter(follower_user=request.user).exists()
 
             user_data.update({"followed": followed})
             response_data["items"].append(user_data)
