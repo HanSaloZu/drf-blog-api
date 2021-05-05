@@ -2,14 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth import get_user_model
 
+from .selectors import get_user_by_id
 from .models import FollowersModel
 from utils.response import APIResponse
 from utils.views import CustomLoginRequiredMixin
-
-
-User = get_user_model()
 
 
 class Follow(CustomLoginRequiredMixin, APIView):
@@ -17,7 +14,7 @@ class Follow(CustomLoginRequiredMixin, APIView):
 
     def get(self, request, user_id):
         try:
-            subject = User.objects.get(id=user_id)
+            subject = get_user_by_id(user_id)
         except ObjectDoesNotExist:
             return Response({"message": "Bad request"}, status.HTTP_400_BAD_REQUEST)
 
@@ -25,7 +22,7 @@ class Follow(CustomLoginRequiredMixin, APIView):
 
     def post(self, request, user_id):
         response = APIResponse()
-        subject = User.objects.get(id=user_id)
+        subject = get_user_by_id(user_id)
 
         if user_id == request.user.id:
             response.result_code = 1
@@ -42,7 +39,7 @@ class Follow(CustomLoginRequiredMixin, APIView):
 
     def delete(self, request, user_id):
         response = APIResponse()
-        subject = User.objects.get(id=user_id)
+        subject = get_user_by_id(user_id)
 
         if self.model.is_following(request.user, subject):
             self.model.unfollow(request.user, subject)
