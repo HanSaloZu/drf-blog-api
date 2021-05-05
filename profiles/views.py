@@ -5,7 +5,6 @@ from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 import json
 
-from .models import Contacts
 from .services import save_photo, delete_image
 from .selectors import get_profile_by_user_id, get_contacts_by_user_id
 from .serializers import (ProfileSerializer, StatusSerializer,
@@ -97,7 +96,6 @@ class ProfileUpdate(CustomLoginRequiredMixin, APIView):
                 user_contacts.update(**dict(data["contacts"]))
 
             request.user.save()
-
             return response.complete()
 
         errors = serialized_data.errors
