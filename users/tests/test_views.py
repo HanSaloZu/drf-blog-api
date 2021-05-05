@@ -168,7 +168,7 @@ class UsersListAPIViewsTest(APIViewTestCase):
         self.client.login(**self.credentials)
         self.first_user.following.create(
             follower_user=self.first_user, following_user=self.second_user)
-        response = self.client.get(self.url({"friend": True}))
+        response = self.client.get(self.url({"friend": "true"}))
 
         self.common_users_list_response_tests(
             response, total_count=1, items_list_len=1)
@@ -178,6 +178,6 @@ class UsersListAPIViewsTest(APIViewTestCase):
     def test_users_list_with_friend_flag_while_unauthorized(self):
         self.second_user.following.create(
             follower_user=self.second_user, following_user=self.first_user)
-        response = self.client.get(self.url({"friend": True}))
+        response = self.client.get(self.url({"friend": "true"}))
 
         self.common_users_list_response_tests(response, total_count=0)
