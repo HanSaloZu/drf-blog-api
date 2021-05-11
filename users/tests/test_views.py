@@ -38,17 +38,18 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
             login="NewUser", **self.credentials)
 
     def test_authentication_with_valid_data(self):
-        response = self.client.post(self.url, self.credentials)
+        response = self.client.put(
+            self.url, self.credentials, content_type="application/json")
 
         self._common_api_response_tests(response)
         self.assertEqual(response.data["data"]["userId"], self.user.id)
 
     def test_authentication_with_invalid_email(self):
-        response = self.client.post(
+        response = self.client.put(
             self.url, {
                 "email": "123",
                 "password": self.credentials["password"]
-            })
+            }, content_type="application/json")
 
         self._common_api_response_tests(response, result_code=1,
                                         messages_list_len=1, fields_errors_list_len=1)
@@ -58,11 +59,11 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
                          [0]["error"], "Enter valid Email")
 
     def test_authentication_with_invalid_password(self):
-        response = self.client.post(
+        response = self.client.put(
             self.url, {
                 "email": self.credentials["email"],
                 "password": "invalid"
-            })
+            }, content_type="application/json")
 
         self._common_api_response_tests(response, result_code=1,
                                         messages_list_len=1, fields_errors_list_len=0)
@@ -70,7 +71,7 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
                          [0], "Incorrect Email or Password")
 
     def test_authentication_wihout_credentials(self):
-        response = self.client.post(self.url)
+        response = self.client.put(self.url)
 
         self._common_api_response_tests(response, result_code=1,
                                         messages_list_len=2, fields_errors_list_len=2)
