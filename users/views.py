@@ -8,8 +8,8 @@ from .serializers import UserSerializer, LoginSerializer, UsersListSerializer
 from utils.response import APIResponse
 
 
-class UserDetail(APIView):
-    def get(self, request, format=None):
+class UserAuthentication(APIView):
+    def get(self, request):
         user = request.user
         response = APIResponse()
 
@@ -21,8 +21,6 @@ class UserDetail(APIView):
         response.data = UserSerializer(user).data
         return response.complete()
 
-
-class UserAuthentication(APIView):
     def put(self, request):
         response = APIResponse()
         serializer = LoginSerializer(data=request.data)
