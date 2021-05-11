@@ -4,8 +4,13 @@ from django.urls import reverse
 from utils.test import APIViewTestCase
 
 
-class UserDetailAPIViewTest(APIViewTestCase):
-    url = reverse("user_detail")
+class UserAuthenticationAPIViewTest(APIViewTestCase):
+    url = reverse("authentication")
+
+    def setUp(self):
+        self.credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **self.credentials)
 
     def test_unauthorized_user_request_user_detail(self):
         response = self.client.get(self.url)
@@ -16,26 +21,14 @@ class UserDetailAPIViewTest(APIViewTestCase):
         self.assertEqual(message, "You are not authorized")
 
     def test_valid_user_detail(self):
-        credentials = {"email": "new@user.com", "password": "pass"}
-        user = self.UserModel.objects.create_user(
-            login="NewUser", **credentials)
-        self.client.login(**credentials)
+        self.client.login(**self.credentials)
         response = self.client.get(self.url)
 
         self._common_api_response_tests(response)
         response_user_detail = response.data["data"]
-        self.assertEqual(response_user_detail["id"], user.id)
-        self.assertEqual(response_user_detail["login"], user.login)
-        self.assertEqual(response_user_detail["email"], user.email)
-
-
-class UserAuthenticationAPIViewTest(APIViewTestCase):
-    url = reverse("authentication")
-
-    def setUp(self):
-        self.credentials = {"email": "new@user.com", "password": "pass"}
-        self.user = self.UserModel.objects.create_user(
-            login="NewUser", **self.credentials)
+        self.assertEqual(response_user_detail["id"], self.user.id)
+        self.assertEqual(response_user_detail["login"], self.user.login)
+        self.assertEqual(response_user_detail["email"], self.user.email)
 
     def test_authentication_with_valid_data(self):
         response = self.client.put(
