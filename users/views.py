@@ -23,7 +23,7 @@ class UserDetail(APIView):
 
 
 class UserAuthentication(APIView):
-    def post(self, request):
+    def put(self, request):
         response = APIResponse()
         serializer = LoginSerializer(data=request.data)
 
