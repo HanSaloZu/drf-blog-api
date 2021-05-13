@@ -5,7 +5,7 @@ SECRET_KEY = environ["SECRET_KEY"]
 
 DEBUG = bool(int(environ["DEBUG"]))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = environ["ALLOWED_HOSTS"].split(" ")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
