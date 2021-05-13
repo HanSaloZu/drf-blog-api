@@ -11,6 +11,7 @@ pillow = "*"
 django-split-settings = "*"
 google-api-python-client = "*"
 six = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 autopep8 = "*"
