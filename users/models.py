@@ -10,6 +10,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     login = models.CharField(db_index=True,
                              unique=True, max_length=160)
     is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["login"]
