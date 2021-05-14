@@ -14,6 +14,7 @@ class UserModelTest(ExtendedTestCase):
         self.assertEqual(user.email, user_email)
         self.assertFalse(user.is_superuser)
         self.assertFalse(user.is_staff)
+        self.assertTrue(user.is_active)
 
     def test_superuser(self):
         superuser_email = "new@superuser.com"
@@ -27,3 +28,4 @@ class UserModelTest(ExtendedTestCase):
         self.assertEqual(superuser.email, superuser_email)
         self.assertTrue(superuser.is_superuser)
         self.assertTrue(superuser.is_staff)
+        self.assertTrue(superuser.is_active)
