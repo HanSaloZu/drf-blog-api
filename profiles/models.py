@@ -36,8 +36,8 @@ class Photo(models.Model):
 
     class Meta:
         verbose_name = "profile photo"
-        verbose_name_plural = "profile photos"
-        db_table = "profile_photos"
+        verbose_name_plural = "profiles photos"
+        db_table = "profiles_photos"
 
 
 class Contacts(models.Model):
@@ -52,4 +52,4 @@ class Contacts(models.Model):
     class Meta:
         verbose_name = "user contacts"
         verbose_name_plural = "users contacts"
-        db_table = "user_contacts"
+        db_table = "users_contacts"
