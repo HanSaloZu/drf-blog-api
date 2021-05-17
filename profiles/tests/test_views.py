@@ -248,3 +248,68 @@ class ProfileUpdateAPIViewTest(APIViewTestCase):
             self.url, {"fullName": "New User", "aboutMe": "About me!", "contacts": None}, content_type="application/json")
 
         self.common_api_response_tests(response)
+
+
+class ProfilePreferencesAPIViewTest(APIViewTestCase):
+    url = reverse("profile_preferences")
+
+    def setUp(self):
+        credentials = {"login": "NewUser",
+                       "email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(**credentials)
+        self.user.profile.preferences.theme = "dark"
+        self.user.save()
+        self.client.login(**credentials)
+
+    def test_get_preferences(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["theme"],
+                         self.user.profile.preferences.theme)
+
+    def test_get_preferences_while_unauthorized(self):
+        self.client.logout()
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_401_UNAUTHORIZED)
+
+    def test_update_preferences_with_valid_data(self):
+        put_data = {"theme": "light"}
+        response = self.client.put(
+            self.url, put_data, content_type="application/json")
+
+        self.common_api_response_tests(response)
+
+        self.assertEqual(self.UserModel.objects.first(
+        ).profile.preferences.theme, put_data["theme"])
+
+    def test_update_theme_with_blank_value(self):
+        response = self.client.put(
+            self.url, {"theme": ""}, content_type="application/json")
+
+        self.common_api_response_tests(response)
+        self.assertEqual(
+            self.UserModel.objects.first().profile.preferences.theme, "")
+
+    def test_update_theme_with_null_value(self):
+        put_data = {"theme": None}
+        response = self.client.put(
+            self.url, put_data, content_type="application/json")
+
+        self.common_api_response_tests(response, result_code=1, messages_list_len=1,
+                                       fields_errors_list_len=1, messages=["Theme value cannot be null"])
+
+    def test_update_preferences_without_data(self):
+        response = self.client.put(self.url)
+
+        self.common_api_response_tests(response, result_code=1, messages_list_len=1,
+                                       fields_errors_list_len=1, messages=["Theme field is required"])
+
+    def test_update_preferences_with_invalid_data(self):
+        response = self.client.put(
+            self.url, {"theme": "a"*320}, content_type="application/json")
+
+        self.common_api_response_tests(response, result_code=1, messages_list_len=1, fields_errors_list_len=1, messages=[
+                                       "Theme field max length is 255 symbols"])
