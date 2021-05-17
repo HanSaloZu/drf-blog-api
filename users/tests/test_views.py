@@ -8,20 +8,22 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
     url = reverse("authentication")
 
     def setUp(self):
-        self.credentials = {"email": "new@user.com", "password": "pass"}
+        self.login_credentials = {"email": "new@user.com", "password": "pass"}
+        self.registration_credentials = {"login": "RegUser", "email": "conswintcomin@gmail.com",
+                                         "password1": "pass", "password2": "pass", "aboutMe": "About me!"}
         self.user = self.UserModel.objects.create_user(
-            login="NewUser", **self.credentials)
+            login="NewUser", **self.login_credentials)
+
+    # User detail testing
 
     def test_unauthorized_user_request_user_detail(self):
         response = self.client.get(self.url)
 
         self._common_api_response_tests(
-            response, result_code=1, messages_list_len=1)
-        message = response.data["messages"][0]
-        self.assertEqual(message, "You are not authorized")
+            response, result_code=1, messages_list_len=1, messages=["You are not authorized"])
 
     def test_valid_user_detail(self):
-        self.client.login(**self.credentials)
+        self.client.login(**self.login_credentials)
         response = self.client.get(self.url)
 
         self._common_api_response_tests(response)
@@ -30,9 +32,11 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
         self.assertEqual(response_user_detail["login"], self.user.login)
         self.assertEqual(response_user_detail["email"], self.user.email)
 
+    # Authorization testing
+
     def test_authentication_with_valid_data(self):
         response = self.client.put(
-            self.url, self.credentials, content_type="application/json")
+            self.url, self.login_credentials, content_type="application/json")
 
         self._common_api_response_tests(response)
         self.assertEqual(response.data["data"]["userId"], self.user.id)
@@ -41,38 +45,32 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
         response = self.client.put(
             self.url, {
                 "email": "123",
-                "password": self.credentials["password"]
+                "password": self.login_credentials["password"]
             }, content_type="application/json")
 
-        self._common_api_response_tests(response, result_code=1,
-                                        messages_list_len=1, fields_errors_list_len=1)
-        self.assertEqual(response.data["messages"][0], "Enter valid Email")
-        self.assertEqual(response.data["fieldsErrors"][0]["field"], "email")
-        self.assertEqual(response.data["fieldsErrors"]
-                         [0]["error"], "Enter valid Email")
+        self._common_api_response_tests(
+            response, result_code=1, messages_list_len=1, fields_errors_list_len=1, messages=["Enter valid Email"])
 
     def test_authentication_with_invalid_password(self):
         response = self.client.put(
             self.url, {
-                "email": self.credentials["email"],
+                "email": self.login_credentials["email"],
                 "password": "invalid"
             }, content_type="application/json")
 
         self._common_api_response_tests(response, result_code=1,
-                                        messages_list_len=1, fields_errors_list_len=0)
-        self.assertEqual(response.data["messages"]
-                         [0], "Incorrect Email or Password")
+                                        messages_list_len=1, fields_errors_list_len=0, messages=["Incorrect Email or Password"])
 
     def test_authentication_wihout_credentials(self):
         response = self.client.put(self.url)
 
-        self._common_api_response_tests(response, result_code=1,
-                                        messages_list_len=2, fields_errors_list_len=2)
-        self.assertIn("Please enter your Email", response.data["messages"])
-        self.assertIn("Enter your password", response.data["messages"])
+        self._common_api_response_tests(response, result_code=1, messages_list_len=2, fields_errors_list_len=2, messages=[
+                                        "Please enter your Email", "Enter your password"])
+
+    # Logging out testing
 
     def test_logging_out(self):
-        self.client.login(**self.credentials)
+        self.client.login(**self.login_credentials)
         response = self.client.delete(self.url)
         self._common_api_response_tests(response)
 

@@ -35,24 +35,20 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self._common_api_response_tests(
-            response, result_code=1, messages_list_len=1)
-        self.assertEqual(response.data["messages"]
-                         [0], "You can't follow yourself")
+            response, result_code=1, messages_list_len=1, messages=["You can't follow yourself"])
 
     def test_double_following(self):
         self.client.post(self.url({"user_id": self.second_user.id}))
 
         response = self.client.post(self.url({"user_id": self.second_user.id}))
-        self._common_api_response_tests(
-            response, result_code=1, messages_list_len=1)
-        self.assertEqual(response.data["messages"]
-                         [0], "You are already following this user")
+        self._common_api_response_tests(response, result_code=1, messages_list_len=1, messages=[
+                                        "You are already following this user"])
 
     def test_unfollow(self):
         self.client.post(self.url({"user_id": self.second_user.id}))
-
         response = self.client.delete(
             self.url({"user_id": self.second_user.id}))
+
         self._common_api_response_tests(response)
         self.assertFalse(self.model.is_following(
             self.first_user, self.second_user))
@@ -61,10 +57,8 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         response = self.client.delete(
             self.url(kwargs={"user_id": self.second_user.id}))
 
-        self._common_api_response_tests(
-            response, result_code=1, messages_list_len=1)
-        self.assertEqual(response.data["messages"]
-                         [0], "First you should follow user. Then you can unfollow")
+        self._common_api_response_tests(response, result_code=1, messages_list_len=1, messages=[
+                                        "First you should follow user. Then you can unfollow"])
 
     def test_is_following(self):
         response = self.client.get(

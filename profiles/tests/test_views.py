@@ -62,9 +62,10 @@ class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
     def test_status_update_with_long_value(self):
         response = self.client.put(
             self.url, {"status": "a"*320}, content_type="application/json")
+
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["messages"]
-                         [0], "Max Status length is 300 symbols")
+        self.assertIn("Max Status length is 300 symbols",
+                      response.data["messages"])
 
     def test_status_update_without_value(self):
         response = self.client.put(self.url)
@@ -224,22 +225,14 @@ class ProfileUpdateAPIViewTest(APIViewTestCase):
         response = self.client.put(self.url)
 
         self._common_api_response_tests(
-            response, messages_list_len=2, result_code=1)
-        self.assertIn("The FullName field is required. (FullName)",
-                      response.data["messages"])
-        self.assertIn("The AboutMe field is required. (AboutMe)",
-                      response.data["messages"])
+            response, messages_list_len=2, result_code=1, messages=["The FullName field is required. (FullName)", "The AboutMe field is required. (AboutMe)"])
 
     def test_profile_update_with_invalid_data(self):
         response = self.client.put(
             self.url, {"fullName": None, "aboutMe": None}, content_type="application/json")
 
         self._common_api_response_tests(
-            response, messages_list_len=2, result_code=1)
-        self.assertIn("The FullName field is required. (FullName)",
-                      response.data["messages"])
-        self.assertIn("The AboutMe field is required. (AboutMe)",
-                      response.data["messages"])
+            response, messages_list_len=2, result_code=1, messages=["The FullName field is required. (FullName)", "The AboutMe field is required. (AboutMe)"])
 
     def test_profile_update_with_invalid_contacts(self):
         response = self.client.put(
@@ -247,10 +240,8 @@ class ProfileUpdateAPIViewTest(APIViewTestCase):
                 "github": "123"
             }}, content_type="application/json")
 
-        self._common_api_response_tests(
-            response, messages_list_len=1, result_code=1)
-        self.assertEqual(response.data["messages"][0],
-                         "Invalid url format (Contacts->Github)")
+        self._common_api_response_tests(response, messages_list_len=1, result_code=1, messages=[
+                                        "Invalid url format (Contacts->Github)"])
 
     def test_profile_update_with_contacts_equals_none(self):
         response = self.client.put(
