@@ -1,6 +1,6 @@
 from utils.test import ExtendedTestCase
 
-from ..models import Profile, Contacts, Photo
+from ..models import Profile, Contacts, Photo, ProfilePreferences
 
 
 class ProfileModelTest(ExtendedTestCase):
@@ -54,3 +54,15 @@ class PhotoModelTest(ExtendedTestCase):
 
         self.assertIsNone(photo.file_id)
         self.assertIsNone(photo.link)
+
+
+class ProfilePreferencesModelTest(ExtendedTestCase):
+    model = ProfilePreferences
+
+    def test_preferences(self):
+        user = self.UserModel.objects.create_user(
+            login="NewUser", email="new@user.com", password="pass")
+        preferences = user.profile.preferences
+
+        self.assertIsInstance(preferences, self.model)
+        self.assertEqual(preferences.theme, "")
