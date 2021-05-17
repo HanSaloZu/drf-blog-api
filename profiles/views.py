@@ -8,7 +8,7 @@ import json
 from .services import save_photo, delete_image
 from .selectors import get_profile_by_user_id, get_contacts_by_user_id
 from .serializers import (ProfileSerializer, StatusSerializer,
-                          UpdateProfileSerializer)
+                          UpdateProfileSerializer, ProfilePreferencesSerializer)
 from utils.response import APIResponse
 from utils.views import CustomLoginRequiredMixin
 
@@ -110,4 +110,30 @@ class ProfileUpdate(CustomLoginRequiredMixin, APIView):
                         f"Invalid url format (Contacts->{contact_error.capitalize()})")
 
         response.result_code = 1
+        return response.complete()
+
+
+class ProfilePreferences(CustomLoginRequiredMixin, APIView):
+    def get(self, request):
+        return Response(ProfilePreferencesSerializer(
+            request.user.profile.preferences).data)
+
+    def put(self, request):
+        response = APIResponse()
+        serialized_data = ProfilePreferencesSerializer(data=request.data)
+
+        if serialized_data.is_valid():
+            request.user.profile.preferences.theme = serialized_data.data["theme"]
+            request.user.save()
+            return response.complete()
+
+        response.result_code = 1
+        errors = serialized_data.errors
+        for error_field in errors:
+            message = errors[error_field][0]
+            response.messages.append(message)
+            response.fields_errors.append({
+                "field": error_field,
+                "error": message
+            })
         return response.complete()
