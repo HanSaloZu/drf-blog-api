@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Profile, Contacts
+from .models import Profile, Contacts, ProfilePreferences
 
 
 class ContactsSerializer(serializers.ModelSerializer):
@@ -87,3 +87,15 @@ class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ["status"]
+
+
+class ProfilePreferencesSerializer(serializers.ModelSerializer):
+    theme = serializers.CharField(required=True, allow_null=False, allow_blank=True,
+                                  max_length=255, error_messages={
+                                      "required": "Theme field is required",
+                                      "max_length": "Theme field max length is 255 symbols",
+                                      "null": "Theme value cannot be null"})
+
+    class Meta:
+        model = ProfilePreferences
+        fields = ["theme"]
