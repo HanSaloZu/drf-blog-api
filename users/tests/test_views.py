@@ -19,14 +19,14 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
     def test_unauthorized_user_request_user_detail(self):
         response = self.client.get(self.url)
 
-        self._common_api_response_tests(
+        self.common_api_response_tests(
             response, result_code=1, messages_list_len=1, messages=["You are not authorized"])
 
     def test_valid_user_detail(self):
         self.client.login(**self.login_credentials)
         response = self.client.get(self.url)
 
-        self._common_api_response_tests(response)
+        self.common_api_response_tests(response)
         response_user_detail = response.data["data"]
         self.assertEqual(response_user_detail["id"], self.user.id)
         self.assertEqual(response_user_detail["login"], self.user.login)
@@ -38,7 +38,7 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
         response = self.client.put(
             self.url, self.login_credentials, content_type="application/json")
 
-        self._common_api_response_tests(response)
+        self.common_api_response_tests(response)
         self.assertEqual(response.data["data"]["userId"], self.user.id)
 
     def test_authentication_with_invalid_email(self):
@@ -48,7 +48,7 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
                 "password": self.login_credentials["password"]
             }, content_type="application/json")
 
-        self._common_api_response_tests(
+        self.common_api_response_tests(
             response, result_code=1, messages_list_len=1, fields_errors_list_len=1, messages=["Enter valid Email"])
 
     def test_authentication_with_invalid_password(self):
@@ -58,25 +58,25 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
                 "password": "invalid"
             }, content_type="application/json")
 
-        self._common_api_response_tests(response, result_code=1,
-                                        messages_list_len=1, fields_errors_list_len=0, messages=["Incorrect Email or Password"])
+        self.common_api_response_tests(response, result_code=1,
+                                       messages_list_len=1, fields_errors_list_len=0, messages=["Incorrect Email or Password"])
 
     def test_authentication_wihout_credentials(self):
         response = self.client.put(self.url)
 
-        self._common_api_response_tests(response, result_code=1, messages_list_len=2, fields_errors_list_len=2, messages=[
-                                        "Please enter your Email", "Enter your password"])
+        self.common_api_response_tests(response, result_code=1, messages_list_len=2, fields_errors_list_len=2, messages=[
+            "Please enter your Email", "Enter your password"])
 
     # Logging out testing
 
     def test_logging_out(self):
         self.client.login(**self.login_credentials)
         response = self.client.delete(self.url)
-        self._common_api_response_tests(response)
+        self.common_api_response_tests(response)
 
     def test_unauthorized_logging_out(self):
         response = self.client.delete(self.url)
-        self._common_api_response_tests(response)
+        self.common_api_response_tests(response)
 
 
 class UsersListAPIViewsTest(APIViewTestCase):

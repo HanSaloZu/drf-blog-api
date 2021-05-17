@@ -41,7 +41,7 @@ class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
         response = self.client.put(
             self.url, {"status": "Test"}, content_type="application/json")
 
-        self._common_api_response_tests(response)
+        self.common_api_response_tests(response)
         user = self.UserModel.objects.get(id=1)
         self.assertEqual(user.profile.status, "Test")
 
@@ -49,7 +49,7 @@ class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
         response = self.client.put(
             self.url, {"status": ""}, content_type="application/json")
 
-        self._common_api_response_tests(response)
+        self.common_api_response_tests(response)
         user = self.UserModel.objects.get(id=1)
         self.assertEqual(user.profile.status, "")
 
@@ -181,7 +181,7 @@ class ProfileUpdateAPIViewTest(APIViewTestCase):
             self.url, request_data, content_type="application/json")
         user = self.UserModel.objects.all().first()
 
-        self._common_api_response_tests(response)
+        self.common_api_response_tests(response)
         self.assertEqual(user.profile.fullname, request_data["fullName"])
         self.assertEqual(user.profile.about_me, request_data["aboutMe"])
         self.assertFalse(user.profile.looking_for_a_job)
@@ -196,7 +196,7 @@ class ProfileUpdateAPIViewTest(APIViewTestCase):
             self.url, request_data, content_type="application/json")
         user = self.UserModel.objects.all().first()
 
-        self._common_api_response_tests(response)
+        self.common_api_response_tests(response)
         self.assertEqual(user.profile.contacts.github,
                          request_data["contacts"]["github"])
         self.assertEqual(user.profile.contacts.main_link,
@@ -215,7 +215,7 @@ class ProfileUpdateAPIViewTest(APIViewTestCase):
             self.url, request_data, content_type="application/json")
         user = self.UserModel.objects.all().first()
 
-        self._common_api_response_tests(response)
+        self.common_api_response_tests(response)
         self.assertEqual(user.profile.looking_for_a_job,
                          request_data["lookingForAJob"])
         self.assertEqual(user.profile.looking_for_a_job_description,
@@ -224,14 +224,14 @@ class ProfileUpdateAPIViewTest(APIViewTestCase):
     def test_profile_update_without_data(self):
         response = self.client.put(self.url)
 
-        self._common_api_response_tests(
+        self.common_api_response_tests(
             response, messages_list_len=2, result_code=1, messages=["The FullName field is required. (FullName)", "The AboutMe field is required. (AboutMe)"])
 
     def test_profile_update_with_invalid_data(self):
         response = self.client.put(
             self.url, {"fullName": None, "aboutMe": None}, content_type="application/json")
 
-        self._common_api_response_tests(
+        self.common_api_response_tests(
             response, messages_list_len=2, result_code=1, messages=["The FullName field is required. (FullName)", "The AboutMe field is required. (AboutMe)"])
 
     def test_profile_update_with_invalid_contacts(self):
@@ -240,11 +240,11 @@ class ProfileUpdateAPIViewTest(APIViewTestCase):
                 "github": "123"
             }}, content_type="application/json")
 
-        self._common_api_response_tests(response, messages_list_len=1, result_code=1, messages=[
-                                        "Invalid url format (Contacts->Github)"])
+        self.common_api_response_tests(response, messages_list_len=1, result_code=1, messages=[
+            "Invalid url format (Contacts->Github)"])
 
     def test_profile_update_with_contacts_equals_none(self):
         response = self.client.put(
             self.url, {"fullName": "New User", "aboutMe": "About me!", "contacts": None}, content_type="application/json")
 
-        self._common_api_response_tests(response)
+        self.common_api_response_tests(response)
