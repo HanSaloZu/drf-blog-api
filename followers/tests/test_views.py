@@ -84,14 +84,13 @@ class FollowingAPIViewTestCase(APIViewTestCase):
             self.url(kwargs={"user_id": 999}))
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["message"], "Bad request")
+                         self.http_status.HTTP_404_NOT_FOUND)
 
     def test_follow_with_invalid_user_id(self):
         response = self.client.post(self.url(kwargs={"user_id": 999}))
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
+                         self.http_status.HTTP_404_NOT_FOUND)
 
     def test_follow_while_unauthorized(self):
         self.client.logout()
