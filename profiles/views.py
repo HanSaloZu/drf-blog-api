@@ -103,14 +103,15 @@ class ProfileUpdate(CustomLoginRequiredMixin, APIView):
         return response.complete()
 
 
-class ProfilePreferences(CustomLoginRequiredMixin, APIView):
-    def get(self, request):
-        return Response(ProfilePreferencesSerializer(
-            request.user.profile.preferences).data)
+class ProfilePreferences(CustomLoginRequiredMixin, generics.RetrieveAPIView):
+    serializer_class = ProfilePreferencesSerializer
+
+    def get_object(self):
+        return self.request.user.profile.preferences
 
     def put(self, request):
         response = APIResponse()
-        serialized_data = ProfilePreferencesSerializer(data=request.data)
+        serialized_data = self.serializer_class(data=request.data)
 
         if serialized_data.is_valid():
             request.user.profile.preferences.theme = serialized_data.data["theme"]
