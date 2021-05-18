@@ -9,12 +9,11 @@ class ProfileStatusDetailAPIViewTest(APIViewTestCase):
         return reverse("profile_status_detail", kwargs=kwargs)
 
     def test_status_detail_with_invalid_user_id(self):
-        url = self.url({"user_id": 9})
+        url = self.url({"pk": 9})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(response.data["message"], "An error has occurred.")
+                         self.http_status.HTTP_404_NOT_FOUND)
 
     def test_valid_status_detail(self):
         user = self.UserModel.objects.create_user(login="NewUser", email="new@user.com",
@@ -22,11 +21,10 @@ class ProfileStatusDetailAPIViewTest(APIViewTestCase):
         user.profile.status = "test"
         user.save()
 
-        response = self.client.get(self.url({"user_id": 1}))
+        response = self.client.get(self.url({"pk": 1}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(json.loads(response.content),
-                         user.profile.status)
+        self.assertEqual(response.data["status"], user.profile.status)
 
 
 class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
@@ -101,7 +99,7 @@ class ProfileDetailAPIViewTest(APIViewTestCase):
         self.profile = profile
 
     def test_valid_profile_detail(self):
-        url = self.url({"user_id": 1})
+        url = self.url({"pk": 1})
         response = self.client.get(url)
         data = response.data
         profile = self.profile
@@ -125,11 +123,11 @@ class ProfileDetailAPIViewTest(APIViewTestCase):
         self.assertIsNone(data["contacts"]["youtube"])
 
     def test_profile_detail_with_invalid_user_id(self):
-        url = reverse("profile_detail", kwargs={"user_id": 9})
+        url = reverse("profile_detail", kwargs={"pk": 9})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
+                         self.http_status.HTTP_404_NOT_FOUND)
 
 
 class ProfilePhotoUpdateAPIViewTest(APIViewTestCase):
