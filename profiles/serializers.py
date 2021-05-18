@@ -90,11 +90,12 @@ class StatusSerializer(serializers.ModelSerializer):
 
 
 class ProfilePreferencesSerializer(serializers.ModelSerializer):
-    theme = serializers.CharField(required=True, allow_null=False, allow_blank=True,
+    theme = serializers.CharField(required=True, allow_null=False, allow_blank=False,
                                   max_length=255, error_messages={
                                       "required": "Theme field is required",
                                       "max_length": "Theme field max length is 255 symbols",
-                                      "null": "Theme value cannot be null"})
+                                      "null": "Theme value cannot be null",
+                                      "blank": "Theme value cannot be empty"})
 
     class Meta:
         model = ProfilePreferences
