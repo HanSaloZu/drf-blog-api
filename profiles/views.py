@@ -40,15 +40,9 @@ class ProfileStatusUpdate(CustomLoginRequiredMixin, APIView):
         return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class ProfileDetail(APIView):
-    def get(self, request, user_id):
-        try:
-            profile = get_profile_by_user_id(user_id)
-        except ObjectDoesNotExist:
-            return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        deserialized_data = ProfileSerializer(profile).data
-        return Response(deserialized_data)
+class ProfileDetail(generics.RetrieveAPIView):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
 
 
 class ProfilePhotoUpdate(CustomLoginRequiredMixin, APIView):

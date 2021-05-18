@@ -8,7 +8,7 @@ urlpatterns = [
     path("status/<int:pk>/", ProfileStatusDetail.as_view(),
          name="profile_status_detail"),
     path("status/", ProfileStatusUpdate.as_view(), name="profile_status_update"),
-    path("<int:user_id>/", ProfileDetail.as_view(), name="profile_detail"),
+    path("<int:pk>/", ProfileDetail.as_view(), name="profile_detail"),
     path("photo/", ProfilePhotoUpdate.as_view(), name="profile_photo_update"),
     path("preferences/", ProfilePreferences.as_view(), name="profile_preferences")
 ]
