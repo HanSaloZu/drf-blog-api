@@ -8,7 +8,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/1.0/auth/", include("users.auth_urls")),
     path("api/1.0/profile/", include("profiles.urls")),
-    path("api/1.0/follow/", include("following.urls")),
+    path("api/1.0/follow/", include("followers.urls")),
     path("api/1.0/users/", include("users.users_url"))
 ]
 
