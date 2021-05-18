@@ -3,8 +3,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
-import json
+from rest_framework import generics
 
+from .models import Profile
 from .services import save_photo, delete_image
 from .selectors import get_profile_by_user_id, get_contacts_by_user_id
 from .serializers import (ProfileSerializer, StatusSerializer,
@@ -13,14 +14,9 @@ from utils.response import APIResponse
 from utils.views import CustomLoginRequiredMixin
 
 
-class ProfileStatusDetail(APIView):
-    def get(self, request, user_id):
-        try:
-            profile = get_profile_by_user_id(user_id)
-        except ObjectDoesNotExist:
-            return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return HttpResponse(json.dumps(profile.status), content_type="application/json")
+class ProfileStatusDetail(generics.RetrieveAPIView):
+    queryset = Profile.objects.all()
+    serializer_class = StatusSerializer
 
 
 class ProfileStatusUpdate(CustomLoginRequiredMixin, APIView):
