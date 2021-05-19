@@ -77,9 +77,7 @@ class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
             self.url, {"status": "New status"}, content_type="application/json")
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(
-            response.data["message"], "Authorization has been denied for this request.")
+                         self.http_status.HTTP_403_FORBIDDEN)
 
 
 class ProfileDetailAPIViewTest(APIViewTestCase):
@@ -142,9 +140,7 @@ class ProfilePhotoUpdateAPIViewTest(APIViewTestCase):
         response = self.client.put(self.url)
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(
-            response.data["message"], "Authorization has been denied for this request.")
+                         self.http_status.HTTP_403_FORBIDDEN)
 
     def test_photo_update_without_file(self):
         self.client.login(**self.credentials)
@@ -169,9 +165,7 @@ class ProfileUpdateAPIViewTest(APIViewTestCase):
             self.url, {"fullName": "New User", "aboutMe": "About me!"}, content_type="application/json")
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(
-            response.data["message"], "Authorization has been denied for this request.")
+                         self.http_status.HTTP_403_FORBIDDEN)
 
     def test_profile_update_with_only_required_fields(self):
         request_data = {"fullName": "New User", "aboutMe": "About me!"}
@@ -271,7 +265,7 @@ class ProfilePreferencesAPIViewTest(APIViewTestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_401_UNAUTHORIZED)
+                         self.http_status.HTTP_403_FORBIDDEN)
 
     def test_update_preferences_with_valid_data(self):
         put_data = {"theme": "light"}

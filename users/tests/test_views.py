@@ -186,4 +186,4 @@ class UsersListAPIViewsTest(APIViewTestCase):
         response = self.client.get(self.url({"friend": "true"}))
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_401_UNAUTHORIZED)
+                         self.http_status.HTTP_403_FORBIDDEN)

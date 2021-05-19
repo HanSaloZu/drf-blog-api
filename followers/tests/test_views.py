@@ -98,4 +98,4 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         response = self.client.post(
             self.url(kwargs={"user_id": self.second_user.id}))
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_401_UNAUTHORIZED)
+                         self.http_status.HTTP_403_FORBIDDEN)
