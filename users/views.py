@@ -5,10 +5,10 @@ from rest_framework.response import Response
 from rest_framework import generics
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 
 from .serializers import UserSerializer, LoginSerializer, UsersListSerializer
 from utils.response import APIResponse
-from utils.views import CustomLoginRequiredMixin
 
 User = get_user_model()
 
@@ -62,7 +62,8 @@ class UserAuthentication(APIView):
         return response.complete()
 
 
-class UsersList(CustomLoginRequiredMixin, generics.ListAPIView):
+class UsersList(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = UsersListSerializer
 
     def validate_parameters(self):

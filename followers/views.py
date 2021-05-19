@@ -4,15 +4,17 @@ from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAuthenticated
 
 from .models import FollowersModel
 from utils.response import APIResponse
-from utils.views import CustomLoginRequiredMixin
 
 User = get_user_model()
 
 
-class Follow(CustomLoginRequiredMixin, APIView):
+class Follow(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, user_id):
         subject = get_object_or_404(User, id=user_id)
 

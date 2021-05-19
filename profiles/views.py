@@ -4,6 +4,7 @@ from rest_framework import status
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 
 from .models import Profile
 from .services import save_photo, delete_image
@@ -11,7 +12,6 @@ from .selectors import get_profile_by_user_id, get_contacts_by_user_id
 from .serializers import (ProfileSerializer, StatusSerializer,
                           UpdateProfileSerializer, ProfilePreferencesSerializer)
 from utils.response import APIResponse
-from utils.views import CustomLoginRequiredMixin
 
 
 class ProfileStatusDetail(generics.RetrieveAPIView):
@@ -19,7 +19,9 @@ class ProfileStatusDetail(generics.RetrieveAPIView):
     serializer_class = StatusSerializer
 
 
-class ProfileStatusUpdate(CustomLoginRequiredMixin, APIView):
+class ProfileStatusUpdate(APIView):
+    permission_classes = [IsAuthenticated]
+
     def put(self, request):
         serialized_data = StatusSerializer(data=request.data)
         response = APIResponse()
@@ -45,7 +47,9 @@ class ProfileDetail(generics.RetrieveAPIView):
     serializer_class = ProfileSerializer
 
 
-class ProfilePhotoUpdate(CustomLoginRequiredMixin, APIView):
+class ProfilePhotoUpdate(APIView):
+    permission_classes = [IsAuthenticated]
+
     def put(self, request):
         response = APIResponse()
         image = request.data.get("image")
@@ -63,7 +67,9 @@ class ProfilePhotoUpdate(CustomLoginRequiredMixin, APIView):
             return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class ProfileUpdate(CustomLoginRequiredMixin, APIView):
+class ProfileUpdate(APIView):
+    permission_classes = [IsAuthenticated]
+
     def put(self, request):
         response = APIResponse()
         serialized_data = UpdateProfileSerializer(data=request.data)
@@ -103,7 +109,8 @@ class ProfileUpdate(CustomLoginRequiredMixin, APIView):
         return response.complete()
 
 
-class ProfilePreferences(CustomLoginRequiredMixin, generics.RetrieveAPIView):
+class ProfilePreferences(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = ProfilePreferencesSerializer
 
     def get_object(self):
