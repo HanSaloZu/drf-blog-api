@@ -87,20 +87,20 @@ class UsersListAPIViewsTest(APIViewTestCase):
 
         return url
 
-    def common_users_list_response_tests(self, response, status_code=200, items_list_len=0, total_count=3, error=""):
+    def common_users_list_response_tests(self, response, status_code=200, items_list_len=0, total_count=3):
         self.assertEqual(response.status_code, status_code)
         self.assertEqual(len(response.data["items"]), items_list_len)
         self.assertEqual(response.data["totalCount"], total_count)
-        self.assertEqual(response.data["error"], error)
 
     def setUp(self):
-        self.credentials = {"email": "first@gmail.com", "password": "pass"}
+        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="First User", **self.credentials)
+            login="First User", **credentials)
         self.second_user = self.UserModel.objects.create_user(
             login="Second User", email="second@gmail.com", password="pass")
         self.third_user = self.UserModel.objects.create_user(
             login="Third User", email="third@gmail.com", password="pass")
+        self.client.login(**credentials)
 
     def test_users_list_without_parameters(self):
         response = self.client.get(self.url())
@@ -136,12 +136,13 @@ class UsersListAPIViewsTest(APIViewTestCase):
     def test_users_list_with_invalid_count_parameter(self):
         response = self.client.get(self.url({"count": -5}))
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
+                         self.http_status.HTTP_400_BAD_REQUEST)
 
     def test_users_list_with_large_count_parameter(self):
         response = self.client.get(self.url({"count": 999}))
-        self.common_users_list_response_tests(
-            response, error="Max page size is 100 items", total_count=0)
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_400_BAD_REQUEST)
 
     def test_users_list_with_page_parameter(self):
         response = self.client.get(self.url({"count": 1, "page": 1}))
@@ -156,8 +157,13 @@ class UsersListAPIViewsTest(APIViewTestCase):
         user_data = response.data["items"][0]
         self.assertEqual(user_data["id"], self.second_user.id)
 
+    def test_users_list_with_invalid_page_parameter(self):
+        response = self.client.get(self.url({"count": 1, "page": "abc"}))
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_400_BAD_REQUEST)
+
     def test_users_list_with_friend_flag(self):
-        self.client.login(**self.credentials)
         self.first_user.following.create(
             follower_user=self.first_user, following_user=self.second_user)
         response = self.client.get(self.url({"friend": "true"}))
@@ -167,9 +173,17 @@ class UsersListAPIViewsTest(APIViewTestCase):
         self.assertEqual(response.data["items"][0]["id"], self.second_user.id)
         self.assertTrue(response.data["items"][0]["followed"])
 
-    def test_users_list_with_friend_flag_while_unauthorized(self):
+    def test_users_list_with_invalid_friend_flag(self):
+        response = self.client.get(self.url({"friend": "abc"}))
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_400_BAD_REQUEST)
+
+    def test_users_list_while_unauthorized(self):
+        self.client.logout()
         self.second_user.following.create(
             follower_user=self.second_user, following_user=self.first_user)
         response = self.client.get(self.url({"friend": "true"}))
 
-        self.common_users_list_response_tests(response, total_count=0)
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_401_UNAUTHORIZED)
