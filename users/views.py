@@ -2,10 +2,15 @@ from rest_framework.views import APIView
 from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator
 from rest_framework.response import Response
+from rest_framework import generics
+from django.contrib.auth import get_user_model
+from rest_framework.exceptions import ValidationError
 
-from .selectors import get_all_users, get_users_by_term
 from .serializers import UserSerializer, LoginSerializer, UsersListSerializer
 from utils.response import APIResponse
+from utils.views import CustomLoginRequiredMixin
+
+User = get_user_model()
 
 
 class UserAuthentication(APIView):
@@ -57,48 +62,54 @@ class UserAuthentication(APIView):
         return response.complete()
 
 
-class UsersList(APIView):
-    def get(self, request):
-        count = int(request.GET.get("count", 10))
-        page_number = int(request.GET.get("page", 1))
-        term = request.GET.get("term", None)
-        friend = {"true": True, "false": False}[  # the friend parameter can only be "true" or "false"
-            request.GET.get("friend", "false")]
+class UsersList(CustomLoginRequiredMixin, generics.ListAPIView):
+    serializer_class = UsersListSerializer
 
-        response_data = {
-            "items": [],
-            "totalCount": 0,
-            "error": ""
-        }
+    def validate_parameters(self):
+        term = self.request.GET.get("term", "")
+        friend = self.request.GET.get("friend", "false")
+        # the friend parameter can only be "true" or "false"
+
+        if friend != "false" and friend != "true":
+            raise ValidationError(detail="Invalid friend flag value")
+        friend = {"true": True, "false": False}[friend]
+
+        try:
+            count = int(self.request.GET.get("count", 10))
+        except ValueError:
+            raise ValidationError(detail="Invalid count value")
+
+        try:
+            page_number = int(self.request.GET.get("page", 1))
+        except ValueError:
+            raise ValidationError(detail="Invalid page number value")
 
         if count > 100:
-            response_data["error"] = "Max page size is 100 items"
-            return Response(response_data)
+            raise ValidationError(detail="Maximum page size is 100 items")
+        elif count < 0:
+            raise ValidationError(detail="Minimum page size is 0 items")
 
-        if term:
-            users_list = get_users_by_term(term)
-        else:
-            users_list = get_all_users()
+        self.get_parameters = {"term": term, "friend": friend,
+                               "count": count, "page_number": page_number}
 
-        if friend:
-            if not request.user.is_authenticated:
-                return Response(response_data)
+    def get_queryset(self):
+        self.validate_parameters()
+        return User.objects.all()
 
-            followings = request.user.following.only("following_user")
+    def filter_queryset(self, queryset):
+        filtered_queryset = queryset.filter(
+            login__contains=self.get_parameters["term"])
+        if self.get_parameters["friend"]:
+            followings = self.request.user.following.only("following_user")
             followings_ids = [i.following_user.id for i in list(followings)]
-            users_list = users_list.filter(id__in=followings_ids)
+            filtered_queryset = filtered_queryset.filter(id__in=followings_ids)
 
-        paginator = Paginator(users_list, count)
-        page = paginator.get_page(page_number)
+        self.total_count = filtered_queryset.count()
+        return filtered_queryset
 
-        for obj in page.object_list:
-            user_data = UsersListSerializer(obj).data
-            followed = False
-            if request.user.is_authenticated:
-                followed = obj.followers.all().filter(follower_user=request.user).exists()
+    def paginate_queryset(self, queryset):
+        paginator = Paginator(queryset, self.get_parameters["count"])
+        return paginator.get_page(self.get_parameters["page_number"])
 
-            user_data.update({"followed": followed})
-            response_data["items"].append(user_data)
-
-        response_data["totalCount"] = users_list.count()
-        return Response(response_data)
+    def get_paginated_response(self, serialized_data):
+        return Response({"items": serialized_data, "totalCount": self.total_count})
