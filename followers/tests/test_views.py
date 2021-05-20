@@ -1,5 +1,4 @@
 from django.urls import reverse
-import json
 
 from ..models import FollowersModel
 from utils.test import APIViewTestCase
@@ -24,7 +23,8 @@ class FollowingAPIViewTestCase(APIViewTestCase):
     def test_follow(self):
         response = self.client.post(self.url({"user_id": self.second_user.id}))
 
-        self.common_api_response_tests(response)
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
         self.assertTrue(self.model.is_following(
             self.first_user, self.second_user))
         self.assertFalse(self.model.is_following(
@@ -33,23 +33,26 @@ class FollowingAPIViewTestCase(APIViewTestCase):
     def test_self_follow(self):
         response = self.client.post(self.url({"user_id": self.first_user.id}))
 
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.common_api_response_tests(
-            response, result_code=1, messages_list_len=1, messages=["You can't follow yourself"])
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["message"], "You can't follow yourself")
 
     def test_double_following(self):
         self.client.post(self.url({"user_id": self.second_user.id}))
-
         response = self.client.post(self.url({"user_id": self.second_user.id}))
-        self.common_api_response_tests(response, result_code=1, messages_list_len=1, messages=[
-            "You are already following this user"])
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["message"],
+                         "You are already following this user")
 
     def test_unfollow(self):
         self.client.post(self.url({"user_id": self.second_user.id}))
         response = self.client.delete(
             self.url({"user_id": self.second_user.id}))
 
-        self.common_api_response_tests(response)
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
         self.assertFalse(self.model.is_following(
             self.first_user, self.second_user))
 
@@ -57,16 +60,18 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         response = self.client.delete(
             self.url(kwargs={"user_id": self.second_user.id}))
 
-        self.common_api_response_tests(response, result_code=1, messages_list_len=1, messages=[
-            "First you should follow user. Then you can unfollow"])
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["message"], "You should first follow the user, then you can unfollow")
 
     def test_is_following(self):
         response = self.client.get(
             self.url(kwargs={"user_id": self.second_user.id}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertFalse(json.loads(response.content))
-        self.assertEqual(json.loads(response.content),
+        self.assertFalse(response.data["following"])
+        self.assertEqual(response.data["following"],
                          self.model.is_following(self.first_user, self.second_user))
 
         self.client.post(
@@ -75,8 +80,8 @@ class FollowingAPIViewTestCase(APIViewTestCase):
             self.url(kwargs={"user_id": self.second_user.id}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertTrue(json.loads(response.content))
-        self.assertEqual(json.loads(response.content),
+        self.assertTrue(response.data["following"])
+        self.assertEqual(response.data["following"],
                          self.model.is_following(self.first_user, self.second_user))
 
     def test_is_following_with_invalid_user_id(self):
