@@ -7,25 +7,13 @@ from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import UserSerializer, LoginSerializer, UsersListSerializer
+from .serializers import LoginSerializer, UsersListSerializer
 from utils.response import APIResponse
 
 User = get_user_model()
 
 
 class UserAuthentication(APIView):
-    def get(self, request):
-        user = request.user
-        response = APIResponse()
-
-        if user.is_anonymous:
-            response.result_code = 1
-            response.messages.append("You are not authorized")
-            return response.complete()
-
-        response.data = UserSerializer(user).data
-        return response.complete()
-
     def put(self, request):
         response = APIResponse()
         serializer = LoginSerializer(data=request.data)
