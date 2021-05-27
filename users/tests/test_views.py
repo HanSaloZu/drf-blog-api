@@ -14,24 +14,6 @@ class UserAuthenticationAPIViewTest(APIViewTestCase):
         self.user = self.UserModel.objects.create_user(
             login="NewUser", **self.login_credentials)
 
-    # User detail testing
-
-    def test_unauthorized_user_request_user_detail(self):
-        response = self.client.get(self.url)
-
-        self.common_api_response_tests(
-            response, result_code=1, messages_list_len=1, messages=["You are not authorized"])
-
-    def test_valid_user_detail(self):
-        self.client.login(**self.login_credentials)
-        response = self.client.get(self.url)
-
-        self.common_api_response_tests(response)
-        response_user_detail = response.data["data"]
-        self.assertEqual(response_user_detail["id"], self.user.id)
-        self.assertEqual(response_user_detail["login"], self.user.login)
-        self.assertEqual(response_user_detail["email"], self.user.email)
-
     # Authorization testing
 
     def test_authentication_with_valid_data(self):
