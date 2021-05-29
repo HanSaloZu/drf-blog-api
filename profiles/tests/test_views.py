@@ -4,29 +4,6 @@ import json
 from utils.test import APIViewTestCase
 
 
-class ProfileStatusDetailAPIViewTest(APIViewTestCase):
-    def url(self, kwargs):
-        return reverse("profile_status_detail", kwargs=kwargs)
-
-    def test_status_detail_with_invalid_user_id(self):
-        url = self.url({"pk": 9})
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_404_NOT_FOUND)
-
-    def test_valid_status_detail(self):
-        user = self.UserModel.objects.create_user(login="NewUser", email="new@user.com",
-                                                  password="pass")
-        user.profile.status = "test"
-        user.save()
-
-        response = self.client.get(self.url({"pk": 1}))
-
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["status"], user.profile.status)
-
-
 class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
     url = reverse("profile_status_update")
 
