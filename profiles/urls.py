@@ -1,12 +1,10 @@
 from django.urls import path
 
-from .views import (ProfileStatusDetail, ProfileDetail,
-                    ProfileStatusUpdate, ProfilePhotoUpdate, ProfileUpdate, ProfilePreferences)
+from .views import (ProfileDetail, ProfileStatusUpdate, ProfilePhotoUpdate,
+                    ProfileUpdate, ProfilePreferences)
 
 urlpatterns = [
     path("", ProfileUpdate.as_view(), name="profile_update"),
-    path("status/<int:pk>/", ProfileStatusDetail.as_view(),
-         name="profile_status_detail"),
     path("status/", ProfileStatusUpdate.as_view(), name="profile_status_update"),
     path("<int:pk>/", ProfileDetail.as_view(), name="profile_detail"),
     path("photo/", ProfilePhotoUpdate.as_view(), name="profile_photo_update"),

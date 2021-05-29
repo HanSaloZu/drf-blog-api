@@ -14,11 +14,6 @@ from .serializers import (ProfileSerializer, StatusSerializer,
 from utils.response import APIResponse
 
 
-class ProfileStatusDetail(generics.RetrieveAPIView):
-    queryset = Profile.objects.all()
-    serializer_class = StatusSerializer
-
-
 class ProfileStatusUpdate(APIView):
     permission_classes = [IsAuthenticated]
 
