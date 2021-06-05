@@ -56,12 +56,6 @@ class UsersList(generics.ListAPIView):
 
     def validate_parameters(self):
         term = self.request.GET.get("term", "")
-        friend = self.request.GET.get("friend", "false")
-        # the friend parameter can only be "true" or "false"
-
-        if friend != "false" and friend != "true":
-            raise ValidationError(detail="Invalid friend flag value")
-        friend = {"true": True, "false": False}[friend]
 
         try:
             count = int(self.request.GET.get("count", 10))
@@ -78,7 +72,7 @@ class UsersList(generics.ListAPIView):
         elif count < 0:
             raise ValidationError(detail="Minimum page size is 0 items")
 
-        self.get_parameters = {"term": term, "friend": friend,
+        self.get_parameters = {"term": term,
                                "count": count, "page_number": page_number}
 
     def get_queryset(self):
@@ -88,12 +82,8 @@ class UsersList(generics.ListAPIView):
     def filter_queryset(self, queryset):
         filtered_queryset = queryset.filter(
             login__contains=self.get_parameters["term"])
-        if self.get_parameters["friend"]:
-            followings = self.request.user.following.only("following_user")
-            followings_ids = [i.following_user.id for i in list(followings)]
-            filtered_queryset = filtered_queryset.filter(id__in=followings_ids)
-
         self.total_count = filtered_queryset.count()
+
         return filtered_queryset
 
     def paginate_queryset(self, queryset):
