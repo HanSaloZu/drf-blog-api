@@ -145,22 +145,6 @@ class UsersListAPIViewsTest(APIViewTestCase):
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_400_BAD_REQUEST)
 
-    def test_users_list_with_friend_flag(self):
-        self.first_user.following.create(
-            follower_user=self.first_user, following_user=self.second_user)
-        response = self.client.get(self.url({"friend": "true"}))
-
-        self.common_users_list_response_tests(
-            response, total_count=1, items_list_len=1)
-        self.assertEqual(response.data["items"][0]["id"], self.second_user.id)
-        self.assertTrue(response.data["items"][0]["followed"])
-
-    def test_users_list_with_invalid_friend_flag(self):
-        response = self.client.get(self.url({"friend": "abc"}))
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_400_BAD_REQUEST)
-
     def test_users_list_while_unauthorized(self):
         self.client.logout()
         self.second_user.following.create(
