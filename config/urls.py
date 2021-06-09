@@ -6,10 +6,10 @@ from django.conf import settings
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/1.0/auth/", include("users.auth_urls")),
-    path("api/1.0/profile/", include("profiles.urls")),
-    path("api/1.0/follow/", include("followers.urls")),
-    path("api/1.0/users/", include("users.users_url"))
+    path("api/v1/auth/", include("users.auth_urls")),
+    path("api/v1/profile/", include("profiles.urls")),
+    path("api/v1/follow/", include("followers.urls")),
+    path("api/v1/users/", include("users.users_url"))
 ]
 
 if settings.DEBUG:
