@@ -259,7 +259,7 @@ class ProfilePreferencesAPIViewTest(APIViewTestCase):
             self.url, {"theme": ""}, content_type="application/json")
 
         self.common_api_response_tests(response, result_code=1, messages_list_len=1,
-                                       fields_errors_list_len=1, messages=["Theme field cannot be empty"])
+                                       fields_errors_list_len=1, messages=["Theme value cannot be empty"])
 
     def test_update_theme_with_null_value(self):
         put_data = {"theme": None}
