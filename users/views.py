@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import LoginSerializer, UsersListSerializer
+from .serializers import UsersListSerializer
 
 User = get_user_model()
 
