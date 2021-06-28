@@ -5,7 +5,6 @@ from .views import (ProfileDetail, ProfileStatusUpdate, ProfilePhotoUpdate,
 
 urlpatterns = [
     path("", ProfileUpdate.as_view(), name="profile_update"),
-    path("status/", ProfileStatusUpdate.as_view(), name="profile_status_update"),
     path("<int:pk>/", ProfileDetail.as_view(), name="profile_detail"),
     path("photo/", ProfilePhotoUpdate.as_view(), name="profile_photo_update"),
     path("preferences/", ProfilePreferences.as_view(), name="profile_preferences")

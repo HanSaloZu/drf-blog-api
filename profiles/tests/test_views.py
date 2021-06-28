@@ -4,59 +4,6 @@ import json
 from utils.test import APIViewTestCase
 
 
-class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
-    url = reverse("profile_status_update")
-
-    def setUp(self):
-        self.credentials = {"email": "new@user.com", "password": "pass"}
-        self.UserModel.objects.create_user(login="NewUser", **self.credentials)
-        self.client.login(**self.credentials)
-
-    def test_valid_status_update(self):
-        response = self.client.put(
-            self.url, {"status": "Test"}, content_type="application/json")
-
-        self.common_api_response_tests(response)
-        user = self.UserModel.objects.get(id=1)
-        self.assertEqual(user.profile.status, "Test")
-
-    def test_status_update_with_blank_value(self):
-        response = self.client.put(
-            self.url, {"status": ""}, content_type="application/json")
-
-        self.common_api_response_tests(response)
-        user = self.UserModel.objects.get(id=1)
-        self.assertEqual(user.profile.status, "")
-
-    def test_status_update_with_none_value(self):
-        response = self.client.put(
-            self.url, {"status": None}, content_type="application/json")
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def test_status_update_with_long_value(self):
-        response = self.client.put(
-            self.url, {"status": "a"*320}, content_type="application/json")
-
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertIn("Max Status length is 300 symbols",
-                      response.data["messages"])
-
-    def test_status_update_without_value(self):
-        response = self.client.put(self.url)
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(response.data["message"], "An error has occurred.")
-
-    def test_status_update_by_unauthorized_user(self):
-        self.client.logout()
-        response = self.client.put(
-            self.url, {"status": "New status"}, content_type="application/json")
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_403_FORBIDDEN)
-
-
 class ProfileDetailAPIViewTest(APIViewTestCase):
     def url(self, kwargs):
         return reverse("profile_detail", kwargs=kwargs)

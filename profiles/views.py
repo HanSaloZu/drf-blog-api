@@ -14,29 +14,6 @@ from .serializers import (ProfileSerializer, StatusSerializer,
 from utils.response import APIResponse
 
 
-class ProfileStatusUpdate(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def put(self, request):
-        serialized_data = StatusSerializer(data=request.data)
-        response = APIResponse()
-
-        if serialized_data.is_valid():
-            user = request.user
-            user.profile.status = serialized_data.data["status"]
-            user.save()
-
-            return response.complete()
-        elif serialized_data.errors["status"][0].code == "max_length":
-            response = APIResponse()
-            response.result_code = 1
-            response.messages.append(serialized_data.errors["status"][0])
-
-            return response.complete()
-
-        return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 class ProfileDetail(generics.RetrieveAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
