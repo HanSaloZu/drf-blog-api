@@ -1,7 +1,7 @@
 from urllib.parse import urlencode
 from django.urls import reverse
 
-from utils.test import APIViewTestCase
+from utils.test import APIViewTestCase, ProfileDetailAPIViewTestCase
 
 
 class UsersListAPIViewsTest(APIViewTestCase):
@@ -96,3 +96,57 @@ class UsersListAPIViewsTest(APIViewTestCase):
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_403_FORBIDDEN)
+
+
+class UserProfileDetailAPIViewTest(ProfileDetailAPIViewTestCase):
+    def url(self, kwargs):
+        return reverse("user_profile_detail", kwargs=kwargs)
+
+    def setUp(self):
+        credentials = {"email": "first@gmail.com", "password": "pass"}
+        self.first_user = self.UserModel.objects.create_user(
+            login="First User", **credentials)
+        self.client.login(**credentials)
+
+        self.second_user = self.UserModel.objects.create_user(
+            login="Second User", email="second@gmail.com", password="pass")
+        profile = self.second_user.profile
+        profile.looking_for_a_job = True
+        profile.looking_for_a_job_description = "Test"
+        profile.about_me = "Test"
+        profile.contacts.github = "https://github.com/HanSaloZu"
+        self.second_user.save()
+
+    def test_user_profile_detail(self):
+        response = self.client.get(self.url({"login": self.second_user.login}))
+        profile = self.second_user.profile
+
+        self.compare_profile_instance_and_response_data(profile, response.data)
+
+    def test_self_profile_detail(self):
+        response = self.client.get(self.url({"login": self.first_user.login}))
+        profile = self.first_user.profile
+
+        self.compare_profile_instance_and_response_data(profile, response.data)
+
+    def test_user_profile_detail_with_invalid_user_login(self):
+        url = self.url(kwargs={"login": "invalid"})
+        response = self.client.get(url)
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages_list_len=1,
+            messages=["Invalid login, user is not found"])
+
+    def test_user_profile_detail_while_unauthenticated(self):
+        self.client.logout()
+        response = self.client.get(self.url({"login": self.second_user}))
+
+        self.client_error_response_test(
+            response,
+            code="notAuthenticated",
+            status=self.http_status.HTTP_401_UNAUTHORIZED,
+            messages_list_len=1,
+            messages=["You are not authenticated"])
