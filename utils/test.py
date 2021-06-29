@@ -20,4 +20,4 @@ class APIViewTestCase(ExtendedTestCase):
             len(response.data["fieldsErrors"]), fields_errors_list_len)
 
         for m in messages:
-            self.assertIn(m, messages)
+            self.assertIn(m, response.data["messages"])
