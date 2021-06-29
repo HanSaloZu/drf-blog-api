@@ -31,3 +31,8 @@ class NotAuthenticated401Response(ClientErrorResponse):
 class NotFound404Response(ClientErrorResponse):
     code = "notFound"
     status_code = status.HTTP_404_NOT_FOUND
+
+
+class InvalidData400Response(ClientErrorResponse):
+    code = "invalid"
+    status_code = status.HTTP_400_BAD_REQUEST
