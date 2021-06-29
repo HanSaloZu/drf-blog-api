@@ -22,6 +22,12 @@ class ClientErrorResponse:
         }, status=self.status_code, content_type="application/json")
 
 
+class NotAuthenticated401Response(ClientErrorResponse):
+    code = "notAuthenticated"
+    status_code = status.HTTP_401_UNAUTHORIZED
+    messages = ["You are not authenticated"]
+
+
 class NotFound404Response(ClientErrorResponse):
     code = "notFound"
     status_code = status.HTTP_404_NOT_FOUND
