@@ -24,3 +24,30 @@ class APIViewTestCase(ExtendedTestCase):
 
         for m in messages:
             self.assertIn(m, response.data["messages"])
+
+
+class ProfileDetailAPIViewTestCase(APIViewTestCase):
+    def compare_profile_instance_and_response_data(self, profile, response):
+        self.assertEqual(response["userId"], profile.user.id)
+        self.assertEqual(response["lookingForAJob"], profile.looking_for_a_job)
+        self.assertEqual(response["lookingForAJobDescription"],
+                         profile.looking_for_a_job_description)
+        self.assertEqual(response["fullName"], profile.fullname)
+        self.assertEqual(response["aboutMe"], profile.about_me)
+        self.assertEqual(len(response["contacts"]), 8)
+        self.assertEqual(response["photo"], profile.photo.link)
+        self.assertEqual(response["contacts"]
+                         ["github"], profile.contacts.github)
+        self.assertEqual(response["contacts"]
+                         ["facebook"], profile.contacts.facebook)
+        self.assertEqual(response["contacts"]
+                         ["instagram"], profile.contacts.instagram)
+        self.assertEqual(response["contacts"]
+                         ["mainLink"], profile.contacts.main_link)
+        self.assertEqual(response["contacts"]
+                         ["twitter"], profile.contacts.twitter)
+        self.assertEqual(response["contacts"]["vk"], profile.contacts.vk)
+        self.assertEqual(response["contacts"]
+                         ["website"], profile.contacts.website)
+        self.assertEqual(response["contacts"]
+                         ["youtube"], profile.contacts.youtube)
