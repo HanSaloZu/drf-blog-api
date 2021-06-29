@@ -20,3 +20,8 @@ class ClientErrorResponse:
             "messages": self.messages,
             "fieldsErrors": self.fields_errors,
         }, status=self.status_code, content_type="application/json")
+
+
+class NotFound404Response(ClientErrorResponse):
+    code = "notFound"
+    status_code = status.HTTP_404_NOT_FOUND
