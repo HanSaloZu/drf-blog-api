@@ -1,17 +1,16 @@
 from rest_framework.response import Response
 
 
-class APIResponse:
+class ClientErrorResponse:
     def __init__(self):
-        self.data = {}
+        self.detail = ""
         self.messages = []
-        self.fields_errors = []
-        self.result_code = 0
+        self.fields_errors = {}
+        self.status_code = 400
 
     def complete(self):
         return Response({
-            "data": self.data,
+            "detail": self.detail,
             "messages": self.messages,
             "fieldsErrors": self.fields_errors,
-            "resultCode": self.result_code
-        })
+        }, status=self.status_code, content_type="application/json")
