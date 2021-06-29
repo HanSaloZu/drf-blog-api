@@ -79,16 +79,6 @@ class UpdateProfileSerializer(serializers.Serializer):
         default=UpdateContactsSerializer(), required=False, allow_null=True)
 
 
-class StatusSerializer(serializers.ModelSerializer):
-    status = serializers.CharField(required=True, max_length=300, allow_null=False, allow_blank=True, error_messages={
-        "max_length": "Max Status length is 300 symbols"
-    })
-
-    class Meta:
-        model = Profile
-        fields = ["status"]
-
-
 class ProfilePreferencesSerializer(serializers.ModelSerializer):
     theme = serializers.CharField(required=True, allow_null=False, allow_blank=False,
                                   max_length=255, error_messages={
