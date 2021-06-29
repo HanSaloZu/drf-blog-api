@@ -1,18 +1,22 @@
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework import status
 
 
 class ClientErrorResponse:
-    def __init__(self, detail="", messages=[], fields_errors={}, status_code=HTTP_400_BAD_REQUEST,
-                 content_type="application/json"):
-        self.detail = detail
-        self.messages = messages
+    code = "clientError"
+    status_code = status.HTTP_400_BAD_REQUEST
+
+    def __init__(self, messages=[], fields_errors={}):
+        if not hasattr(self, "messages"):
+            self.messages = messages
         self.fields_errors = fields_errors
-        self.status_code = status_code
+
+    def __str__(self):
+        return f"{self.code}"
 
     def complete(self):
         return Response({
-            "detail": self.detail,
+            "code": self.code,
             "messages": self.messages,
             "fieldsErrors": self.fields_errors,
         }, status=self.status_code, content_type="application/json")
