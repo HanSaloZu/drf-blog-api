@@ -56,13 +56,14 @@ class Photo(models.Model):
 class Contacts(models.Model):
     profile = models.OneToOneField(
         Profile, on_delete=models.CASCADE, unique=True)
-    facebook, github, instagram, main_link, twitter, vk, website, youtube = [models.CharField(
-        max_length=300, null=True, blank=True) for i in range(8)]
-
-    def __str__(self):
-        return f"{self.profile.user.login} contacts"
+    facebook, github, instagram, main_link, twitter, vk, website, youtube = [
+        models.URLField(blank=True) for i in range(8)
+    ]
 
     class Meta:
         verbose_name = "user contacts"
         verbose_name_plural = "users contacts"
         db_table = "users_contacts"
+
+    def __str__(self):
+        return f"{self.profile.user.login} contacts"
