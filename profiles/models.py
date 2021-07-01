@@ -41,16 +41,16 @@ class Preferences(models.Model):
 class Photo(models.Model):
     profile = models.OneToOneField(
         Profile, on_delete=models.CASCADE, unique=True)
-    file_id = models.CharField(max_length=50, null=True, default=None)
-    link = models.URLField(default=None, max_length=300, null=True)
-
-    def __str__(self):
-        return f"{self.profile.user.login} photo"
+    file_id = models.CharField(max_length=50, blank=True)
+    link = models.URLField(max_length=300, blank=True)
 
     class Meta:
         verbose_name = "profile photo"
         verbose_name_plural = "profiles photos"
         db_table = "profiles_photos"
+
+    def __str__(self):
+        return f"{self.profile.user.login} photo"
 
 
 class Contacts(models.Model):
