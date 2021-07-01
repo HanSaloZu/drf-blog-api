@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 
-from .models import Profile, Contacts, Photo, ProfilePreferences
+from .models import Profile, Contacts, Photo, Preferences
 
 User = get_user_model()
 
@@ -14,7 +14,7 @@ def create_profile(sender, instance, created, **kwargs):
         profile.save()
         Contacts(profile=profile).save()
         Photo(profile=profile).save()
-        ProfilePreferences(profile=profile).save()
+        Preferences(profile=profile).save()
 
 
 @receiver(post_save, sender=User)

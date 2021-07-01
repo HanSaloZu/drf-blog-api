@@ -24,18 +24,18 @@ class Profile(models.Model):
         return f"{self.user.login} profile"
 
 
-class ProfilePreferences(models.Model):
+class Preferences(models.Model):
     profile = models.OneToOneField(
-        Profile, on_delete=models.CASCADE, unique=True, related_name="preferences")
-    theme = models.CharField(max_length=255, null=False, blank=True)
-
-    def __str__(self):
-        return f"{self.profile.user.login} profile preferences"
+        Profile, on_delete=models.CASCADE, unique=True)
+    theme = models.CharField(max_length=250, blank=True)
 
     class Meta:
         verbose_name = "profile preferences"
         verbose_name_plural = "profiles preferences"
         db_table = "profiles_preferences"
+
+    def __str__(self):
+        return f"{self.profile.user.login} profile preferences"
 
 
 class Photo(models.Model):
