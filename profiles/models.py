@@ -8,21 +8,20 @@ class Profile(models.Model):
     user = models.OneToOneField(
         User, primary_key=True, on_delete=models.CASCADE)
 
-    looking_for_a_job = models.BooleanField(default=False)
-    looking_for_a_job_description = models.TextField(default=None, null=True)
+    is_looking_for_a_job = models.BooleanField(default=False)
+    professional_skills = models.TextField(blank=True)
 
-    fullname = models.CharField(max_length=300)
-    status = models.CharField(
-        default="", max_length=300, blank=True, null=False)
-    about_me = models.TextField(default=None, null=True)
-
-    def __str__(self):
-        return f"{self.user.login} profile"
+    fullname = models.CharField(max_length=150)
+    status = models.CharField(max_length=70, blank=True)
+    about_me = models.TextField(blank=True)
 
     class Meta:
         verbose_name = "profile"
         verbose_name_plural = "profiles"
         db_table = "profiles"
+
+    def __str__(self):
+        return f"{self.user.login} profile"
 
 
 class ProfilePreferences(models.Model):
