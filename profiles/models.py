@@ -24,9 +24,15 @@ class Profile(models.Model):
         return f"{self.user.login} profile"
 
 
-class Preferences(models.Model):
+class ProfileRelatedModel(models.Model):
     profile = models.OneToOneField(
         Profile, on_delete=models.CASCADE, unique=True)
+
+    class Meta:
+        abstract = True
+
+
+class Preferences(ProfileRelatedModel):
     theme = models.CharField(max_length=250, blank=True)
 
     class Meta:
@@ -38,9 +44,7 @@ class Preferences(models.Model):
         return f"{self.profile.user.login} profile preferences"
 
 
-class Photo(models.Model):
-    profile = models.OneToOneField(
-        Profile, on_delete=models.CASCADE, unique=True)
+class Photo(ProfileRelatedModel):
     file_id = models.CharField(max_length=50, blank=True)
     link = models.URLField(max_length=300, blank=True)
 
@@ -53,9 +57,7 @@ class Photo(models.Model):
         return f"{self.profile.user.login} photo"
 
 
-class Contacts(models.Model):
-    profile = models.OneToOneField(
-        Profile, on_delete=models.CASCADE, unique=True)
+class Contacts(ProfileRelatedModel):
     facebook, github, instagram, main_link, twitter, vk, website, youtube = [
         models.URLField(blank=True) for i in range(8)
     ]
