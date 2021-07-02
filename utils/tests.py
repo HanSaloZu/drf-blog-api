@@ -39,11 +39,13 @@ class APIViewTestCase(ExtendedTestCase):
 class ProfileDetailAPIViewTestCase(APIViewTestCase):
     def compare_profile_instance_and_response_data(self, profile, response):
         self.assertEqual(response["userId"], profile.user.id)
-        self.assertEqual(response["lookingForAJob"], profile.looking_for_a_job)
-        self.assertEqual(response["lookingForAJobDescription"],
-                         profile.looking_for_a_job_description)
-        self.assertEqual(response["fullName"], profile.fullname)
+        self.assertEqual(response["isLookingForAJob"],
+                         profile.is_looking_for_a_job)
+        self.assertEqual(response["professionalSkills"],
+                         profile.professional_skills)
+        self.assertEqual(response["fullname"], profile.fullname)
         self.assertEqual(response["aboutMe"], profile.about_me)
+        self.assertEqual(response["status"], profile.status)
         self.assertEqual(len(response["contacts"]), 8)
         self.assertEqual(response["photo"], profile.photo.link)
         self.assertEqual(response["contacts"]

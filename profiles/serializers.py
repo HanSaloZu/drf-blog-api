@@ -15,11 +15,11 @@ class ContactsSerializer(serializers.ModelSerializer):
                   "instagram", "twitter", "website", "youtube", "mainLink"]
 
 
-class ProfileSerializer(serializers.Serializer):
+class ProfileSerializer(serializers.ModelSerializer):
     userId = serializers.SerializerMethodField()
-    lookingForAJob = serializers.SerializerMethodField()
-    lookingForAJobDescription = serializers.SerializerMethodField()
-    fullName = serializers.SerializerMethodField()
+    login = serializers.SerializerMethodField()
+    isLookingForAJob = serializers.SerializerMethodField()
+    professionalSkills = serializers.SerializerMethodField()
     aboutMe = serializers.SerializerMethodField()
     photo = serializers.SerializerMethodField()
     contacts = ContactsSerializer()
@@ -27,14 +27,14 @@ class ProfileSerializer(serializers.Serializer):
     def get_userId(self, obj):
         return obj.user.id
 
-    def get_lookingForAJob(self, obj):
-        return obj.looking_for_a_job
+    def get_login(self, obj):
+        return obj.user.login
 
-    def get_lookingForAJobDescription(self, obj):
-        return obj.looking_for_a_job_description
+    def get_isLookingForAJob(self, obj):
+        return obj.is_looking_for_a_job
 
-    def get_fullName(self, obj):
-        return obj.fullname
+    def get_professionalSkills(self, obj):
+        return obj.professional_skills
 
     def get_aboutMe(self, obj):
         return obj.about_me
@@ -44,8 +44,8 @@ class ProfileSerializer(serializers.Serializer):
 
     class Meta:
         model = Profile
-        fields = ["userId", "lookingForAJob",
-                  "lookingForAJobDescription", "fullName", "contacts", "aboutMe", "photo"]
+        fields = ["userId", "isLookingForAJob",
+                  "professionalSkills", "fullname", "login", "status", "aboutMe", "photo", "contacts"]
 
 
 class UpdateContactsSerializer(serializers.Serializer):
