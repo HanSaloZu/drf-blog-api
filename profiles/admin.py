@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Profile, Photo, Contacts, ProfilePreferences
+from .models import Profile, Photo, Contacts, Preferences
 
 
 class NoAddPermissionAdminModel(admin.ModelAdmin):
@@ -10,16 +10,16 @@ class NoAddPermissionAdminModel(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(NoAddPermissionAdminModel):
-    list_display = ("user", "fullname", "looking_for_a_job", "status")
-    list_display_links = ("user", "fullname", "looking_for_a_job")
-    list_filter = ("looking_for_a_job",)
+    list_display = ("user", "fullname", "is_looking_for_a_job", "status")
+    list_display_links = ("user", "fullname", "is_looking_for_a_job")
+    list_filter = ("is_looking_for_a_job",)
     search_fields = ("user__login", "fullname")
     fieldsets = (
         (None, {
             "fields": ("fullname", "status", "about_me")
         }),
         ("Job", {
-            "fields": ("looking_for_a_job", "looking_for_a_job_description")
+            "fields": ("is_looking_for_a_job", "professionalSkills")
         })
     )
 
@@ -48,8 +48,8 @@ class ContactsAdmin(NoAddPermissionAdminModel):
               "main_link", "twitter", "vk", "website", "youtube")
 
 
-@admin.register(ProfilePreferences)
-class ProfilesPreferencesAdmin(NoAddPermissionAdminModel):
+@admin.register(Preferences)
+class PreferencesAdmin(NoAddPermissionAdminModel):
     list_display = ("profile", "theme")
     list_display_links = ("profile", "theme")
     search_fields = ("profile__user__login",
