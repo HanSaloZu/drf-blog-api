@@ -25,6 +25,16 @@ class APIViewTestCase(ExtendedTestCase):
         for m in messages:
             self.assertIn(m, response.data["messages"])
 
+    def unauthorized_client_error_response_test(self, response):
+        self.client_error_response_test(
+            response,
+            code="notAuthenticated",
+            status=self.http_status.HTTP_401_UNAUTHORIZED,
+            messages_list_len=1,
+            messages=["You are not authenticated"],
+            fields_errors_dict_len=0
+        )
+
 
 class ProfileDetailAPIViewTestCase(APIViewTestCase):
     def compare_profile_instance_and_response_data(self, profile, response):
