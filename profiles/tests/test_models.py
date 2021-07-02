@@ -1,6 +1,6 @@
-from utils.test import ExtendedTestCase
+from utils.tests import ExtendedTestCase
 
-from ..models import Profile, Contacts, Photo, ProfilePreferences
+from profiles.models import Profile, Contacts, Photo, Preferences
 
 
 class ProfileModelTest(ExtendedTestCase):
@@ -13,13 +13,12 @@ class ProfileModelTest(ExtendedTestCase):
 
         self.assertIsInstance(profile, self.model)
 
+        self.assertFalse(profile.is_looking_for_a_job)
+        self.assertEqual(profile.professional_skills, "")
+
         self.assertEqual(profile.fullname, user.login)
-
-        self.assertFalse(profile.looking_for_a_job)
-        self.assertIsNone(profile.looking_for_a_job_description)
-
         self.assertEqual(profile.status, "")
-        self.assertIsNone(profile.about_me)
+        self.assertEqual(profile.about_me, "")
 
 
 class ContactsModelTest(ExtendedTestCase):
@@ -32,14 +31,14 @@ class ContactsModelTest(ExtendedTestCase):
 
         self.assertIsInstance(contacts, self.model)
 
-        self.assertIsNone(contacts.vk)
-        self.assertIsNone(contacts.github)
-        self.assertIsNone(contacts.facebook)
-        self.assertIsNone(contacts.instagram)
-        self.assertIsNone(contacts.main_link)
-        self.assertIsNone(contacts.twitter)
-        self.assertIsNone(contacts.website)
-        self.assertIsNone(contacts.youtube)
+        self.assertEqual(contacts.vk, "")
+        self.assertEqual(contacts.github, "")
+        self.assertEqual(contacts.facebook, "")
+        self.assertEqual(contacts.instagram, "")
+        self.assertEqual(contacts.main_link, "")
+        self.assertEqual(contacts.twitter, "")
+        self.assertEqual(contacts.website, "")
+        self.assertEqual(contacts.youtube, "")
 
 
 class PhotoModelTest(ExtendedTestCase):
@@ -52,12 +51,12 @@ class PhotoModelTest(ExtendedTestCase):
 
         self.assertIsInstance(photo, self.model)
 
-        self.assertIsNone(photo.file_id)
-        self.assertIsNone(photo.link)
+        self.assertEqual(photo.file_id, "")
+        self.assertEqual(photo.link, "")
 
 
-class ProfilePreferencesModelTest(ExtendedTestCase):
-    model = ProfilePreferences
+class PreferencesModelTest(ExtendedTestCase):
+    model = Preferences
 
     def test_preferences(self):
         user = self.UserModel.objects.create_user(
@@ -65,4 +64,5 @@ class ProfilePreferencesModelTest(ExtendedTestCase):
         preferences = user.profile.preferences
 
         self.assertIsInstance(preferences, self.model)
+
         self.assertEqual(preferences.theme, "")
