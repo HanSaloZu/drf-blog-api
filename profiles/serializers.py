@@ -61,8 +61,15 @@ def get_error_messages(field_name):
 
 
 class UpdateContactsSerializer(serializers.Serializer):
-    github, vk, facebook, instagram, twitter, website, youtube, mainLink = [serializers.URLField(
-        max_length=300, default=None, required=False, allow_blank=True, allow_null=True) for i in range(8)]
+    github, vk, facebook, instagram, twitter, website, youtube, mainLink = [
+        serializers.URLField(
+            max_length=200,
+            required=False,
+            allow_blank=True,
+            error_messages=get_error_messages(i)) for i in [
+            "github", "vk", "facebook", "instagram", "twitter", "website", "youtube", "mainLink"
+        ]
+    ]
 
 
 class UpdateProfileSerializer(serializers.Serializer):
