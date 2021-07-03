@@ -1,55 +1,157 @@
+from django.utils.crypto import get_random_string
 from django.urls import reverse
+
 import json
 
-from utils.test import APIViewTestCase
+from utils.tests import APIViewTestCase, ProfileDetailAPIViewTestCase
 
 
-class ProfileDetailAPIViewTest(APIViewTestCase):
-    def url(self, kwargs):
-        return reverse("profile_detail", kwargs=kwargs)
+class RetrieveUpdateProfileAPIViewTest(ProfileDetailAPIViewTestCase):
+    url = reverse("profile")
 
     def setUp(self):
-        user = self.UserModel.objects.create_user(login="NewUser", email="new@user.com",
-                                                  password="pass")
-        profile = user.profile
+        credentials = {"email": "new@user.com", "password": "pass"}
+        user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
 
-        profile.looking_for_a_job = True
-        profile.looking_for_a_job_description = "Test"
-        profile.about_me = "I am a view test"
-        profile.contacts.github = "https://github.com/HanSaloZu"
+        user.profile.is_looking_for_a_job = True
+        user.profile.professional_skills = "Test"
+        user.profile.about_me = "I am a view test"
+        user.profile.contacts.github = "https://github.com/HanSaloZu"
         user.save()
-        self.profile = profile
 
-    def test_valid_profile_detail(self):
-        url = self.url({"pk": 1})
-        response = self.client.get(url)
-        data = response.data
-        profile = self.profile
+        self.user = user
+        self.client.login(**credentials)
 
-        self.assertEqual(data["userId"], profile.user.id)
-        self.assertTrue(data["lookingForAJob"])
-        self.assertEqual(data["lookingForAJobDescription"],
-                         profile.looking_for_a_job_description)
-        self.assertEqual(data["fullName"], profile.fullname)
-        self.assertEqual(data["fullName"], profile.user.login)
-        self.assertEqual(data["aboutMe"], profile.about_me)
-        self.assertEqual(len(data["contacts"]), 8)
-        self.assertEqual(data["photo"], profile.photo.link)
-        self.assertEqual(data["contacts"]["github"], profile.contacts.github)
-        self.assertIsNone(data["contacts"]["facebook"])
-        self.assertIsNone(data["contacts"]["instagram"])
-        self.assertIsNone(data["contacts"]["mainLink"])
-        self.assertIsNone(data["contacts"]["twitter"])
-        self.assertIsNone(data["contacts"]["vk"])
-        self.assertIsNone(data["contacts"]["website"])
-        self.assertIsNone(data["contacts"]["youtube"])
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url)
 
-    def test_profile_detail_with_invalid_user_id(self):
-        url = reverse("profile_detail", kwargs={"pk": 9})
-        response = self.client.get(url)
+        self.unauthorized_client_error_response_test(response)
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_404_NOT_FOUND)
+    # Profile retrieving tests
+
+    def test_profile_detail(self):
+        response = self.client.get(self.url)
+
+        self.compare_profile_instance_and_response_data(
+            self.user.profile, response.data)
+
+    # Profile update tests
+
+    def test_profile_update_without_contacts(self):
+        payload = {
+            "fullname": "New User",
+            "aboutMe": get_random_string(length=70),
+            "isLookingForAJob": True,
+            "professionalSkills": "Backend web developer",
+            "status": "New status"
+        }
+        response = self.client.patch(
+            self.url, payload, content_type="application/json")
+        user = self.UserModel.objects.all().first()
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+        self.assertEqual(user.profile.fullname, payload["fullname"])
+        self.assertEqual(user.profile.about_me, payload["aboutMe"])
+        self.assertEqual(user.profile.status, payload["status"])
+        self.assertEqual(user.profile.is_looking_for_a_job,
+                         payload["isLookingForAJob"])
+        self.assertEqual(user.profile.professional_skills,
+                         payload["professionalSkills"])
+        self.compare_profile_instance_and_response_data(
+            user.profile, response.data)
+
+    def test_profile_update_with_contacts(self):
+        payload = {
+            "fullname": "New Fullname",
+            "isLookingForAJob": False,
+            "status": "",
+            "contacts": {
+                "github": "https://github.com/HanSaloZu",
+                "mainLink": "https://github.com/HanSaloZu",
+                "twitter": ""
+            }
+        }
+        response = self.client.patch(
+            self.url, payload, content_type="application/json")
+        user = self.UserModel.objects.all().first()
+        contacts = user.profile.contacts
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+        self.assertEqual(user.profile.fullname, payload["fullname"])
+        self.assertEqual(user.profile.is_looking_for_a_job,
+                         payload["isLookingForAJob"])
+        self.assertEqual(user.profile.status, payload["status"])
+
+        self.assertEqual(contacts.github, payload["contacts"]["github"])
+        self.assertEqual(contacts.main_link, payload["contacts"]["mainLink"])
+        self.assertEqual(contacts.twitter, payload["contacts"]["twitter"])
+        self.assertEqual(contacts.facebook,
+                         self.user.profile.contacts.facebook)
+
+        self.compare_profile_instance_and_response_data(
+            user.profile, response.data)
+
+    def test_profile_update_without_data(self):
+        response = self.client.patch(self.url)
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.compare_profile_instance_and_response_data(
+            self.user.profile, response.data)
+
+    def test_profile_update_with_invalid_data(self):
+        payload = {
+            "fullname": "",
+            "aboutMe": get_random_string(length=69),
+            "status": get_random_string(length=100),
+            "professionalSkills": None,
+            "isLookingForAJob": "invalid",
+            "contacts": None
+        }
+        response = self.client.patch(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            messages_list_len=6,
+            code="invalid",
+            messages=[
+                "Fullname field cannot be empty",
+                "About me field value is too short",
+                "Status field value is too long",
+                "Professional skills field cannot be null",
+                "Invalid value for is looking for a job field",
+                "Contacts field cannot be null"
+            ],
+            fields_errors_dict_len=6
+        )
+
+    def test_profile_update_with_invalid_contacts_urls(self):
+        payload = {
+            "contacts": {
+                "github": "123",
+                "twitter": None,
+                "facebook": get_random_string(length=205),
+                "vk": ""
+            }
+        }
+        response = self.client.patch(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            messages_list_len=3,
+            code="invalid",
+            fields_errors_dict_len=3,
+            messages=[
+                "Invalid value for github field",
+                "Twitter field cannot be null",
+                "Facebook field value is too long"
+            ]
+        )
 
 
 class ProfilePhotoUpdateAPIViewTest(APIViewTestCase):
@@ -72,98 +174,6 @@ class ProfilePhotoUpdateAPIViewTest(APIViewTestCase):
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class ProfileUpdateAPIViewTest(APIViewTestCase):
-    url = reverse("profile_update")
-
-    def setUp(self):
-        credentials = {"email": "new@user.com", "password": "pass"}
-        self.UserModel.objects.create_user(
-            login="NewUser", **credentials)
-        self.client.login(**credentials)
-
-    def test_profile_update_by_unauthorized_user(self):
-        self.client.logout()
-        response = self.client.put(
-            self.url, {"fullName": "New User", "aboutMe": "About me!"}, content_type="application/json")
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_403_FORBIDDEN)
-
-    def test_profile_update_with_only_required_fields(self):
-        request_data = {"fullName": "New User", "aboutMe": "About me!"}
-        response = self.client.put(
-            self.url, request_data, content_type="application/json")
-        user = self.UserModel.objects.all().first()
-
-        self.common_api_response_tests(response)
-        self.assertEqual(user.profile.fullname, request_data["fullName"])
-        self.assertEqual(user.profile.about_me, request_data["aboutMe"])
-        self.assertFalse(user.profile.looking_for_a_job)
-        self.assertIsNone(user.profile.looking_for_a_job_description)
-
-    def test_profile_update_with_contacts(self):
-        request_data = {"fullName": "New User", "aboutMe": "About me!", "contacts": {
-            "github": "https://github.com/HanSaloZu",
-            "mainLink": "https://github.com/HanSaloZu"
-        }}
-        response = self.client.put(
-            self.url, request_data, content_type="application/json")
-        user = self.UserModel.objects.all().first()
-
-        self.common_api_response_tests(response)
-        self.assertEqual(user.profile.contacts.github,
-                         request_data["contacts"]["github"])
-        self.assertEqual(user.profile.contacts.main_link,
-                         request_data["contacts"]["mainLink"])
-        self.assertIsNone(user.profile.contacts.facebook)
-        self.assertIsNone(user.profile.contacts.instagram)
-        self.assertIsNone(user.profile.contacts.twitter)
-        self.assertIsNone(user.profile.contacts.vk)
-        self.assertIsNone(user.profile.contacts.website)
-        self.assertIsNone(user.profile.contacts.youtube)
-
-    def test_profile_update_without_contacts(self):
-        request_data = {"fullName": "New User", "aboutMe": "About me!",
-                        "lookingForAJob": True, "lookingForAJobDescription": "I need a job!"}
-        response = self.client.put(
-            self.url, request_data, content_type="application/json")
-        user = self.UserModel.objects.all().first()
-
-        self.common_api_response_tests(response)
-        self.assertEqual(user.profile.looking_for_a_job,
-                         request_data["lookingForAJob"])
-        self.assertEqual(user.profile.looking_for_a_job_description,
-                         request_data["lookingForAJobDescription"])
-
-    def test_profile_update_without_data(self):
-        response = self.client.put(self.url)
-
-        self.common_api_response_tests(
-            response, messages_list_len=2, result_code=1, messages=["The FullName field is required. (FullName)", "The AboutMe field is required. (AboutMe)"])
-
-    def test_profile_update_with_invalid_data(self):
-        response = self.client.put(
-            self.url, {"fullName": None, "aboutMe": None}, content_type="application/json")
-
-        self.common_api_response_tests(
-            response, messages_list_len=2, result_code=1, messages=["The FullName field is required. (FullName)", "The AboutMe field is required. (AboutMe)"])
-
-    def test_profile_update_with_invalid_contacts(self):
-        response = self.client.put(
-            self.url, {"fullName": "New User", "aboutMe": "About me!", "contacts": {
-                "github": "123"
-            }}, content_type="application/json")
-
-        self.common_api_response_tests(response, messages_list_len=1, result_code=1, messages=[
-            "Invalid url format (Contacts->Github)"])
-
-    def test_profile_update_with_contacts_equals_none(self):
-        response = self.client.put(
-            self.url, {"fullName": "New User", "aboutMe": "About me!", "contacts": None}, content_type="application/json")
-
-        self.common_api_response_tests(response)
 
 
 class ProfilePreferencesAPIViewTest(APIViewTestCase):
