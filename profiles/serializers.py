@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Profile, Contacts, ProfilePreferences
+from .models import Profile, Contacts, Preferences
 
 
 class ContactsSerializer(serializers.ModelSerializer):
@@ -145,14 +145,15 @@ class UpdateProfileSerializer(serializers.Serializer):
         return instance
 
 
-class ProfilePreferencesSerializer(serializers.ModelSerializer):
-    theme = serializers.CharField(required=True, allow_null=False, allow_blank=False,
-                                  max_length=255, error_messages={
-                                      "required": "Theme field is required",
-                                      "max_length": "Theme field max length is 255 symbols",
-                                      "null": "Theme value cannot be null",
-                                      "blank": "Theme value cannot be empty"})
+class PreferencesSerializer(serializers.ModelSerializer):
+    theme = serializers.CharField(
+        required=True,
+        allow_null=False,
+        allow_blank=True,
+        max_length=250,
+        error_messages=get_error_messages("theme")
+    )
 
     class Meta:
-        model = ProfilePreferences
+        model = Preferences
         fields = ["theme"]
