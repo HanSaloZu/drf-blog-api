@@ -199,16 +199,26 @@ class UpdatePhotoAPIViewTest(APIViewTestCase):
         )
 
 
-class ProfilePreferencesAPIViewTest(APIViewTestCase):
+class RetrieveUpdatePreferencesAPIViewTest(APIViewTestCase):
     url = reverse("profile_preferences")
 
     def setUp(self):
-        credentials = {"login": "NewUser",
-                       "email": "new@user.com", "password": "pass"}
-        self.user = self.UserModel.objects.create_user(**credentials)
+        credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
+
         self.user.profile.preferences.theme = "dark"
         self.user.save()
+
         self.client.login(**credentials)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url)
+
+        self.unauthorized_client_error_response_test(response)
+
+    # Preferences retrieving tests
 
     def test_get_preferences(self):
         response = self.client.get(self.url)
@@ -217,47 +227,63 @@ class ProfilePreferencesAPIViewTest(APIViewTestCase):
         self.assertEqual(response.data["theme"],
                          self.user.profile.preferences.theme)
 
-    def test_get_preferences_while_unauthorized(self):
-        self.client.logout()
-        response = self.client.get(self.url)
+     # Preferences update tests
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_403_FORBIDDEN)
-
-    def test_update_preferences_with_valid_data(self):
-        put_data = {"theme": "light"}
+    def test_update_preferences(self):
+        payload = {"theme": "light"}
         response = self.client.put(
-            self.url, put_data, content_type="application/json")
+            self.url, payload, content_type="application/json")
 
-        self.common_api_response_tests(response)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
-        self.assertEqual(self.UserModel.objects.first(
-        ).profile.preferences.theme, put_data["theme"])
+        user = self.UserModel.objects.first()
+        self.assertEqual(user.profile.preferences.theme, payload["theme"])
+        self.assertEqual(response.data["theme"], payload["theme"])
 
     def test_update_theme_with_blank_value(self):
+        payload = {"theme": ""}
         response = self.client.put(
-            self.url, {"theme": ""}, content_type="application/json")
+            self.url, payload, content_type="application/json")
 
-        self.common_api_response_tests(response, result_code=1, messages_list_len=1,
-                                       fields_errors_list_len=1, messages=["Theme value cannot be empty"])
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+        user = self.UserModel.objects.first()
+        self.assertEqual(user.profile.preferences.theme, payload["theme"])
+        self.assertEqual(response.data["theme"], payload["theme"])
 
     def test_update_theme_with_null_value(self):
-        put_data = {"theme": None}
+        payload = {"theme": None}
         response = self.client.put(
-            self.url, put_data, content_type="application/json")
+            self.url, payload, content_type="application/json")
 
-        self.common_api_response_tests(response, result_code=1, messages_list_len=1,
-                                       fields_errors_list_len=1, messages=["Theme value cannot be null"])
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=1,
+            messages=["Theme field cannot be null"],
+            fields_errors_dict_len=1
+        )
 
     def test_update_preferences_without_data(self):
         response = self.client.put(self.url)
 
-        self.common_api_response_tests(response, result_code=1, messages_list_len=1,
-                                       fields_errors_list_len=1, messages=["Theme field is required"])
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=1,
+            messages=["Theme field is required"],
+            fields_errors_dict_len=1
+        )
 
-    def test_update_preferences_with_invalid_data(self):
+    def test_update_preferences_with_invalid_payload(self):
+        payload = {"theme": "a"*260}
         response = self.client.put(
-            self.url, {"theme": "a"*320}, content_type="application/json")
+            self.url, payload, content_type="application/json")
 
-        self.common_api_response_tests(response, result_code=1, messages_list_len=1, fields_errors_list_len=1, messages=[
-                                       "Theme field max length is 255 symbols"])
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=1,
+            messages=["Theme field value is too long"],
+            fields_errors_dict_len=1
+        )
