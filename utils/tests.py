@@ -12,15 +12,36 @@ class APIViewTestCase(ExtendedTestCase):
     client = APIClient()
     http_status = status
 
-    def client_error_response_test(self, response, code=None,
-                                   status=http_status.HTTP_400_BAD_REQUEST, messages_list_len=0, fields_errors_dict_len=0, messages=[]):
+    def client_error_response_test(self, response,
+                                   code=None,
+                                   status=http_status.HTTP_400_BAD_REQUEST,
+                                   messages_list_len=0,
+                                   fields_errors_dict_len=0,
+                                   messages=[]):
+
+        def calc_number_of_fields_errors(fields_errors):
+            counter = len(fields_errors)
+
+            for field in fields_errors:
+                # If the field error value is dict, then this is a group of fields
+
+                if isinstance(fields_errors[field], dict):
+                    # Groups of fields are not counted in the counter, so 1 is subtracted from the counter
+
+                    counter += calc_number_of_fields_errors(
+                        fields_errors[field]) - 1
+
+            return counter
+
         if not code is None:
             self.assertEqual(response.data["code"], code)
 
         self.assertEqual(response.status_code, status)
         self.assertEqual(len(response.data["messages"]), messages_list_len)
         self.assertEqual(
-            len(response.data["fieldsErrors"]), fields_errors_dict_len)
+            calc_number_of_fields_errors(response.data["fieldsErrors"]),
+            fields_errors_dict_len
+        )
 
         for m in messages:
             self.assertIn(m, response.data["messages"])
