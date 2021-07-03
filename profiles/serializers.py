@@ -52,6 +52,7 @@ def get_error_messages(field_name):
     capitalized_field_name = field_name.capitalize()
 
     return {
+        "required": f"{capitalized_field_name} field is required",
         "null": f"{capitalized_field_name} field cannot be null",
         "blank": f"{capitalized_field_name} field cannot be empty",
         "invalid": f"Invalid value for {field_name} field",
