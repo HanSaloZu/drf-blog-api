@@ -1,18 +1,17 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from django.http import HttpResponse
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
+from django.core.files import File
 
-from .services import save_photo, delete_image
-from .serializers import (UpdateProfileSerializer, ProfileSerializer,
-                          ProfilePreferencesSerializer)
 from utils.response import APIResponse
 from utils.views import LoginRequiredAPIView
 from utils.responses import InvalidData400Response
 from utils.shortcuts import generate_messages_list_by_serializer_errors
+
+from .services.photos import update_photo
+from .serializers import (UpdateProfileSerializer, ProfileSerializer,
+                          ProfilePreferencesSerializer)
 
 
 class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
@@ -38,24 +37,20 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
         ).complete()
 
 
-class ProfilePhotoUpdate(APIView):
-    permission_classes = [IsAuthenticated]
-
+class UpdatePhotoAPIView(LoginRequiredAPIView, APIView):
     def put(self, request):
-        response = APIResponse()
         image = request.data.get("image")
 
-        if image is not None:
-            profile = request.user.profile
-            if profile.photo.file_id is not None:
-                delete_image(profile.photo.file_id)
-            link = save_photo(image, profile)
-            response.data = {
-                "photo": link
-            }
-            return response.complete()
-        else:
-            return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if isinstance(image, File):
+            instance = request.user.profile.photo
+            link = update_photo(instance, image)
+
+            return Response({"photo": link})
+
+        return InvalidData400Response(
+            messages=["File not provided"],
+            fields_errors={"image": "File not provided"}
+        ).complete()
 
 
 class ProfilePreferences(generics.RetrieveAPIView):
