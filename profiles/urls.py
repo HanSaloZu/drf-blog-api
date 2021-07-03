@@ -1,11 +1,9 @@
 from django.urls import path
 
-from .views import (ProfileDetail, ProfileStatusUpdate, ProfilePhotoUpdate,
-                    ProfileUpdate, ProfilePreferences)
+from .views import RetrieveUpdateProfileAPIView, ProfilePhotoUpdate, ProfilePreferences
 
 urlpatterns = [
-    path("", ProfileUpdate.as_view(), name="profile_update"),
-    path("<int:pk>/", ProfileDetail.as_view(), name="profile_detail"),
+    path("", RetrieveUpdateProfileAPIView.as_view(), name="profile"),
     path("photo/", ProfilePhotoUpdate.as_view(), name="profile_photo_update"),
     path("preferences/", ProfilePreferences.as_view(), name="profile_preferences")
 ]

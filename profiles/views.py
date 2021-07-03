@@ -6,17 +6,36 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Profile
 from .services import save_photo, delete_image
-from .selectors import get_profile_by_user_id, get_contacts_by_user_id
-from .serializers import (ProfileSerializer, StatusSerializer,
-                          UpdateProfileSerializer, ProfilePreferencesSerializer)
+from .serializers import (UpdateProfileSerializer, ProfileSerializer,
+                          ProfilePreferencesSerializer)
 from utils.response import APIResponse
+from utils.views import LoginRequiredAPIView
+from utils.responses import InvalidData400Response
+from utils.shortcuts import generate_messages_list_by_serializer_errors
 
 
-class ProfileDetail(generics.RetrieveAPIView):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
+class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
+    def get(self, request):
+        serializer = ProfileSerializer(request.user.profile)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        instance = request.user.profile
+        serializer = UpdateProfileSerializer(
+            instance, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            instance = serializer.save()
+            return Response(ProfileSerializer(instance).data)
+
+        errors = serializer.errors
+        messages = generate_messages_list_by_serializer_errors(errors)
+
+        return InvalidData400Response(
+            messages=messages,
+            fields_errors=errors
+        ).complete()
 
 
 class ProfilePhotoUpdate(APIView):
@@ -37,48 +56,6 @@ class ProfilePhotoUpdate(APIView):
             return response.complete()
         else:
             return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class ProfileUpdate(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def put(self, request):
-        response = APIResponse()
-        serialized_data = UpdateProfileSerializer(data=request.data)
-
-        if serialized_data.is_valid():
-            profile = request.user.profile
-            data = serialized_data.data
-            user_contacts = get_contacts_by_user_id(request.user.id)
-
-            profile.fullname = data["fullName"]
-            profile.about_me = data["aboutMe"]
-            profile.looking_for_a_job = data.get(
-                "lookingForAJob", profile.looking_for_a_job)
-            profile.looking_for_a_job_description = data.get(
-                "lookingForAJobDescription", profile.looking_for_a_job_description)
-
-            if data.get("contacts", False):
-                data["contacts"]["main_link"] = data["contacts"].pop(
-                    "mainLink")
-                user_contacts.update(**dict(data["contacts"]))
-
-            request.user.save()
-            return response.complete()
-
-        errors = serialized_data.errors
-        for error_field in errors:
-            if error_field != "contacts":
-                message = errors[error_field][0]
-                response.messages.append(message)
-            else:
-                contacts_errors = errors.get("contacts", [])
-                for contact_error in contacts_errors:
-                    response.messages.append(
-                        f"Invalid url format (Contacts->{contact_error.capitalize()})")
-
-        response.result_code = 1
-        return response.complete()
 
 
 class ProfilePreferences(generics.RetrieveAPIView):
