@@ -73,21 +73,75 @@ class UpdateContactsSerializer(serializers.Serializer):
 
 
 class UpdateProfileSerializer(serializers.Serializer):
-    lookingForAJob = serializers.BooleanField(
-        required=False, allow_null=False, error_messages=get_error_messages("lookingForAJob", "boolean"))
+    isLookingForAJob = serializers.BooleanField(
+        allow_null=False,
+        error_messages=get_error_messages("is looking for a job")
+    )
 
-    lookingForAJobDescription = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True)
+    professionalSkills = serializers.CharField(
+        allow_blank=True,
+        max_length=350,
+        allow_null=False,
+        error_messages=get_error_messages("professional skills")
+    )
 
-    fullName = serializers.CharField(
-        max_length=300, required=True, allow_blank=False,
-        allow_null=False, error_messages=get_error_messages("FullName", "string"))
+    fullname = serializers.CharField(
+        max_length=150,
+        allow_blank=False,
+        allow_null=False,
+        error_messages=get_error_messages("fullname")
+    )
+
+    status = serializers.CharField(
+        max_length=70,
+        allow_null=False,
+        allow_blank=True,
+        error_messages=get_error_messages("status")
+    )
 
     aboutMe = serializers.CharField(
-        max_length=300, required=True, allow_blank=False, allow_null=False, error_messages=get_error_messages("AboutMe", "string"))
+        max_length=400,
+        allow_blank=False,
+        allow_null=False,
+        min_length=70,
+        error_messages=get_error_messages("about me")
+    )
 
     contacts = UpdateContactsSerializer(
-        default=UpdateContactsSerializer(), required=False, allow_null=True)
+        required=False,
+        allow_null=False,
+        error_messages=get_error_messages("contacts")
+    )
+
+    def update(self, instance, validated_data):
+        instance.fullname = validated_data.get("fullname", instance.fullname)
+        instance.about_me = validated_data.get("aboutMe", instance.about_me)
+        instance.status = validated_data.get("status", instance.status)
+        instance.is_looking_for_a_job = validated_data.get(
+            "isLookingForAJob", instance.is_looking_for_a_job)
+        instance.professional_skills = validated_data.get(
+            "professionalSkills", instance.professional_skills)
+
+        if "contacts" in validated_data:
+            contacts_data = validated_data.pop("contacts")
+            contacts = instance.contacts
+
+            contacts.github = contacts_data.get("github", contacts.github)
+            contacts.vk = contacts_data.get("vk", contacts.vk)
+            contacts.facebook = contacts_data.get(
+                "facebook", contacts.facebook)
+            contacts.instagram = contacts_data.get(
+                "instagram", contacts.instagram)
+            contacts.twitter = contacts_data.get("twitter", contacts.twitter)
+            contacts.website = contacts_data.get("website", contacts.website)
+            contacts.youtube = contacts_data.get("youtube", contacts.youtube)
+            contacts.main_link = contacts_data.get(
+                "mainLink", contacts.main_link)
+
+            contacts.save()
+
+        instance.save()
+        return instance
 
 
 class ProfilePreferencesSerializer(serializers.ModelSerializer):
