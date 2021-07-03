@@ -48,17 +48,21 @@ class ProfileSerializer(serializers.ModelSerializer):
                   "professionalSkills", "fullname", "login", "status", "aboutMe", "photo", "contacts"]
 
 
+def get_error_messages(field_name):
+    capitalized_field_name = field_name.capitalize()
+
+    return {
+        "null": f"{capitalized_field_name} field cannot be null",
+        "blank": f"{capitalized_field_name} field cannot be empty",
+        "invalid": f"Invalid value for {field_name} field",
+        "max_length": f"{capitalized_field_name} field value is too long",
+        "min_length": f"{capitalized_field_name} field value is too short",
+    }
+
+
 class UpdateContactsSerializer(serializers.Serializer):
     github, vk, facebook, instagram, twitter, website, youtube, mainLink = [serializers.URLField(
         max_length=300, default=None, required=False, allow_blank=True, allow_null=True) for i in range(8)]
-
-
-def get_error_messages(field_name, data_type):
-    res = dict.fromkeys(["null", "required", "blank"],
-                        f"The {field_name} field is required. ({field_name})")
-    res.update(
-        {"invalid": f"Invalid {data_type}. ({field_name})"})
-    return res
 
 
 class UpdateProfileSerializer(serializers.Serializer):
