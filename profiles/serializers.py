@@ -20,6 +20,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     login = serializers.SerializerMethodField()
     isLookingForAJob = serializers.SerializerMethodField()
     professionalSkills = serializers.SerializerMethodField()
+    isAdmin = serializers.SerializerMethodField()
     aboutMe = serializers.SerializerMethodField()
     photo = serializers.SerializerMethodField()
     contacts = ContactsSerializer()
@@ -36,6 +37,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_professionalSkills(self, obj):
         return obj.professional_skills
 
+    def get_isAdmin(self, obj):
+        return obj.user.is_staff
+
     def get_aboutMe(self, obj):
         return obj.about_me
 
@@ -44,8 +48,8 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ["userId", "isLookingForAJob",
-                  "professionalSkills", "fullname", "login", "status", "aboutMe", "photo", "contacts"]
+        fields = ["userId", "isLookingForAJob", "professionalSkills",
+                  "isAdmin", "fullname", "login", "status", "aboutMe", "photo", "contacts"]
 
 
 def get_error_messages(field_name):

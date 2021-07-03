@@ -64,11 +64,13 @@ class ProfileDetailAPIViewTestCase(APIViewTestCase):
                          profile.is_looking_for_a_job)
         self.assertEqual(response["professionalSkills"],
                          profile.professional_skills)
+        self.assertEqual(response["isAdmin"], profile.user.is_staff)
         self.assertEqual(response["fullname"], profile.fullname)
         self.assertEqual(response["aboutMe"], profile.about_me)
         self.assertEqual(response["status"], profile.status)
-        self.assertEqual(len(response["contacts"]), 8)
         self.assertEqual(response["photo"], profile.photo.link)
+
+        self.assertEqual(len(response["contacts"]), 8)
         self.assertEqual(response["contacts"]
                          ["github"], profile.contacts.github)
         self.assertEqual(response["contacts"]
