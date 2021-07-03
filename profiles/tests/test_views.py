@@ -154,26 +154,49 @@ class RetrieveUpdateProfileAPIViewTest(ProfileDetailAPIViewTestCase):
         )
 
 
-class ProfilePhotoUpdateAPIViewTest(APIViewTestCase):
+class UpdatePhotoAPIViewTest(APIViewTestCase):
     url = reverse("profile_photo_update")
 
     def setUp(self):
-        self.credentials = {"email": "new@user.com", "password": "pass"}
+        credentials = {"email": "new@user.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="NewUser", **self.credentials)
+            login="NewUser", **credentials)
+        self.client.login(**credentials)
 
-    def test_photo_update_by_unauthorized_user(self):
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
         response = self.client.put(self.url)
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_403_FORBIDDEN)
+        self.unauthorized_client_error_response_test(response)
 
-    def test_photo_update_without_file(self):
-        self.client.login(**self.credentials)
+    def test_photo_update_without_payload(self):
         response = self.client.put(self.url)
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.client_error_response_test(
+            response,
+            messages_list_len=1,
+            code="invalid",
+            messages=[
+                "File not provided",
+            ],
+            fields_errors_dict_len=1
+        )
+
+    def test_photo_update_with_invalid_payload(self):
+        response = self.client.put(
+            self.url,
+            {"image": "test"},
+            content_type="multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW")
+
+        self.client_error_response_test(
+            response,
+            messages_list_len=1,
+            code="invalid",
+            messages=[
+                "File not provided",
+            ],
+            fields_errors_dict_len=1
+        )
 
 
 class ProfilePreferencesAPIViewTest(APIViewTestCase):
