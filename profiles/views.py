@@ -1,17 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import generics
-from rest_framework.permissions import IsAuthenticated
 from django.core.files import File
 
-from utils.response import APIResponse
 from utils.views import LoginRequiredAPIView
 from utils.responses import InvalidData400Response
 from utils.shortcuts import generate_messages_list_by_serializer_errors
 
 from .services.photos import update_photo
 from .serializers import (UpdateProfileSerializer, ProfileSerializer,
-                          ProfilePreferencesSerializer)
+                          PreferencesSerializer)
 
 
 class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
@@ -53,29 +50,23 @@ class UpdatePhotoAPIView(LoginRequiredAPIView, APIView):
         ).complete()
 
 
-class ProfilePreferences(generics.RetrieveAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = ProfilePreferencesSerializer
-
-    def get_object(self):
-        return self.request.user.profile.preferences
+class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
+    def get(self, request):
+        serializer = PreferencesSerializer(request.user.profile.preferences)
+        return Response(serializer.data)
 
     def put(self, request):
-        response = APIResponse()
-        serialized_data = self.serializer_class(data=request.data)
+        instance = request.user.profile.preferences
+        serializer = PreferencesSerializer(instance, data=request.data)
 
-        if serialized_data.is_valid():
-            request.user.profile.preferences.theme = serialized_data.data["theme"]
-            request.user.save()
-            return response.complete()
+        if serializer.is_valid():
+            instance = serializer.save()
+            return Response(PreferencesSerializer(instance).data)
 
-        response.result_code = 1
-        errors = serialized_data.errors
-        for error_field in errors:
-            message = errors[error_field][0]
-            response.messages.append(message)
-            response.fields_errors.append({
-                "field": error_field,
-                "error": message
-            })
-        return response.complete()
+        errors = serializer.errors
+        messages = generate_messages_list_by_serializer_errors(errors)
+
+        return InvalidData400Response(
+            messages=messages,
+            fields_errors=errors
+        ).complete()
