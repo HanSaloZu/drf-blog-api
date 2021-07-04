@@ -3,20 +3,30 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
+def get_error_messages(field_name):
+    return {
+        "required": f"Enter your {field_name}",
+        "blank": f"Enter your {field_name}",
+        "null": f"Enter your {field_name}",
+        "invalid": f"Invalid {field_name}"
+    }
+
+
 class LoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
-        error_messages={
-            "required": "Please enter your Email",
-            "null": "Please enter your Email",
-            "invalid": "Enter valid Email"
-        })
+        allow_blank=False,
+        allow_null=False,
+        error_messages=get_error_messages("email")
+    )
+
     password = serializers.CharField(
         required=True,
-        error_messages={
-            "required": "Enter your password",
-            "null": "Enter your password"
-        })
+        allow_null=False,
+        allow_blank=False,
+        error_messages=get_error_messages("password")
+    )
 
     class Meta:
         model = User
