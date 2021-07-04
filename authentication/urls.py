@@ -1,7 +1,7 @@
 from django.urls import path
 
-from .views import UserAuthentication
+from .views import AuthenticationAPIView
 
 urlpatterns = [
-    path("", UserAuthentication.as_view(), name="authentication")
+    path("", AuthenticationAPIView.as_view(), name="authentication")
 ]

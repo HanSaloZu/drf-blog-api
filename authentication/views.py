@@ -1,42 +1,38 @@
 from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
 from django.contrib.auth import authenticate, login, logout
 
+from profiles.serializers import ProfileSerializer
+from utils.responses import InvalidData400Response
+from utils.shortcuts import generate_messages_list_by_serializer_errors
+
 from .serializers import LoginSerializer
-from utils.response import APIResponse
 
 
-class UserAuthentication(APIView):
+class AuthenticationAPIView(APIView):
     def put(self, request):
-        response = APIResponse()
         serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
             validated_data = serializer.validated_data
             user = authenticate(
-                email=validated_data["email"], password=validated_data["password"])
+                email=validated_data["email"],
+                password=validated_data["password"]
+            )
+
             if user:
                 login(request, user)
+                return Response(ProfileSerializer(user.profile).data)
 
-                response.data = {"userId": user.id}
-                return response.complete()
+            return InvalidData400Response(messages=["Incorrect email or password"]).complete()
 
-            response.result_code = 1
-            response.messages.append("Incorrect Email or Password")
-            return response.complete()
-
-        fields_errors = serializer.errors
-        for field in fields_errors:
-            message = fields_errors[field][0]
-            response.messages.append(message)
-            response.fields_errors.append({
-                "field": field,
-                "error": message
-            })
-
-        response.result_code = 1
-        return response.complete()
+        errors = serializer.errors
+        return InvalidData400Response(
+            messages=generate_messages_list_by_serializer_errors(errors),
+            fields_errors=errors
+        ).complete()
 
     def delete(self, request):
-        response = APIResponse()
         logout(request)
-        return response.complete()
+        return Response(status=HTTP_204_NO_CONTENT)
