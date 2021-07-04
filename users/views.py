@@ -1,63 +1,23 @@
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated
-from django.core.paginator import Paginator
+from rest_framework.generics import RetrieveAPIView
+from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 
-from utils.views import LoginRequiredAPIView
+from utils.views import LoginRequiredAPIView, ListAPIViewMixin
 from utils.responses import NotFound404Response
 from profiles.serializers import ProfileSerializer
 from profiles.selectors import get_profile_by_user_login
 
-from .serializers import UsersListSerializer
-
-User = get_user_model()
+from .serializers import UserSerializer
 
 
-class UsersList(ListAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = UsersListSerializer
+class UsersListAPIView(LoginRequiredAPIView, ListAPIViewMixin, APIView):
+    queryset = get_user_model().objects.all()
+    serializer_class = UserSerializer
 
-    def validate_parameters(self):
-        term = self.request.GET.get("term", "")
-
-        try:
-            count = int(self.request.GET.get("count", 10))
-        except ValueError:
-            raise ValidationError(detail="Invalid count value")
-
-        try:
-            page_number = int(self.request.GET.get("page", 1))
-        except ValueError:
-            raise ValidationError(detail="Invalid page number value")
-
-        if count > 100:
-            raise ValidationError(detail="Maximum page size is 100 items")
-        elif count < 0:
-            raise ValidationError(detail="Minimum page size is 0 items")
-
-        self.get_parameters = {"term": term,
-                               "count": count, "page_number": page_number}
-
-    def get_queryset(self):
-        self.validate_parameters()
-        return User.objects.all()
-
-    def filter_queryset(self, queryset):
-        filtered_queryset = queryset.filter(
-            login__contains=self.get_parameters["term"])
-        self.total_count = filtered_queryset.count()
-
-        return filtered_queryset
-
-    def paginate_queryset(self, queryset):
-        paginator = Paginator(queryset, self.get_parameters["count"])
-        return paginator.get_page(self.get_parameters["page_number"])
-
-    def get_paginated_response(self, serialized_data):
-        return Response({"items": serialized_data, "totalCount": self.total_count})
+    def filter_queryset(self, queryset, kwargs):
+        return queryset.filter(login__contains=kwargs["q"])
 
 
 class RetrieveUserProfileAPIView(LoginRequiredAPIView, RetrieveAPIView):
