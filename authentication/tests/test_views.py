@@ -1,60 +1,80 @@
 from django.urls import reverse
 
-from utils.test import APIViewTestCase
+from utils.tests import ProfileDetailAPIViewTestCase
 
 
-class UserAuthenticationAPIViewTest(APIViewTestCase):
+class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
     url = reverse("authentication")
 
     def setUp(self):
         self.login_credentials = {"email": "new@user.com", "password": "pass"}
-        self.registration_credentials = {"login": "RegUser", "email": "conswintcomin@gmail.com",
-                                         "password1": "pass", "password2": "pass", "aboutMe": "About Me!"}
+
         self.user = self.UserModel.objects.create_user(
             login="NewUser", **self.login_credentials)
 
-    # Authorization testing
+    # Authentication test
 
-    def test_authentication_with_valid_data(self):
+    def test_authentication(self):
         response = self.client.put(
             self.url, self.login_credentials, content_type="application/json")
 
-        self.common_api_response_tests(response)
-        self.assertEqual(response.data["data"]["userId"], self.user.id)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.compare_profile_instance_and_response_data(
+            self.user.profile, response.data)
 
     def test_authentication_with_invalid_email(self):
+        payload = {
+            "email": "invalid",
+            "password": self.login_credentials["password"]
+        }
         response = self.client.put(
-            self.url, {
-                "email": "123",
-                "password": self.login_credentials["password"]
-            }, content_type="application/json")
+            self.url, payload, content_type="application/json")
 
-        self.common_api_response_tests(
-            response, result_code=1, messages_list_len=1, fields_errors_list_len=1, messages=["Enter valid Email"])
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=1,
+            fields_errors_dict_len=1,
+            messages=["Invalid email"]
+        )
 
     def test_authentication_with_invalid_password(self):
+        payload = {
+            "email": self.login_credentials["email"],
+            "password": "invalid"
+        }
         response = self.client.put(
-            self.url, {
-                "email": self.login_credentials["email"],
-                "password": "invalid"
-            }, content_type="application/json")
+            self.url, payload, content_type="application/json")
 
-        self.common_api_response_tests(response, result_code=1,
-                                       messages_list_len=1, fields_errors_list_len=0, messages=["Incorrect Email or Password"])
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=1,
+            messages=["Incorrect email or password"]
+        )
 
     def test_authentication_wihout_credentials(self):
         response = self.client.put(self.url)
 
-        self.common_api_response_tests(response, result_code=1, messages_list_len=2, fields_errors_list_len=2, messages=[
-            "Please enter your Email", "Enter your password"])
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=2,
+            fields_errors_dict_len=2,
+            messages=["Enter your email", "Enter your password"]
+        )
 
-    # Logging out testing
+    # Logout test
 
-    def test_logging_out(self):
+    def test_logout(self):
         self.client.login(**self.login_credentials)
         response = self.client.delete(self.url)
-        self.common_api_response_tests(response)
 
-    def test_unauthorized_logging_out(self):
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
+
+    def test_unauthenticated_client_logout(self):
         response = self.client.delete(self.url)
-        self.common_api_response_tests(response)
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
