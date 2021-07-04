@@ -1,16 +1,22 @@
-from django.core.paginator import Paginator
 from rest_framework.response import Response
-from rest_framework import generics
-from django.contrib.auth import get_user_model
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from django.core.paginator import Paginator
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+
+from utils.views import LoginRequiredAPIView
+from utils.responses import NotFound404Response
+from profiles.serializers import ProfileSerializer
+from profiles.selectors import get_profile_by_user_login
 
 from .serializers import UsersListSerializer
 
 User = get_user_model()
 
 
-class UsersList(generics.ListAPIView):
+class UsersList(ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UsersListSerializer
 
@@ -52,3 +58,14 @@ class UsersList(generics.ListAPIView):
 
     def get_paginated_response(self, serialized_data):
         return Response({"items": serialized_data, "totalCount": self.total_count})
+
+
+class RetrieveUserProfileAPIView(LoginRequiredAPIView, RetrieveAPIView):
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            instance = get_profile_by_user_login(kwargs["login"])
+
+            serializer = ProfileSerializer(instance)
+            return Response(serializer.data)
+        except ObjectDoesNotExist:
+            return NotFound404Response(messages=["Invalid login, user is not found"]).complete()
