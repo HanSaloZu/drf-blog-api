@@ -1,7 +1,7 @@
 from urllib.parse import urlencode
 from django.urls import reverse
 
-from utils.test import APIViewTestCase, ProfileDetailAPIViewTestCase
+from utils.tests import APIViewTestCase, ProfileDetailAPIViewTestCase
 
 
 class UsersListAPIViewsTest(APIViewTestCase):
@@ -98,7 +98,7 @@ class UsersListAPIViewsTest(APIViewTestCase):
                          self.http_status.HTTP_403_FORBIDDEN)
 
 
-class UserProfileDetailAPIViewTest(ProfileDetailAPIViewTestCase):
+class RetrieveUserProfileAPIViewTest(ProfileDetailAPIViewTestCase):
     def url(self, kwargs):
         return reverse("user_profile_detail", kwargs=kwargs)
 
@@ -111,11 +111,17 @@ class UserProfileDetailAPIViewTest(ProfileDetailAPIViewTestCase):
         self.second_user = self.UserModel.objects.create_user(
             login="Second User", email="second@gmail.com", password="pass")
         profile = self.second_user.profile
-        profile.looking_for_a_job = True
-        profile.looking_for_a_job_description = "Test"
+        profile.is_looking_for_a_job = True
+        profile.professional_skills = "Test"
         profile.about_me = "Test"
         profile.contacts.github = "https://github.com/HanSaloZu"
         self.second_user.save()
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url({"login": self.second_user.login}))
+
+        self.unauthorized_client_error_response_test(response)
 
     def test_user_profile_detail(self):
         response = self.client.get(self.url({"login": self.second_user.login}))
@@ -139,14 +145,3 @@ class UserProfileDetailAPIViewTest(ProfileDetailAPIViewTestCase):
             status=self.http_status.HTTP_404_NOT_FOUND,
             messages_list_len=1,
             messages=["Invalid login, user is not found"])
-
-    def test_user_profile_detail_while_unauthenticated(self):
-        self.client.logout()
-        response = self.client.get(self.url({"login": self.second_user}))
-
-        self.client_error_response_test(
-            response,
-            code="notAuthenticated",
-            status=self.http_status.HTTP_401_UNAUTHORIZED,
-            messages_list_len=1,
-            messages=["You are not authenticated"])
