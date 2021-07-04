@@ -1,10 +1,10 @@
 from urllib.parse import urlencode
 from django.urls import reverse
 
-from utils.tests import APIViewTestCase, ProfileDetailAPIViewTestCase
+from utils.tests import ProfileDetailAPIViewTestCase, ListAPIViewTestCase
 
 
-class UsersListAPIViewsTest(APIViewTestCase):
+class UsersListAPIViewTest(ListAPIViewTestCase):
     def url(self, parameters={}):
         url = reverse("users_list")
         if parameters:
@@ -12,90 +12,103 @@ class UsersListAPIViewsTest(APIViewTestCase):
 
         return url
 
-    def common_users_list_response_tests(self, response, status_code=200, items_list_len=0, total_count=3):
-        self.assertEqual(response.status_code, status_code)
-        self.assertEqual(len(response.data["items"]), items_list_len)
-        self.assertEqual(response.data["totalCount"], total_count)
-
     def setUp(self):
         credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
             login="First User", **credentials)
+        self.client.login(**credentials)
+
         self.second_user = self.UserModel.objects.create_user(
             login="Second User", email="second@gmail.com", password="pass")
         self.third_user = self.UserModel.objects.create_user(
             login="Third User", email="third@gmail.com", password="pass")
-        self.client.login(**credentials)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url())
+
+        self.unauthorized_client_error_response_test(response)
 
     def test_users_list_without_parameters(self):
         response = self.client.get(self.url())
 
-        self.common_users_list_response_tests(response, items_list_len=3)
-        user_data = response.data["items"][0]
-        self.assertIn("id", user_data)
-        self.assertIn("name", user_data)
-        self.assertIn("status", user_data)
-        self.assertIn("photo", user_data)
-        self.assertIn("followed", user_data)
+        self.check_common_response_details(
+            response, total_items=3, page_size=3)
 
-    def test_users_list_with_term(self):
-        response = self.client.get(self.url({"term": "First User"}))
+        list_item = response.data["items"][0]
+        self.assertIn("userId", list_item)
+        self.assertIn("login", list_item)
+        self.assertIn("status", list_item)
+        self.assertIn("photo", list_item)
+        self.assertIn("isFollowed", list_item)
+        self.assertIn("isAdmin", list_item)
 
-        self.common_users_list_response_tests(
-            response, items_list_len=1, total_count=1)
-        user_data = response.data["items"][0]
-        self.assertEqual(user_data["id"], self.first_user.id)
-        self.assertEqual(user_data["name"], self.first_user.login)
-        self.assertFalse(user_data["followed"])
-        self.assertIsNone(user_data["photo"])
-        self.assertEqual(user_data["status"], "")
+    def test_users_list_with_q_parameter(self):
+        response = self.client.get(self.url({"q": "First User"}))
 
-        response = self.client.get(self.url({"term": "3333"}))
-        self.common_users_list_response_tests(
-            response, items_list_len=0, total_count=0)
+        self.check_common_response_details(
+            response, page_size=1, total_items=1)
 
-    def test_users_list_with_count_parameter(self):
-        response = self.client.get(self.url({"count": 2}))
-        self.common_users_list_response_tests(response, items_list_len=2)
+        list_item = response.data["items"][0]
+        self.assertEqual(list_item["userId"], self.first_user.id)
+        self.assertEqual(list_item["login"], self.first_user.login)
+        self.assertFalse(list_item["isFollowed"])
+        self.assertEqual(list_item["photo"], "")
+        self.assertEqual(list_item["status"], "")
 
-    def test_users_list_with_invalid_count_parameter(self):
-        response = self.client.get(self.url({"count": -5}))
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_400_BAD_REQUEST)
+        response = self.client.get(self.url({"q": "3333"}))
+        self.check_common_response_details(response)
 
-    def test_users_list_with_large_count_parameter(self):
-        response = self.client.get(self.url({"count": 999}))
+    def test_users_list_with_limit_parameter(self):
+        response = self.client.get(self.url({"limit": 2}))
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_400_BAD_REQUEST)
+        self.check_common_response_details(
+            response, total_items=3, total_pages=2, page_size=2)
+
+    def test_users_list_with_negative_limit_parameter(self):
+        response = self.client.get(self.url({"limit": -5}))
+
+        self.client_error_response_test(
+            response,
+            messages_list_len=1,
+            messages=["Minimum page size is 0 items"]
+        )
+
+    def test_users_list_with_large_limit_parameter(self):
+        response = self.client.get(self.url({"limit": 999}))
+
+        self.client_error_response_test(
+            response,
+            messages_list_len=1,
+            messages=["Maximum page size is 100 items"]
+        )
 
     def test_users_list_with_page_parameter(self):
-        response = self.client.get(self.url({"count": 1, "page": 1}))
+        response = self.client.get(self.url({"limit": 1, "page": 1}))
+        self.check_common_response_details(
+            response, total_items=3, total_pages=3, page_size=1)
 
-        self.common_users_list_response_tests(response, items_list_len=1)
-        user_data = response.data["items"][0]
-        self.assertEqual(user_data["id"], self.third_user.id)
-
-        response = self.client.get(self.url({"count": 1, "page": 2}))
-
-        self.common_users_list_response_tests(response, items_list_len=1)
-        user_data = response.data["items"][0]
-        self.assertEqual(user_data["id"], self.second_user.id)
+        response = self.client.get(self.url({"limit": 1, "page": 2}))
+        self.check_common_response_details(
+            response, total_items=3, total_pages=3, page_size=1, page_number=2)
 
     def test_users_list_with_invalid_page_parameter(self):
-        response = self.client.get(self.url({"count": 1, "page": "abc"}))
+        response = self.client.get(self.url({"limit": 1, "page": "abc"}))
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_400_BAD_REQUEST)
+        self.client_error_response_test(
+            response,
+            messages_list_len=1,
+            messages=["Invalid page number value"]
+        )
 
-    def test_users_list_while_unauthorized(self):
-        self.client.logout()
-        self.second_user.following.create(
-            follower_user=self.second_user, following_user=self.first_user)
-        response = self.client.get(self.url({"friend": "true"}))
+    def test_users_list_with_invalid_limit_parameter(self):
+        response = self.client.get(self.url({"limit": "invalid"}))
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_403_FORBIDDEN)
+        self.client_error_response_test(
+            response,
+            messages_list_len=1,
+            messages=["Invalid limit value"]
+        )
 
 
 class RetrieveUserProfileAPIViewTest(ProfileDetailAPIViewTestCase):
