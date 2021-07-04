@@ -3,14 +3,15 @@ from rest_framework import serializers
 from .models import User
 
 
-class UsersListSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
+class UserSerializer(serializers.ModelSerializer):
+    userId = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     photo = serializers.SerializerMethodField()
-    followed = serializers.SerializerMethodField()
+    isAdmin = serializers.SerializerMethodField()
+    isFollowed = serializers.SerializerMethodField()
 
-    def get_name(self, obj):
-        return obj.login
+    def get_userId(self, obj):
+        return obj.id
 
     def get_status(self, obj):
         return obj.profile.status
@@ -18,10 +19,14 @@ class UsersListSerializer(serializers.ModelSerializer):
     def get_photo(self, obj):
         return obj.profile.photo.link
 
-    def get_followed(self, obj):
+    def get_isAdmin(self, obj):
+        return obj.is_staff
+
+    def get_isFollowed(self, obj):
         user = self.context.get("request").user
         return obj.followers.all().filter(follower_user=user).exists()
 
     class Meta:
         model = User
-        fields = ["name", "id", "status", "photo", "followed"]
+        fields = ["userId", "login", "status",
+                  "photo", "isAdmin", "isFollowed"]
