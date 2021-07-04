@@ -1,4 +1,4 @@
-from utils.test import ExtendedTestCase
+from utils.tests import ExtendedTestCase
 
 
 class UserModelTest(ExtendedTestCase):
