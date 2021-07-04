@@ -8,7 +8,7 @@ from .managers import UserManager
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     login = models.CharField(db_index=True,
-                             unique=True, max_length=160)
+                             unique=True, max_length=150)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
@@ -17,10 +17,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    def __str__(self):
-        return self.login
-
     class Meta:
         verbose_name = "user"
         db_table = "users"
         ordering = ["-id"]
+
+    def __str__(self):
+        return self.login
