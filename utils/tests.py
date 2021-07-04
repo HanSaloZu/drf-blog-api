@@ -86,3 +86,20 @@ class ProfileDetailAPIViewTestCase(APIViewTestCase):
                          ["website"], profile.contacts.website)
         self.assertEqual(response["contacts"]
                          ["youtube"], profile.contacts.youtube)
+
+
+class ListAPIViewTestCase(APIViewTestCase):
+    def check_common_response_details(self, response,
+                                      total_items=0,
+                                      total_pages=1,
+                                      page_size=0,
+                                      page_number=1):
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+        self.assertEqual(len(response.data["items"]), page_size)
+
+        page_details = response.data["page"]
+        self.assertEqual(page_details["totalItems"], total_items)
+        self.assertEqual(page_details["totalPages"], total_pages)
+        self.assertEqual(page_details["pageSize"], page_size)
+        self.assertEqual(page_details["pageNumber"], page_number)
