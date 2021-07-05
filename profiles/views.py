@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
 from django.core.files import File
 
 from utils.views import LoginRequiredAPIView
@@ -8,7 +9,7 @@ from utils.shortcuts import generate_messages_list_by_serializer_errors
 
 from .services.photos import update_photo
 from .serializers import (UpdateProfileSerializer, ProfileSerializer,
-                          PreferencesSerializer)
+                          PreferencesSerializer, UpdatePasswordSerailizer)
 
 
 class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
@@ -68,5 +69,22 @@ class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
 
         return InvalidData400Response(
             messages=messages,
+            fields_errors=errors
+        ).complete()
+
+
+class UpdatePasswordAPIView(LoginRequiredAPIView, APIView):
+    def put(self, request):
+        instance = request.user
+        serializer = UpdatePasswordSerailizer(
+            instance, data=request.data, context={"request": request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=HTTP_204_NO_CONTENT)
+
+        errors = serializer.errors
+        return InvalidData400Response(
+            messages=generate_messages_list_by_serializer_errors(errors),
             fields_errors=errors
         ).complete()
