@@ -3,6 +3,19 @@ from rest_framework import serializers
 from .models import Profile, Contacts, Preferences
 
 
+def get_error_messages(field_name):
+    capitalized_field_name = field_name.capitalize()
+
+    return {
+        "required": f"{capitalized_field_name} field is required",
+        "null": f"{capitalized_field_name} field cannot be null",
+        "blank": f"{capitalized_field_name} field cannot be empty",
+        "invalid": f"Invalid value for {field_name} field",
+        "max_length": f"{capitalized_field_name} field value is too long",
+        "min_length": f"{capitalized_field_name} field value is too short",
+    }
+
+
 class ContactsSerializer(serializers.ModelSerializer):
     mainLink = serializers.SerializerMethodField()
 
@@ -50,19 +63,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ["userId", "isLookingForAJob", "professionalSkills",
                   "isAdmin", "fullname", "login", "status", "aboutMe", "photo", "contacts"]
-
-
-def get_error_messages(field_name):
-    capitalized_field_name = field_name.capitalize()
-
-    return {
-        "required": f"{capitalized_field_name} field is required",
-        "null": f"{capitalized_field_name} field cannot be null",
-        "blank": f"{capitalized_field_name} field cannot be empty",
-        "invalid": f"Invalid value for {field_name} field",
-        "max_length": f"{capitalized_field_name} field value is too long",
-        "min_length": f"{capitalized_field_name} field value is too short",
-    }
 
 
 class UpdateContactsSerializer(serializers.Serializer):
@@ -161,3 +161,35 @@ class PreferencesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Preferences
         fields = ["theme"]
+
+
+class UpdatePasswordSerailizer(serializers.Serializer):
+    oldPassword, newPassword1, newPassword2 = [
+        serializers.CharField(
+            max_length=128,
+            required=True,
+            allow_blank=False,
+            allow_null=False,
+            error_messages=get_error_messages(i)) for i in [
+            "old password", "new password", "repeat new password"
+        ]
+    ]
+
+    def validate(self, data):
+        if not self.context["request"].user.check_password(data["oldPassword"]):
+            raise serializers.ValidationError({
+                "oldPassword": "Invalid password"
+            })
+
+        if data["newPassword1"] != data["newPassword2"]:
+            raise serializers.ValidationError({
+                "newPassword2": "Passwords do not match"
+            })
+
+        return data
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data["newPassword1"])
+        instance.save()
+
+        return instance
