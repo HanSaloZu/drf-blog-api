@@ -287,3 +287,104 @@ class RetrieveUpdatePreferencesAPIViewTest(APIViewTestCase):
             messages=["Theme field value is too long"],
             fields_errors_dict_len=1
         )
+
+
+class UpdatePasswordAPIViewTest(APIViewTestCase):
+    url = reverse("update_password")
+
+    def setUp(self):
+        credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
+
+        self.client.login(**credentials)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.put(self.url)
+
+        self.unauthorized_client_error_response_test(response)
+
+    def test_update_password(self):
+        payload = {
+            "oldPassword": "pass",
+            "newPassword1": "newpassword",
+            "newPassword2": "newpassword"
+        }
+        response = self.client.put(
+            self.url, payload, content_type="application/json")
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
+
+        user = self.UserModel.objects.all().first()
+        self.assertTrue(user.check_password(payload["newPassword1"]))
+
+    def test_update_password_without_payload(self):
+        response = self.client.put(self.url)
+
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=3,
+            messages=[
+                "Old password field is required",
+                "New password field is required",
+                "Repeat new password field is required",
+            ],
+            fields_errors_dict_len=3
+        )
+
+    def test_update_password_with_different_passwords(self):
+        payload = {
+            "oldPassword": "pass",
+            "newPassword1": "invalid",
+            "newPassword2": "newpassword"
+        }
+        response = self.client.put(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=1,
+            messages=["Passwords do not match"],
+            fields_errors_dict_len=1
+        )
+
+    def test_update_password_with_invalid_current_password(self):
+        payload = {
+            "oldPassword": "invalid",
+            "newPassword1": "newpassword",
+            "newPassword2": "newpassword"
+        }
+        response = self.client.put(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=1,
+            messages=["Invalid password"],
+            fields_errors_dict_len=1
+        )
+
+    def test_update_password_with_invalid_payload(self):
+        payload = {
+            "oldPassword": "pass",
+            "newPassword1": "",
+            "newPassword2": None
+        }
+        response = self.client.put(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=2,
+            messages=[
+                "New password field cannot be empty",
+                "Repeat new password field cannot be null"
+            ],
+            fields_errors_dict_len=2
+        )
