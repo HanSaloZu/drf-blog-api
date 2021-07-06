@@ -34,6 +34,21 @@ class UserFollowersListAPIView(LoginRequiredAPIView, ListAPIViewMixin):
         )
 
 
+class UserFollowingListAPIView(LoginRequiredAPIView, ListAPIViewMixin):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def filter_queryset(self, queryset, kwargs):
+        target_user = get_profile_by_user_login_or_404(kwargs["login"]).user
+        followings = target_user.following.only("following_user")
+        followings_ids = [i.following_user.id for i in list(followings)]
+
+        return queryset.filter(
+            id__in=followings_ids,
+            login__contains=kwargs["q"]
+        )
+
+
 class RetrieveUserProfileAPIView(LoginRequiredAPIView, RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         instance = get_profile_by_user_login_or_404(kwargs["login"])
