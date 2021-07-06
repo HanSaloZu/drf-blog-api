@@ -1,5 +1,6 @@
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.core.paginator import Paginator
 
 from .exceptions import NotAuthenticated401, InvalidData400, custom_exception_handler
@@ -18,11 +19,11 @@ class LoginRequiredAPIView:
         return super().dispatch(request, *args, **kwargs)
 
 
-class ListAPIViewMixin:
+class ListAPIViewMixin(APIView):
     serializer_class = None
     queryset = None
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         """
         Query parameters:
 
@@ -30,22 +31,22 @@ class ListAPIViewMixin:
             limit - number of items per page
             page - page number
         """
-        kwargs = {"q": request.GET.get("q", "")}
+        kwargs["q"] = request.query_params.get("q", "")
 
         try:
-            kwargs["limit"] = int(request.GET.get("limit", 10))
+            kwargs["limit"] = int(request.query_params.get("limit", 10))
         except ValueError:
-            return InvalidData400Response(messages=["Invalid limit value"]).complete()
+            raise InvalidData400("Invalid limit value")
 
         if kwargs["limit"] > 100:
-            return InvalidData400Response(messages=["Maximum page size is 100 items"]).complete()
+            raise InvalidData400("Maximum page size is 100 items")
         elif kwargs["limit"] < 0:
-            return InvalidData400Response(messages=["Minimum page size is 0 items"]).complete()
+            raise InvalidData400("Minimum page size is 0 items")
 
         try:
-            kwargs["page"] = int(request.GET.get("page", 1))
+            kwargs["page"] = int(request.query_params.get("page", 1))
         except ValueError:
-            return InvalidData400Response(messages=["Invalid page number value"]).complete()
+            raise InvalidData400("Invalid page number value")
 
         queryset = self.filter_queryset(self.queryset, kwargs)
 

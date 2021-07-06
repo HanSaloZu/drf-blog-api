@@ -1,6 +1,5 @@
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveAPIView
-from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 
 from utils.views import LoginRequiredAPIView, ListAPIViewMixin
@@ -10,7 +9,7 @@ from profiles.selectors import get_profile_by_user_login_or_404
 from .serializers import UserSerializer
 
 
-class UsersListAPIView(LoginRequiredAPIView, ListAPIViewMixin, APIView):
+class UsersListAPIView(LoginRequiredAPIView, ListAPIViewMixin):
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
 
