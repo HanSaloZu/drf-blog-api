@@ -1,4 +1,24 @@
+from rest_framework.views import exception_handler
 from rest_framework import status
+from rest_framework.response import Response
+
+
+def custom_exception_handler(exc, context=None):
+    if isinstance(exc, CustomAPIException):
+        data = {
+            "code": exc.code,
+            "messages": exc.messages,
+            "fieldsErrors": exc.fields_errors
+        }
+
+        return Response(data, status=exc.status_code,  content_type="application/json")
+
+    response = exception_handler(exc, context)
+
+    if response is not None:
+        response.data['status_code'] = response.status_code
+
+    return response
 
 
 class CustomAPIException(Exception):
