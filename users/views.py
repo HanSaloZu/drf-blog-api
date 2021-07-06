@@ -8,13 +8,30 @@ from profiles.selectors import get_profile_by_user_login_or_404
 
 from .serializers import UserSerializer
 
+User = get_user_model()
+
 
 class UsersListAPIView(LoginRequiredAPIView, ListAPIViewMixin):
-    queryset = get_user_model().objects.all()
+    queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def filter_queryset(self, queryset, kwargs):
         return queryset.filter(login__contains=kwargs["q"])
+
+
+class UserFollowersListAPIView(LoginRequiredAPIView, ListAPIViewMixin):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def filter_queryset(self, queryset, kwargs):
+        target_user = get_profile_by_user_login_or_404(kwargs["login"]).user
+        followers = target_user.followers.only("follower_user")
+        followers_ids = [i.follower_user.id for i in list(followers)]
+
+        return queryset.filter(
+            id__in=followers_ids,
+            login__contains=kwargs["q"]
+        )
 
 
 class RetrieveUserProfileAPIView(LoginRequiredAPIView, RetrieveAPIView):
