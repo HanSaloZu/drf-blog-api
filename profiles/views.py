@@ -4,8 +4,8 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from django.core.files import File
 
 from utils.views import LoginRequiredAPIView
-from utils.responses import InvalidData400Response
-from utils.shortcuts import generate_messages_list_by_serializer_errors
+from utils.exceptions import InvalidData400
+from utils.shortcuts import raise_400_based_on_serializer
 
 from .services.photos import update_photo
 from .serializers import (UpdateProfileSerializer, ProfileSerializer,
@@ -26,13 +26,7 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
             instance = serializer.save()
             return Response(ProfileSerializer(instance).data)
 
-        errors = serializer.errors
-        messages = generate_messages_list_by_serializer_errors(errors)
-
-        return InvalidData400Response(
-            messages=messages,
-            fields_errors=errors
-        ).complete()
+        raise_400_based_on_serializer(serializer)
 
 
 class UpdatePhotoAPIView(LoginRequiredAPIView, APIView):
@@ -45,10 +39,8 @@ class UpdatePhotoAPIView(LoginRequiredAPIView, APIView):
 
             return Response({"photo": link})
 
-        return InvalidData400Response(
-            messages=["File not provided"],
-            fields_errors={"image": "File not provided"}
-        ).complete()
+        raise InvalidData400("File not provided",
+                             {"image": "File not provided"})
 
 
 class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
@@ -64,13 +56,7 @@ class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
             instance = serializer.save()
             return Response(PreferencesSerializer(instance).data)
 
-        errors = serializer.errors
-        messages = generate_messages_list_by_serializer_errors(errors)
-
-        return InvalidData400Response(
-            messages=messages,
-            fields_errors=errors
-        ).complete()
+        raise_400_based_on_serializer(serializer)
 
 
 class UpdatePasswordAPIView(LoginRequiredAPIView, APIView):
@@ -83,8 +69,4 @@ class UpdatePasswordAPIView(LoginRequiredAPIView, APIView):
             serializer.save()
             return Response(status=HTTP_204_NO_CONTENT)
 
-        errors = serializer.errors
-        return InvalidData400Response(
-            messages=generate_messages_list_by_serializer_errors(errors),
-            fields_errors=errors
-        ).complete()
+        raise_400_based_on_serializer(serializer)
