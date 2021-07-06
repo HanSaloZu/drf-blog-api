@@ -4,8 +4,8 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from django.contrib.auth import authenticate, login, logout
 
 from profiles.serializers import ProfileSerializer
-from utils.responses import InvalidData400Response
-from utils.shortcuts import generate_messages_list_by_serializer_errors
+from utils.exceptions import InvalidData400
+from utils.shortcuts import raise_400_based_on_serializer
 
 from .serializers import LoginSerializer
 
@@ -25,13 +25,9 @@ class AuthenticationAPIView(APIView):
                 login(request, user)
                 return Response(ProfileSerializer(user.profile).data)
 
-            return InvalidData400Response(messages=["Incorrect email or password"]).complete()
+            raise InvalidData400("Incorrect email or password")
 
-        errors = serializer.errors
-        return InvalidData400Response(
-            messages=generate_messages_list_by_serializer_errors(errors),
-            fields_errors=errors
-        ).complete()
+        raise_400_based_on_serializer(serializer)
 
     def delete(self, request):
         logout(request)
