@@ -2,13 +2,13 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from django.core.paginator import Paginator
 
-from .responses import NotAuthenticated401Response, InvalidData400Response
+from .exceptions import NotAuthenticated401, InvalidData400, custom_exception_handler
 
 
 class LoginRequiredAPIView:
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            response = NotAuthenticated401Response().complete()
+            response = custom_exception_handler(NotAuthenticated401())
             response.accepted_renderer = JSONRenderer()
             response.accepted_media_type = "application/json"
             response.renderer_context = {}
