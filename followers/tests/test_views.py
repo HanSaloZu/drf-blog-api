@@ -1,27 +1,36 @@
 from django.urls import reverse
+from urllib.parse import urlencode
+
+from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
 from ..models import FollowersModel
-from utils.test import APIViewTestCase
 
 
-class FollowingAPIViewTestCase(APIViewTestCase):
+class FollowingAPIViewTest(APIViewTestCase):
     model = FollowersModel
 
     def url(self, kwargs):
-        return reverse("follow", kwargs=kwargs)
+        return reverse("following", kwargs=kwargs)
 
     def setUp(self):
-        first_user_credentials = {
+        credentials = {
             "email": "first_user_@gmail.com", "password": "pass"}
 
         self.first_user = self.UserModel.objects.create_user(
-            login="FirstUser", **first_user_credentials)
+            login="FirstUser", **credentials)
+        self.client.login(**credentials)
+
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second_user_@gmail.com", password="pass")
-        self.client.login(**first_user_credentials)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url({"login": self.second_user.login}))
+
+        self.unauthorized_client_error_response_test(response)
 
     def test_follow(self):
-        response = self.client.post(self.url({"user_id": self.second_user.id}))
+        response = self.client.put(self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_204_NO_CONTENT)
@@ -31,25 +40,43 @@ class FollowingAPIViewTestCase(APIViewTestCase):
             self.second_user, self.first_user))
 
     def test_self_follow(self):
-        response = self.client.post(self.url({"user_id": self.first_user.id}))
+        response = self.client.put(self.url({"login": self.first_user.login}))
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["message"], "You can't follow yourself")
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=1,
+            messages=["You can't follow yourself"]
+        )
 
-    def test_double_following(self):
-        self.client.post(self.url({"user_id": self.second_user.id}))
-        response = self.client.post(self.url({"user_id": self.second_user.id}))
+    def test_double_follow(self):
+        self.model.follow(self.first_user, self.second_user)
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["message"],
-                         "You are already following this user")
+        response = self.client.put(self.url({"login": self.second_user.login}))
+
+        self.client_error_response_test(
+            response,
+            code="invalid",
+            messages_list_len=1,
+            messages=["You are already following this user"]
+        )
+
+    def test_follow_with_invalid_login(self):
+        response = self.client.put(self.url({"login": "login"}))
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages_list_len=1,
+            messages=["Invalid login, user is not found"]
+        )
 
     def test_unfollow(self):
-        self.client.post(self.url({"user_id": self.second_user.id}))
+        self.model.follow(self.first_user, self.second_user)
+
         response = self.client.delete(
-            self.url({"user_id": self.second_user.id}))
+            self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_204_NO_CONTENT)
@@ -58,49 +85,30 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
     def test_unfollow_not_followed_user(self):
         response = self.client.delete(
-            self.url(kwargs={"user_id": self.second_user.id}))
+            self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["message"], "You should first follow the user, then you can unfollow")
+                         self.http_status.HTTP_204_NO_CONTENT)
+        self.assertFalse(self.model.is_following(
+            self.first_user, self.second_user))
 
     def test_is_following(self):
-        response = self.client.get(
-            self.url(kwargs={"user_id": self.second_user.id}))
-
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertFalse(response.data["following"])
-        self.assertEqual(response.data["following"],
-                         self.model.is_following(self.first_user, self.second_user))
-
-        self.client.post(
-            self.url(kwargs={"user_id": self.second_user.id}))
-        response = self.client.get(
-            self.url(kwargs={"user_id": self.second_user.id}))
-
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertTrue(response.data["following"])
-        self.assertEqual(response.data["following"],
-                         self.model.is_following(self.first_user, self.second_user))
-
-    def test_is_following_with_invalid_user_id(self):
-        response = self.client.get(
-            self.url(kwargs={"user_id": 999}))
-
+        response = self.client.get(self.url({"login": self.second_user.login}))
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_404_NOT_FOUND)
 
-    def test_follow_with_invalid_user_id(self):
-        response = self.client.post(self.url(kwargs={"user_id": 999}))
-
+        self.model.follow(self.first_user, self.second_user)
+        response = self.client.get(self.url({"login": self.second_user.login}))
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_404_NOT_FOUND)
+                         self.http_status.HTTP_204_NO_CONTENT)
 
-    def test_follow_while_unauthorized(self):
-        self.client.logout()
+    def test_is_following_with_invalid_login(self):
+        response = self.client.get(self.url({"login": "invalid"}))
 
-        response = self.client.post(
-            self.url(kwargs={"user_id": self.second_user.id}))
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_403_FORBIDDEN)
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages_list_len=1,
+            messages=["Invalid login, user is not found"]
+        )
