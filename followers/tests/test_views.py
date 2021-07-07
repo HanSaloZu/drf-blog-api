@@ -57,6 +57,38 @@ class FollowersListAPIViewTest(ListAPIViewTestCase):
                          [0]["userId"], self.second_user.id)
 
 
+class FollowingListAPIViewTest(ListAPIViewTestCase):
+    url = reverse("following_list")
+    model = FollowersModel
+
+    def setUp(self):
+        credentials = {"email": "first@gmail.com", "password": "pass"}
+        self.first_user = self.UserModel.objects.create_user(
+            login="FirstUser", **credentials)
+        self.client.login(**credentials)
+
+        self.second_user = self.UserModel.objects.create_user(
+            login="SecondUser", email="second@gmail.com", password="pass")
+        self.model.follow(self.first_user, self.second_user)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url)
+
+        self.unauthorized_client_error_response_test(response)
+
+    def test_following_list(self):
+        response = self.client.get(self.url)
+
+        self.check_common_response_details(
+            response,
+            total_items=1,
+            page_size=1
+        )
+        self.assertEqual(response.data["items"]
+                         [0]["userId"], self.second_user.id)
+
+
 class FollowingAPIViewTest(APIViewTestCase):
     model = FollowersModel
 
