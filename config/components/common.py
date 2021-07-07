@@ -57,6 +57,15 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 AUTH_USER_MODEL = "users.User"
 
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 4,
+        }
+    },
+]
+
 LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "Europe/Moscow"
