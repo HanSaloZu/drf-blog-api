@@ -27,6 +27,20 @@ class FollowersListAPIView(LoginRequiredAPIView, ListAPIViewMixin):
         )
 
 
+class FollowingListAPIView(LoginRequiredAPIView, ListAPIViewMixin):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def filter_queryset(self, queryset, kwargs):
+        followings = self.request.user.following.only("following_user")
+        followings_ids = [i.following_user.id for i in list(followings)]
+
+        return queryset.filter(
+            id__in=followings_ids,
+            login__contains=kwargs["q"]
+        )
+
+
 class FollowingAPIView(LoginRequiredAPIView, APIView):
     model = FollowersModel
 
