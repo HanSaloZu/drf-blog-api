@@ -1,42 +1,44 @@
-from rest_framework.generics import DestroyAPIView
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 from django.contrib.auth import get_user_model
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import ValidationError
-from rest_framework.status import HTTP_204_NO_CONTENT
+
+from utils.views import LoginRequiredAPIView, ListAPIViewMixin
+from utils.exceptions import InvalidData400
+from users.serializers import UserSerializer
+from profiles.selectors import get_profile_by_user_login_or_404
 
 from .models import FollowersModel
 
 User = get_user_model()
 
 
-class FollowAPIView(DestroyAPIView):
-    permission_classes = [IsAuthenticated]
+class FollowingAPIView(LoginRequiredAPIView, APIView):
     model = FollowersModel
 
-    def get(self, request, user_id):
-        subject = get_object_or_404(User, id=user_id)
-        return Response({"following": self.model.is_following(request.user, subject)})
+    def get(self, request, login):
+        target = get_profile_by_user_login_or_404(login).user
 
-    def post(self, request, user_id):
-        subject = get_object_or_404(User, id=user_id)
+        if self.model.is_following(request.user, target):
+            return Response(status=HTTP_204_NO_CONTENT)
+        return Response(status=HTTP_404_NOT_FOUND)
 
-        if user_id == request.user.id:
-            raise ValidationError({"message": "You can't follow yourself"})
-        elif self.model.is_following(request.user, subject):
-            raise ValidationError(
-                {"message": "You are already following this user"})
+    def put(self, request, login):
+        if login == request.user.login:
+            raise InvalidData400("You can't follow yourself")
 
-        self.model.follow(request.user, subject)
+        target = get_profile_by_user_login_or_404(login).user
+
+        if self.model.is_following(request.user, target):
+            raise InvalidData400("You are already following this user")
+
+        self.model.follow(request.user, target)
         return Response(status=HTTP_204_NO_CONTENT)
 
-    def get_object(self):
-        subject = get_object_or_404(User, id=self.kwargs["user_id"])
+    def delete(self, request, login):
+        target = get_profile_by_user_login_or_404(login).user
 
-        if self.model.is_following(self.request.user, subject):
-            return self.model.objects.filter(
-                follower_user=self.request.user, following_user=subject)
-        else:
-            raise ValidationError(
-                {"message": "You should first follow the user, then you can unfollow"})
+        if self.model.is_following(request.user, target):
+            self.model.unfollow(request.user, target)
+
+        return Response(status=HTTP_204_NO_CONTENT)
