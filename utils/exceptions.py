@@ -56,7 +56,7 @@ class InvalidData400(CustomAPIException):
 
 class Forbidden403(CustomAPIException):
     code = "forbidden"
-    code = status.HTTP_403_FORBIDDEN
+    status_code = status.HTTP_403_FORBIDDEN
 
 
 class InactiveProfile403(CustomAPIException):
