@@ -7,7 +7,9 @@ from profiles.serializers import ProfileSerializer
 from utils.exceptions import InvalidData400
 from utils.shortcuts import raise_400_based_on_serializer
 
+from .services.activation import get_user_by_uidb64_or_none
 from .serializers import LoginSerializer
+from .tokens import confirmation_token
 
 
 class AuthenticationAPIView(APIView):
@@ -32,3 +34,17 @@ class AuthenticationAPIView(APIView):
     def delete(self, request):
         logout(request)
         return Response(status=HTTP_204_NO_CONTENT)
+
+
+class ProfileActivationAPIView(APIView):
+    def post(self, request):
+        user = get_user_by_uidb64_or_none(request.data.get("uidb64", ""))
+        token = request.data.get("token", "")
+
+        if user is not None and confirmation_token.check_token(user, token):
+            user.is_active = True
+            user.save()
+
+            return Response(status=HTTP_204_NO_CONTENT)
+
+        raise InvalidData400("Invalid credentials")
