@@ -12,9 +12,14 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
 
     def setUp(self):
         self.credentials = {"email": "new@user.com", "password": "pass"}
+        self.inactive_user_credentials = {
+            "email": "inactive@user.com", "password": "pass"}
 
         self.user = self.UserModel.objects.create_user(
             login="NewUser", **self.credentials)
+        self.inactive_user = self.UserModel.objects.create_user(
+            login="InactiveUser", **self.inactive_user_credentials, is_active=False
+        )
 
     # Authentication test
 
@@ -25,6 +30,18 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.compare_profile_instance_and_response_data(
             self.user.profile, response.data)
+
+    def test_inactive_profile_authentication(self):
+        response = self.client.put(
+            self.url, self.inactive_user_credentials, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            code="inactiveProfile",
+            status=self.http_status.HTTP_403_FORBIDDEN,
+            messages_list_len=1,
+            messages=["Your profile is not activated"]
+        )
 
     def test_authentication_with_invalid_email(self):
         payload = {
