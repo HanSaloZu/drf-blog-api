@@ -102,6 +102,27 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
 
     # Registration test
 
+    def test_registration_request_by_authenticated_client(self):
+        self.client.login(**self.credentials)
+
+        payload = {
+            "login": "NewUser",
+            "email": "test@test.com",
+            "password1": "pass",
+            "password2": "pass",
+            "aboutMe": get_random_string(length=80)
+        }
+        response = self.client.post(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            code="forbidden",
+            status=self.http_status.HTTP_403_FORBIDDEN,
+            messages_list_len=1,
+            messages=["You are already autenticated"]
+        )
+
     def test_registration_with_used_login(self):
         payload = {
             "login": "NewUser",
