@@ -1,7 +1,10 @@
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 
-from utils.tests import ProfileDetailAPIViewTestCase
+from utils.tests import ProfileDetailAPIViewTestCase, APIViewTestCase
+
+from ..services.activation import generate_uidb64
+from ..tokens import confirmation_token
 
 
 class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
@@ -202,3 +205,40 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
         self.assertFalse(user.is_active)
         self.assertEqual(user.profile.about_me, payload["aboutMe"])
         self.assertTrue(user.check_password(payload["password1"]))
+
+
+class ProfileActivationAPIViewTest(APIViewTestCase):
+    url = reverse("profile_activation")
+
+    def setUp(self):
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", email="new@user.com", password="pass", is_active=False)
+
+    def test_profile_activation(self):
+        payload = {
+            "token": confirmation_token.make_token(self.user),
+            "uidb64": generate_uidb64(self.user)
+        }
+        response = self.client.post(
+            self.url, payload, content_type="application/json")
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
+
+        user = self.UserModel.objects.get(id=self.user.id)
+        self.assertFalse(self.user.is_active)
+        self.assertTrue(user.is_active)
+
+    def test_profile_activation_with_invalid_payload(self):
+        payload = {
+            "token": "invalid",
+            "uidb64": "invalid"
+        }
+        response = self.client.post(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            messages_list_len=1,
+            messages=["Invalid credentials"]
+        )
