@@ -179,7 +179,7 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
             messages_list_len=5,
             fields_errors_dict_len=5,
             messages=[
-                "Login must be up to 160 characters long",
+                "Login must be up to 150 characters long",
                 "Email is required",
                 "Password must be at least 4 characters",
                 "You should repeat your password",
