@@ -4,7 +4,7 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from django.contrib.auth import authenticate, login, logout
 
 from profiles.serializers import ProfileSerializer
-from utils.exceptions import InvalidData400, InactiveProfile403
+from utils.exceptions import InvalidData400, InactiveProfile403, Forbidden403
 from utils.shortcuts import raise_400_based_on_serializer
 
 from .services.email import send_profile_activation_email
@@ -15,6 +15,9 @@ from .tokens import confirmation_token
 
 class AuthenticationAPIView(APIView):
     def post(self, request):
+        if request.user.is_authenticated:
+            raise Forbidden403("You are already autenticated")
+
         serializer = RegistrationSerializer(data=request.data)
 
         if serializer.is_valid():
