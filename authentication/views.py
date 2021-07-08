@@ -55,6 +55,9 @@ class AuthenticationAPIView(APIView):
 
 class ProfileActivationAPIView(APIView):
     def post(self, request):
+        if request.user.is_authenticated:
+            raise Forbidden403("You are already autenticated")
+
         user = get_user_by_uidb64_or_none(request.data.get("uidb64", ""))
         token = request.data.get("token", "")
 
