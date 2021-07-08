@@ -252,6 +252,26 @@ class ProfileActivationAPIViewTest(APIViewTestCase):
         self.user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass", is_active=False)
 
+    def test_profile_activation_request_by_authenticated_client(self):
+        credentials = {"email": "active@user.com", "password": "pass"}
+        self.UserModel.objects.create_user(login="ActiveUser", **credentials)
+        self.client.login(**credentials)
+
+        payload = {
+            "token": confirmation_token.make_token(self.user),
+            "uidb64": generate_uidb64(self.user)
+        }
+        response = self.client.post(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            code="forbidden",
+            status=self.http_status.HTTP_403_FORBIDDEN,
+            messages_list_len=1,
+            messages=["You are already autenticated"]
+        )
+
     def test_profile_activation(self):
         payload = {
             "token": confirmation_token.make_token(self.user),
