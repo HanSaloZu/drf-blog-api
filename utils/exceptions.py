@@ -52,3 +52,9 @@ class NotFound404(CustomAPIException):
 class InvalidData400(CustomAPIException):
     code = "invalid"
     status_code = status.HTTP_400_BAD_REQUEST
+
+
+class InactiveProfile403(CustomAPIException):
+    code = "inactiveProfile"
+    status_code = status.HTTP_403_FORBIDDEN
+    messages = ["Your profile is not activated"]
