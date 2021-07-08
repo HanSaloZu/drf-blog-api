@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-def get_error_messages(field_name):
+def get_error_messages_for_login_serializer(field_name):
     return {
         "required": f"Enter your {field_name}",
         "blank": f"Enter your {field_name}",
@@ -18,14 +18,14 @@ class LoginSerializer(serializers.ModelSerializer):
         required=True,
         allow_blank=False,
         allow_null=False,
-        error_messages=get_error_messages("email")
+        error_messages=get_error_messages_for_login_serializer("email")
     )
 
     password = serializers.CharField(
         required=True,
         allow_null=False,
         allow_blank=False,
-        error_messages=get_error_messages("password")
+        error_messages=get_error_messages_for_login_serializer("password")
     )
 
     class Meta:
