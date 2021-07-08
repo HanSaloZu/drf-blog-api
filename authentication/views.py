@@ -7,12 +7,24 @@ from profiles.serializers import ProfileSerializer
 from utils.exceptions import InvalidData400
 from utils.shortcuts import raise_400_based_on_serializer
 
+from .services.email import send_profile_activation_email
 from .services.activation import get_user_by_uidb64_or_none
-from .serializers import LoginSerializer
+from .serializers import LoginSerializer, RegistrationSerializer
 from .tokens import confirmation_token
 
 
 class AuthenticationAPIView(APIView):
+    def post(self, request):
+        serializer = RegistrationSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user = serializer.save()
+            send_profile_activation_email(user)
+
+            return Response(status=HTTP_204_NO_CONTENT)
+
+        raise_400_based_on_serializer(serializer)
+
     def put(self, request):
         serializer = LoginSerializer(data=request.data)
 
