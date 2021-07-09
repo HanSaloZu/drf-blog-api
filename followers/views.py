@@ -1,44 +1,29 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
-from django.contrib.auth import get_user_model
 
-from utils.views import LoginRequiredAPIView, ListAPIViewMixin
+from utils.views import LoginRequiredAPIView
 from utils.exceptions import InvalidData400
-from users.serializers import UserSerializer
+from users.mixins import UsersListAPIViewMixin
 from profiles.selectors import get_profile_by_user_login_or_404
 
 from .models import FollowersModel
 
-User = get_user_model()
 
-
-class FollowersListAPIView(LoginRequiredAPIView, ListAPIViewMixin):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
+class FollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
     def filter_queryset(self, queryset, kwargs):
         followers = self.request.user.followers.only("follower_user")
         followers_ids = [i.follower_user.id for i in list(followers)]
 
-        return queryset.filter(
-            id__in=followers_ids,
-            login__contains=kwargs["q"]
-        )
+        return super().filter_queryset(queryset.filter(id__in=followers_ids), kwargs)
 
 
-class FollowingListAPIView(LoginRequiredAPIView, ListAPIViewMixin):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
+class FollowingListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
     def filter_queryset(self, queryset, kwargs):
         followings = self.request.user.following.only("following_user")
         followings_ids = [i.following_user.id for i in list(followings)]
 
-        return queryset.filter(
-            id__in=followings_ids,
-            login__contains=kwargs["q"]
-        )
+        return super().filter_queryset(queryset.filter(id__in=followings_ids), kwargs)
 
 
 class FollowingAPIView(LoginRequiredAPIView, APIView):
