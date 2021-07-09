@@ -7,14 +7,13 @@ from utils.exceptions import InvalidData400
 from users.mixins import UsersListAPIViewMixin
 from profiles.selectors import get_profile_by_user_login_or_404
 
+from .selectors import get_user_followers_ids_list
 from .models import FollowersModel
 
 
 class FollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
     def filter_queryset(self, queryset, kwargs):
-        followers = self.request.user.followers.only("follower_user")
-        followers_ids = [i.follower_user.id for i in list(followers)]
-
+        followers_ids = get_user_followers_ids_list(self.request.user)
         return super().filter_queryset(queryset.filter(id__in=followers_ids), kwargs)
 
 

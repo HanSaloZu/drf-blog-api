@@ -4,6 +4,7 @@ from rest_framework.generics import RetrieveAPIView
 from utils.views import LoginRequiredAPIView
 from profiles.serializers import ProfileSerializer
 from profiles.selectors import get_profile_by_user_login_or_404
+from followers.selectors import get_user_followers_ids_list
 
 from .mixins import UsersListAPIViewMixin
 
@@ -15,8 +16,7 @@ class UsersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
 class UserFollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
     def filter_queryset(self, queryset, kwargs):
         target_user = get_profile_by_user_login_or_404(kwargs["login"]).user
-        followers = target_user.followers.only("follower_user")
-        followers_ids = [i.follower_user.id for i in list(followers)]
+        followers_ids = get_user_followers_ids_list(target_user)
 
         return super().filter_queryset(queryset.filter(id__in=followers_ids), kwargs)
 
