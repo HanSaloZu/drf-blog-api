@@ -39,7 +39,7 @@ class FollowersListAPIViewTest(ListAPIViewTestCase):
     def test_followers_list(self):
         response = self.client.get(self.url())
 
-        self.check_common_response_details(
+        self.check_common_details_of_list_view_response(
             response,
             total_items=2,
             page_size=2
@@ -48,7 +48,7 @@ class FollowersListAPIViewTest(ListAPIViewTestCase):
     def test_followers_list_with_q_parameter(self):
         response = self.client.get(self.url({"q": "SecondUser"}))
 
-        self.check_common_response_details(
+        self.check_common_details_of_list_view_response(
             response,
             total_items=1,
             page_size=1
@@ -80,7 +80,7 @@ class FollowingListAPIViewTest(ListAPIViewTestCase):
     def test_following_list(self):
         response = self.client.get(self.url)
 
-        self.check_common_response_details(
+        self.check_common_details_of_list_view_response(
             response,
             total_items=1,
             page_size=1
@@ -127,8 +127,6 @@ class FollowingAPIViewTest(APIViewTestCase):
 
         self.client_error_response_test(
             response,
-            code="invalid",
-            messages_list_len=1,
             messages=["You can't follow yourself"]
         )
 
@@ -139,8 +137,6 @@ class FollowingAPIViewTest(APIViewTestCase):
 
         self.client_error_response_test(
             response,
-            code="invalid",
-            messages_list_len=1,
             messages=["You are already following this user"]
         )
 
@@ -151,7 +147,6 @@ class FollowingAPIViewTest(APIViewTestCase):
             response,
             code="notFound",
             status=self.http_status.HTTP_404_NOT_FOUND,
-            messages_list_len=1,
             messages=["Invalid login, user is not found"]
         )
 
@@ -192,6 +187,5 @@ class FollowingAPIViewTest(APIViewTestCase):
             response,
             code="notFound",
             status=self.http_status.HTTP_404_NOT_FOUND,
-            messages_list_len=1,
             messages=["Invalid login, user is not found"]
         )

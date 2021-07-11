@@ -58,11 +58,11 @@ class APIViewTestCase(ExtendedTestCase):
 
 
 class ListAPIViewTestCase(APIViewTestCase):
-    def check_common_response_details(self, response,
-                                      total_items=0,
-                                      total_pages=1,
-                                      page_size=0,
-                                      page_number=1):
+    def check_common_details_of_list_view_response(self, response,
+                                                   total_items=0,
+                                                   total_pages=1,
+                                                   page_size=0,
+                                                   page_number=1):
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
         self.assertEqual(len(response.data["items"]), page_size)
