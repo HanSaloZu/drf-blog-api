@@ -1,13 +1,13 @@
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 
-from utils.tests import ProfileDetailAPIViewTestCase, APIViewTestCase
+from utils.tests import APIViewTestCase
 
 from ..services.activation import generate_uidb64
 from ..tokens import confirmation_token
 
 
-class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
+class AuthenticationAPIViewTest(APIViewTestCase):
     url = reverse("authentication")
 
     def setUp(self):
@@ -28,10 +28,9 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
             self.url, self.credentials, content_type="application/json")
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.compare_profile_instance_and_response_data(
-            self.user.profile, response.data)
+        self.assertEqual(response.data["userId"], self.user.id)
 
-    def test_inactive_profile_authentication(self):
+    def test_inactive_user_authentication(self):
         response = self.client.put(
             self.url, self.inactive_user_credentials, content_type="application/json")
 
@@ -39,24 +38,7 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
             response,
             code="inactiveProfile",
             status=self.http_status.HTTP_403_FORBIDDEN,
-            messages_list_len=1,
             messages=["Your profile is not activated"]
-        )
-
-    def test_authentication_with_invalid_email(self):
-        payload = {
-            "email": "invalid",
-            "password": self.credentials["password"]
-        }
-        response = self.client.put(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            code="invalid",
-            messages_list_len=1,
-            fields_errors_dict_len=1,
-            messages=["Invalid email"]
         )
 
     def test_authentication_with_invalid_password(self):
@@ -79,8 +61,6 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
 
         self.client_error_response_test(
             response,
-            code="invalid",
-            messages_list_len=2,
             fields_errors_dict_len=2,
             messages=["Enter your email", "Enter your password"]
         )
@@ -119,48 +99,7 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
             response,
             code="forbidden",
             status=self.http_status.HTTP_403_FORBIDDEN,
-            messages_list_len=1,
             messages=["You are already authenticated"]
-        )
-
-    def test_registration_with_used_login(self):
-        payload = {
-            "login": "NewUser",
-            "email": "test@test.com",
-            "password1": "pass",
-            "password2": "pass",
-            "aboutMe": get_random_string(length=80)
-        }
-        response = self.client.post(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            code="invalid",
-            messages_list_len=1,
-            fields_errors_dict_len=1,
-            messages=["This login is already in use"]
-        )
-
-    def test_registration_with_invalid_login(self):
-        payload = {
-            "login": "New:;.!?@User",
-            "email": "test@test.com",
-            "password1": "pass",
-            "password2": "pass",
-            "aboutMe": get_random_string(length=80)
-        }
-        response = self.client.post(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            code="invalid",
-            messages_list_len=1,
-            fields_errors_dict_len=1,
-            messages=[
-                "Login can only contain letters, numbers, underscores and hyphens"
-            ]
         )
 
     def test_registration_with_used_email(self):
@@ -176,8 +115,6 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
 
         self.client_error_response_test(
             response,
-            code="invalid",
-            messages_list_len=1,
             fields_errors_dict_len=1,
             messages=["This email is already in use"]
         )
@@ -195,37 +132,11 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
 
         self.client_error_response_test(
             response,
-            code="invalid",
-            messages_list_len=1,
             fields_errors_dict_len=1,
             messages=["Passwords do not match"]
         )
 
-    def test_registration_with_invalid_payload(self):
-        payload = {
-            "login": get_random_string(length=180),
-            "email": None,
-            "password1": "s",
-            "aboutMe": ""
-        }
-        response = self.client.post(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            code="invalid",
-            messages_list_len=5,
-            fields_errors_dict_len=5,
-            messages=[
-                "Login must be up to 150 characters long",
-                "Email is required",
-                "Password must be at least 4 characters",
-                "You should repeat your password",
-                "About me can't be empty"
-            ]
-        )
-
-    def test_registration(self):
+    def test_valid_registration(self):
         payload = {
             "login": "Test",
             "email": "test@test.com",
@@ -268,7 +179,6 @@ class ProfileActivationAPIViewTest(APIViewTestCase):
             response,
             code="forbidden",
             status=self.http_status.HTTP_403_FORBIDDEN,
-            messages_list_len=1,
             messages=["You are already authenticated"]
         )
 
@@ -297,6 +207,5 @@ class ProfileActivationAPIViewTest(APIViewTestCase):
 
         self.client_error_response_test(
             response,
-            messages_list_len=1,
             messages=["Invalid credentials"]
         )
