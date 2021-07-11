@@ -16,7 +16,7 @@ from .tokens import confirmation_token
 class AuthenticationAPIView(APIView):
     def post(self, request):
         if request.user.is_authenticated:
-            raise Forbidden403("You are already autenticated")
+            raise Forbidden403("You are already authenticated")
 
         serializer = RegistrationSerializer(data=request.data)
 
@@ -56,7 +56,7 @@ class AuthenticationAPIView(APIView):
 class ProfileActivationAPIView(APIView):
     def post(self, request):
         if request.user.is_authenticated:
-            raise Forbidden403("You are already autenticated")
+            raise Forbidden403("You are already authenticated")
 
         user = get_user_by_uidb64_or_none(request.data.get("uidb64", ""))
         token = request.data.get("token", "")

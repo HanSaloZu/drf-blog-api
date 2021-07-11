@@ -120,7 +120,7 @@ class AuthenticationAPIViewTest(ProfileDetailAPIViewTestCase):
             code="forbidden",
             status=self.http_status.HTTP_403_FORBIDDEN,
             messages_list_len=1,
-            messages=["You are already autenticated"]
+            messages=["You are already authenticated"]
         )
 
     def test_registration_with_used_login(self):
@@ -269,7 +269,7 @@ class ProfileActivationAPIViewTest(APIViewTestCase):
             code="forbidden",
             status=self.http_status.HTTP_403_FORBIDDEN,
             messages_list_len=1,
-            messages=["You are already autenticated"]
+            messages=["You are already authenticated"]
         )
 
     def test_profile_activation(self):
