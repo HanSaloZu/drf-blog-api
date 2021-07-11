@@ -52,41 +52,9 @@ class APIViewTestCase(ExtendedTestCase):
             response,
             code="notAuthenticated",
             status=self.http_status.HTTP_401_UNAUTHORIZED,
-            messages_list_len=1,
             messages=["You are not authenticated"],
             fields_errors_dict_len=0
         )
-
-
-class ProfileDetailAPIViewTestCase(APIViewTestCase):
-    def compare_profile_instance_and_response_data(self, profile, response):
-        self.assertEqual(response["userId"], profile.user.id)
-        self.assertEqual(response["isLookingForAJob"],
-                         profile.is_looking_for_a_job)
-        self.assertEqual(response["professionalSkills"],
-                         profile.professional_skills)
-        self.assertEqual(response["isAdmin"], profile.user.is_staff)
-        self.assertEqual(response["fullname"], profile.fullname)
-        self.assertEqual(response["aboutMe"], profile.about_me)
-        self.assertEqual(response["status"], profile.status)
-        self.assertEqual(response["photo"], profile.photo.link)
-
-        self.assertEqual(len(response["contacts"]), 8)
-        self.assertEqual(response["contacts"]
-                         ["github"], profile.contacts.github)
-        self.assertEqual(response["contacts"]
-                         ["facebook"], profile.contacts.facebook)
-        self.assertEqual(response["contacts"]
-                         ["instagram"], profile.contacts.instagram)
-        self.assertEqual(response["contacts"]
-                         ["mainLink"], profile.contacts.main_link)
-        self.assertEqual(response["contacts"]
-                         ["twitter"], profile.contacts.twitter)
-        self.assertEqual(response["contacts"]["vk"], profile.contacts.vk)
-        self.assertEqual(response["contacts"]
-                         ["website"], profile.contacts.website)
-        self.assertEqual(response["contacts"]
-                         ["youtube"], profile.contacts.youtube)
 
 
 class ListAPIViewTestCase(APIViewTestCase):
