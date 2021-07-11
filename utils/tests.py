@@ -13,7 +13,7 @@ class APIViewTestCase(ExtendedTestCase):
     http_status = status
 
     def client_error_response_test(self, response,
-                                   code=None,
+                                   code="invalid",
                                    status=http_status.HTTP_400_BAD_REQUEST,
                                    messages_list_len=0,
                                    fields_errors_dict_len=0,
@@ -33,10 +33,11 @@ class APIViewTestCase(ExtendedTestCase):
 
             return counter
 
-        if not code is None:
-            self.assertEqual(response.data["code"], code)
+        if messages_list_len == 0 and len(messages) != 0:
+            messages_list_len = len(messages)
 
         self.assertEqual(response.status_code, status)
+        self.assertEqual(response.data["code"], code)
         self.assertEqual(len(response.data["messages"]), messages_list_len)
         self.assertEqual(
             calc_number_of_fields_errors(response.data["fieldsErrors"]),
