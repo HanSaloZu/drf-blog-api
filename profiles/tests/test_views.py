@@ -1,12 +1,10 @@
 from django.utils.crypto import get_random_string
 from django.urls import reverse
 
-import json
-
-from utils.tests import APIViewTestCase, ProfileDetailAPIViewTestCase
+from utils.tests import APIViewTestCase
 
 
-class RetrieveUpdateProfileAPIViewTest(ProfileDetailAPIViewTestCase):
+class RetrieveUpdateProfileAPIViewTest(APIViewTestCase):
     url = reverse("profile")
 
     def setUp(self):
@@ -34,8 +32,8 @@ class RetrieveUpdateProfileAPIViewTest(ProfileDetailAPIViewTestCase):
     def test_profile_detail(self):
         response = self.client.get(self.url)
 
-        self.compare_profile_instance_and_response_data(
-            self.user.profile, response.data)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["userId"], self.user.id)
 
     # Profile update tests
 
@@ -52,6 +50,7 @@ class RetrieveUpdateProfileAPIViewTest(ProfileDetailAPIViewTestCase):
         user = self.UserModel.objects.all().first()
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["userId"], user.id)
 
         self.assertEqual(user.profile.fullname, payload["fullname"])
         self.assertEqual(user.profile.about_me, payload["aboutMe"])
@@ -60,13 +59,10 @@ class RetrieveUpdateProfileAPIViewTest(ProfileDetailAPIViewTestCase):
                          payload["isLookingForAJob"])
         self.assertEqual(user.profile.professional_skills,
                          payload["professionalSkills"])
-        self.compare_profile_instance_and_response_data(
-            user.profile, response.data)
 
     def test_profile_update_with_contacts(self):
         payload = {
             "fullname": "New Fullname",
-            "isLookingForAJob": False,
             "status": "",
             "contacts": {
                 "github": "https://github.com/HanSaloZu",
@@ -80,10 +76,9 @@ class RetrieveUpdateProfileAPIViewTest(ProfileDetailAPIViewTestCase):
         contacts = user.profile.contacts
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["userId"], user.id)
 
         self.assertEqual(user.profile.fullname, payload["fullname"])
-        self.assertEqual(user.profile.is_looking_for_a_job,
-                         payload["isLookingForAJob"])
         self.assertEqual(user.profile.status, payload["status"])
 
         self.assertEqual(contacts.github, payload["contacts"]["github"])
@@ -92,50 +87,17 @@ class RetrieveUpdateProfileAPIViewTest(ProfileDetailAPIViewTestCase):
         self.assertEqual(contacts.facebook,
                          self.user.profile.contacts.facebook)
 
-        self.compare_profile_instance_and_response_data(
-            user.profile, response.data)
-
-    def test_profile_update_without_data(self):
+    def test_profile_update_without_payload(self):
         response = self.client.patch(self.url)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.compare_profile_instance_and_response_data(
-            self.user.profile, response.data)
+        self.assertEqual(response.data["userId"], self.user.id)
 
-    def test_profile_update_with_invalid_data(self):
+    def test_profile_update_with_invalid_payload(self):
         payload = {
             "fullname": "",
-            "aboutMe": get_random_string(length=69),
-            "status": get_random_string(length=100),
-            "professionalSkills": None,
-            "isLookingForAJob": "invalid",
-            "contacts": None
-        }
-        response = self.client.patch(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            messages_list_len=6,
-            code="invalid",
-            messages=[
-                "Fullname field cannot be empty",
-                "About me field value is too short",
-                "Status field value is too long",
-                "Professional skills field cannot be null",
-                "Invalid value for is looking for a job field",
-                "Contacts field cannot be null"
-            ],
-            fields_errors_dict_len=6
-        )
-
-    def test_profile_update_with_invalid_contacts_urls(self):
-        payload = {
             "contacts": {
                 "github": "123",
-                "twitter": None,
-                "facebook": get_random_string(length=205),
-                "vk": ""
             }
         }
         response = self.client.patch(
@@ -143,14 +105,11 @@ class RetrieveUpdateProfileAPIViewTest(ProfileDetailAPIViewTestCase):
 
         self.client_error_response_test(
             response,
-            messages_list_len=3,
-            code="invalid",
-            fields_errors_dict_len=3,
             messages=[
-                "Invalid value for github field",
-                "Twitter field cannot be null",
-                "Facebook field value is too long"
-            ]
+                "Fullname field cannot be empty",
+                "Invalid value for github field"
+            ],
+            fields_errors_dict_len=2
         )
 
 
@@ -174,8 +133,6 @@ class UpdatePhotoAPIViewTest(APIViewTestCase):
 
         self.client_error_response_test(
             response,
-            messages_list_len=1,
-            code="invalid",
             messages=[
                 "File not provided",
             ],
@@ -190,8 +147,6 @@ class UpdatePhotoAPIViewTest(APIViewTestCase):
 
         self.client_error_response_test(
             response,
-            messages_list_len=1,
-            code="invalid",
             messages=[
                 "File not provided",
             ],
@@ -240,51 +195,14 @@ class RetrieveUpdatePreferencesAPIViewTest(APIViewTestCase):
         self.assertEqual(user.profile.preferences.theme, payload["theme"])
         self.assertEqual(response.data["theme"], payload["theme"])
 
-    def test_update_theme_with_blank_value(self):
-        payload = {"theme": ""}
-        response = self.client.put(
-            self.url, payload, content_type="application/json")
-
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-
-        user = self.UserModel.objects.first()
-        self.assertEqual(user.profile.preferences.theme, payload["theme"])
-        self.assertEqual(response.data["theme"], payload["theme"])
-
-    def test_update_theme_with_null_value(self):
+    def test_update_preferences_with_invalid_payload(self):
         payload = {"theme": None}
         response = self.client.put(
             self.url, payload, content_type="application/json")
 
         self.client_error_response_test(
             response,
-            code="invalid",
-            messages_list_len=1,
             messages=["Theme field cannot be null"],
-            fields_errors_dict_len=1
-        )
-
-    def test_update_preferences_without_data(self):
-        response = self.client.put(self.url)
-
-        self.client_error_response_test(
-            response,
-            code="invalid",
-            messages_list_len=1,
-            messages=["Theme field is required"],
-            fields_errors_dict_len=1
-        )
-
-    def test_update_preferences_with_invalid_payload(self):
-        payload = {"theme": "a"*260}
-        response = self.client.put(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            code="invalid",
-            messages_list_len=1,
-            messages=["Theme field value is too long"],
             fields_errors_dict_len=1
         )
 
@@ -320,21 +238,6 @@ class UpdatePasswordAPIViewTest(APIViewTestCase):
         user = self.UserModel.objects.all().first()
         self.assertTrue(user.check_password(payload["newPassword1"]))
 
-    def test_update_password_without_payload(self):
-        response = self.client.put(self.url)
-
-        self.client_error_response_test(
-            response,
-            code="invalid",
-            messages_list_len=3,
-            messages=[
-                "Old password field is required",
-                "New password field is required",
-                "Repeat new password field is required",
-            ],
-            fields_errors_dict_len=3
-        )
-
     def test_update_password_with_different_passwords(self):
         payload = {
             "oldPassword": "pass",
@@ -346,8 +249,6 @@ class UpdatePasswordAPIViewTest(APIViewTestCase):
 
         self.client_error_response_test(
             response,
-            code="invalid",
-            messages_list_len=1,
             messages=["Passwords do not match"],
             fields_errors_dict_len=1
         )
@@ -363,28 +264,6 @@ class UpdatePasswordAPIViewTest(APIViewTestCase):
 
         self.client_error_response_test(
             response,
-            code="invalid",
-            messages_list_len=1,
             messages=["Invalid password"],
             fields_errors_dict_len=1
-        )
-
-    def test_update_password_with_invalid_payload(self):
-        payload = {
-            "oldPassword": "pass",
-            "newPassword1": "",
-            "newPassword2": None
-        }
-        response = self.client.put(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            code="invalid",
-            messages_list_len=2,
-            messages=[
-                "New password field cannot be empty",
-                "Repeat new password field cannot be null"
-            ],
-            fields_errors_dict_len=2
         )
