@@ -1,113 +1,87 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from django.http import HttpResponse
-from django.core.exceptions import ObjectDoesNotExist
-import json
+from rest_framework.status import HTTP_204_NO_CONTENT
+from django.core.files import File
 
-from .services import save_photo, delete_image
-from .selectors import get_profile_by_user_id, get_contacts_by_user_id
-from .serializers import (ProfileSerializer, StatusSerializer,
-                          UpdateProfileSerializer)
-from utils.response import APIResponse
-from utils.views import CustomLoginRequiredMixin
+from utils.views import LoginRequiredAPIView
+from utils.exceptions import InvalidData400
+from utils.shortcuts import raise_400_based_on_serializer
 
-
-class ProfileStatusDetail(APIView):
-    def get(self, request, user_id):
-        try:
-            profile = get_profile_by_user_id(user_id)
-        except ObjectDoesNotExist:
-            return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return HttpResponse(json.dumps(profile.status), content_type="application/json")
+from .services.photos import update_photo
+from .serializers import (UpdateProfileSerializer, ProfileSerializer,
+                          PreferencesSerializer, UpdatePasswordSerailizer)
 
 
-class ProfileStatusUpdate(CustomLoginRequiredMixin, APIView):
+class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
+    """
+    Retrieves and updates the authenticated user profile
+    """
+
+    def get(self, request):
+        serializer = ProfileSerializer(request.user.profile)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        instance = request.user.profile
+        serializer = UpdateProfileSerializer(instance, data=request.data)
+
+        if serializer.is_valid():
+            instance = serializer.save()
+            return Response(ProfileSerializer(instance).data)
+
+        raise_400_based_on_serializer(serializer)
+
+
+class UpdatePhotoAPIView(LoginRequiredAPIView, APIView):
+    """
+    Updates the photo of the authenticated user
+    """
+
     def put(self, request):
-        serialized_data = StatusSerializer(data=request.data)
-        response = APIResponse()
-
-        if serialized_data.is_valid():
-            user = request.user
-            user.profile.status = serialized_data.data["status"]
-            user.save()
-
-            return response.complete()
-        elif serialized_data.errors["status"][0].code == "max_length":
-            response = APIResponse()
-            response.result_code = 1
-            response.messages.append(serialized_data.errors["status"][0])
-
-            return response.complete()
-
-        return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class ProfileDetail(APIView):
-    def get(self, request, user_id):
-        try:
-            profile = get_profile_by_user_id(user_id)
-        except ObjectDoesNotExist:
-            return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        deserialized_data = ProfileSerializer(profile).data
-        return Response(deserialized_data)
-
-
-class ProfilePhotoUpdate(CustomLoginRequiredMixin, APIView):
-    def put(self, request):
-        response = APIResponse()
         image = request.data.get("image")
 
-        if image is not None:
-            profile = request.user.profile
-            if profile.photo.file_id is not None:
-                delete_image(profile.photo.file_id)
-            link = save_photo(image, profile)
-            response.data = {
-                "photo": link
-            }
-            return response.complete()
-        else:
-            return Response({"message": "An error has occurred."}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if isinstance(image, File):
+            instance = request.user.profile.photo
+            link = update_photo(instance, image)
+
+            return Response({"photo": link})
+
+        raise InvalidData400("File not provided",
+                             {"image": "File not provided"})
 
 
-class ProfileUpdate(CustomLoginRequiredMixin, APIView):
+class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
+    """
+    Retrieves and updates the authenticated user preferences
+    """
+
+    def get(self, request):
+        serializer = PreferencesSerializer(request.user.profile.preferences)
+        return Response(serializer.data)
+
     def put(self, request):
-        response = APIResponse()
-        serialized_data = UpdateProfileSerializer(data=request.data)
+        instance = request.user.profile.preferences
+        serializer = PreferencesSerializer(instance, data=request.data)
 
-        if serialized_data.is_valid():
-            profile = request.user.profile
-            data = serialized_data.data
-            user_contacts = get_contacts_by_user_id(request.user.id)
+        if serializer.is_valid():
+            instance = serializer.save()
+            return Response(PreferencesSerializer(instance).data)
 
-            profile.fullname = data["fullName"]
-            profile.about_me = data["aboutMe"]
-            profile.looking_for_a_job = data.get(
-                "lookingForAJob", profile.looking_for_a_job)
-            profile.looking_for_a_job_description = data.get(
-                "lookingForAJobDescription", profile.looking_for_a_job_description)
+        raise_400_based_on_serializer(serializer)
 
-            if data.get("contacts", False):
-                data["contacts"]["main_link"] = data["contacts"].pop(
-                    "mainLink")
-                user_contacts.update(**dict(data["contacts"]))
 
-            request.user.save()
-            return response.complete()
+class UpdatePasswordAPIView(LoginRequiredAPIView, APIView):
+    """
+    Updates the password of the authenticated user
+    """
 
-        errors = serialized_data.errors
-        for error_field in errors:
-            if error_field != "contacts":
-                message = errors[error_field][0]
-                response.messages.append(message)
-            else:
-                contacts_errors = errors.get("contacts", [])
-                for contact_error in contacts_errors:
-                    response.messages.append(
-                        f"Invalid url format (Contacts->{contact_error.capitalize()})")
+    def put(self, request):
+        instance = request.user
+        serializer = UpdatePasswordSerailizer(
+            instance, data=request.data, context={"request": request})
 
-        response.result_code = 1
-        return response.complete()
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=HTTP_204_NO_CONTENT)
+
+        raise_400_based_on_serializer(serializer)

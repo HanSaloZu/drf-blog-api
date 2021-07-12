@@ -1,6 +1,19 @@
 from rest_framework import serializers
 
-from .models import Profile, Contacts
+from .models import Profile, Contacts, Preferences
+
+
+def get_error_messages(field_name):
+    capitalized_field_name = field_name.capitalize()
+
+    return {
+        "required": f"{capitalized_field_name} field is required",
+        "null": f"{capitalized_field_name} field cannot be null",
+        "blank": f"{capitalized_field_name} field cannot be empty",
+        "invalid": f"Invalid value for {field_name} field",
+        "max_length": f"{capitalized_field_name} field value is too long",
+        "min_length": f"{capitalized_field_name} field value is too short",
+    }
 
 
 class ContactsSerializer(serializers.ModelSerializer):
@@ -15,11 +28,12 @@ class ContactsSerializer(serializers.ModelSerializer):
                   "instagram", "twitter", "website", "youtube", "mainLink"]
 
 
-class ProfileSerializer(serializers.Serializer):
+class ProfileSerializer(serializers.ModelSerializer):
     userId = serializers.SerializerMethodField()
-    lookingForAJob = serializers.SerializerMethodField()
-    lookingForAJobDescription = serializers.SerializerMethodField()
-    fullName = serializers.SerializerMethodField()
+    login = serializers.SerializerMethodField()
+    isLookingForAJob = serializers.SerializerMethodField()
+    professionalSkills = serializers.SerializerMethodField()
+    isAdmin = serializers.SerializerMethodField()
     aboutMe = serializers.SerializerMethodField()
     photo = serializers.SerializerMethodField()
     contacts = ContactsSerializer()
@@ -27,14 +41,17 @@ class ProfileSerializer(serializers.Serializer):
     def get_userId(self, obj):
         return obj.user.id
 
-    def get_lookingForAJob(self, obj):
-        return obj.looking_for_a_job
+    def get_login(self, obj):
+        return obj.user.login
 
-    def get_lookingForAJobDescription(self, obj):
-        return obj.looking_for_a_job_description
+    def get_isLookingForAJob(self, obj):
+        return obj.is_looking_for_a_job
 
-    def get_fullName(self, obj):
-        return obj.fullname
+    def get_professionalSkills(self, obj):
+        return obj.professional_skills
+
+    def get_isAdmin(self, obj):
+        return obj.user.is_staff
 
     def get_aboutMe(self, obj):
         return obj.about_me
@@ -44,46 +61,140 @@ class ProfileSerializer(serializers.Serializer):
 
     class Meta:
         model = Profile
-        fields = ["userId", "lookingForAJob",
-                  "lookingForAJobDescription", "fullName", "contacts", "aboutMe", "photo"]
+        fields = ["userId", "isLookingForAJob", "professionalSkills",
+                  "isAdmin", "fullname", "login", "status", "aboutMe", "photo", "contacts"]
 
 
 class UpdateContactsSerializer(serializers.Serializer):
-    github, vk, facebook, instagram, twitter, website, youtube, mainLink = [serializers.URLField(
-        max_length=300, default=None, required=False, allow_blank=True, allow_null=True) for i in range(8)]
-
-
-def get_error_messages(field_name, data_type):
-    res = dict.fromkeys(["null", "required", "blank"],
-                        f"The {field_name} field is required. ({field_name})")
-    res.update(
-        {"invalid": f"Invalid {data_type}. ({field_name})"})
-    return res
+    github, vk, facebook, instagram, twitter, website, youtube, mainLink = [
+        serializers.URLField(
+            max_length=200,
+            required=False,
+            allow_blank=True,
+            error_messages=get_error_messages(i)) for i in [
+            "github", "vk", "facebook", "instagram", "twitter", "website", "youtube", "mainLink"
+        ]
+    ]
 
 
 class UpdateProfileSerializer(serializers.Serializer):
-    lookingForAJob = serializers.BooleanField(
-        required=False, allow_null=False, error_messages=get_error_messages("lookingForAJob", "boolean"))
+    isLookingForAJob = serializers.BooleanField(
+        required=False,
+        allow_null=False,
+        error_messages=get_error_messages("is looking for a job")
+    )
 
-    lookingForAJobDescription = serializers.CharField(
-        required=False, allow_blank=True, allow_null=True)
+    professionalSkills = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=350,
+        allow_null=False,
+        error_messages=get_error_messages("professional skills")
+    )
 
-    fullName = serializers.CharField(
-        max_length=300, required=True, allow_blank=False,
-        allow_null=False, error_messages=get_error_messages("FullName", "string"))
+    fullname = serializers.CharField(
+        required=False,
+        max_length=150,
+        allow_blank=False,
+        allow_null=False,
+        error_messages=get_error_messages("fullname")
+    )
+
+    status = serializers.CharField(
+        required=False,
+        max_length=70,
+        allow_null=False,
+        allow_blank=True,
+        error_messages=get_error_messages("status")
+    )
 
     aboutMe = serializers.CharField(
-        max_length=300, required=True, allow_blank=False, allow_null=False, error_messages=get_error_messages("AboutMe", "string"))
+        required=False,
+        max_length=400,
+        allow_blank=False,
+        allow_null=False,
+        min_length=70,
+        error_messages=get_error_messages("about me")
+    )
 
     contacts = UpdateContactsSerializer(
-        default=UpdateContactsSerializer(), required=False, allow_null=True)
+        required=False,
+        allow_null=False,
+        error_messages=get_error_messages("contacts")
+    )
+
+    def update(self, instance, validated_data):
+        instance.fullname = validated_data.get("fullname", instance.fullname)
+        instance.about_me = validated_data.get("aboutMe", instance.about_me)
+        instance.status = validated_data.get("status", instance.status)
+        instance.is_looking_for_a_job = validated_data.get(
+            "isLookingForAJob", instance.is_looking_for_a_job)
+        instance.professional_skills = validated_data.get(
+            "professionalSkills", instance.professional_skills)
+
+        if "contacts" in validated_data:
+            contacts_data = validated_data.pop("contacts")
+            contacts = instance.contacts
+
+            contacts.github = contacts_data.get("github", contacts.github)
+            contacts.vk = contacts_data.get("vk", contacts.vk)
+            contacts.facebook = contacts_data.get(
+                "facebook", contacts.facebook)
+            contacts.instagram = contacts_data.get(
+                "instagram", contacts.instagram)
+            contacts.twitter = contacts_data.get("twitter", contacts.twitter)
+            contacts.website = contacts_data.get("website", contacts.website)
+            contacts.youtube = contacts_data.get("youtube", contacts.youtube)
+            contacts.main_link = contacts_data.get(
+                "mainLink", contacts.main_link)
+
+            contacts.save()
+
+        instance.save()
+        return instance
 
 
-class StatusSerializer(serializers.ModelSerializer):
-    status = serializers.CharField(required=False, max_length=300, allow_null=False, allow_blank=True, error_messages={
-        "max_length": "Max Status length is 300 symbols"
-    })
+class PreferencesSerializer(serializers.ModelSerializer):
+    theme = serializers.CharField(
+        required=True,
+        allow_null=False,
+        allow_blank=True,
+        max_length=250,
+        error_messages=get_error_messages("theme")
+    )
 
     class Meta:
-        model = Profile
-        fields = ["status"]
+        model = Preferences
+        fields = ["theme"]
+
+
+class UpdatePasswordSerailizer(serializers.Serializer):
+    oldPassword, newPassword1, newPassword2 = [
+        serializers.CharField(
+            max_length=128,
+            required=True,
+            allow_blank=False,
+            allow_null=False,
+            error_messages=get_error_messages(i)) for i in [
+            "old password", "new password", "repeat new password"
+        ]
+    ]
+
+    def validate(self, data):
+        if not self.context["request"].user.check_password(data["oldPassword"]):
+            raise serializers.ValidationError({
+                "oldPassword": "Invalid password"
+            })
+
+        if data["newPassword1"] != data["newPassword2"]:
+            raise serializers.ValidationError({
+                "newPassword2": "Passwords do not match"
+            })
+
+        return data
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data["newPassword1"])
+        instance.save()
+
+        return instance

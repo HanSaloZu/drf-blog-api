@@ -1,56 +1,68 @@
-from utils.test import ExtendedTestCase
+from utils.tests import ExtendedTestCase
 
-from ..models import Profile, Contacts, Photo
+from profiles.models import Profile, Contacts, Photo, Preferences
 
 
-class ProfileModelTest(ExtendedTestCase):
+class ProfileModelTestCase(ExtendedTestCase):
     model = Profile
 
-    def test_profile(self):
+    def test_profile_model(self):
         user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
         profile = user.profile
 
         self.assertIsInstance(profile, self.model)
 
+        self.assertIs(profile.is_looking_for_a_job, False)
+        self.assertEqual(profile.professional_skills, "")
+
         self.assertEqual(profile.fullname, user.login)
-
-        self.assertFalse(profile.looking_for_a_job)
-        self.assertIsNone(profile.looking_for_a_job_description)
-
         self.assertEqual(profile.status, "")
-        self.assertIsNone(profile.about_me)
+        self.assertEqual(profile.about_me, "")
 
 
-class ContactsModelTest(ExtendedTestCase):
+class ContactsModelTestCase(ExtendedTestCase):
     model = Contacts
 
-    def test_contacts(self):
+    def test_contacts_model(self):
         user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
         contacts = user.profile.contacts
 
         self.assertIsInstance(contacts, self.model)
 
-        self.assertIsNone(contacts.vk)
-        self.assertIsNone(contacts.github)
-        self.assertIsNone(contacts.facebook)
-        self.assertIsNone(contacts.instagram)
-        self.assertIsNone(contacts.main_link)
-        self.assertIsNone(contacts.twitter)
-        self.assertIsNone(contacts.website)
-        self.assertIsNone(contacts.youtube)
+        self.assertEqual(contacts.vk, "")
+        self.assertEqual(contacts.github, "")
+        self.assertEqual(contacts.facebook, "")
+        self.assertEqual(contacts.instagram, "")
+        self.assertEqual(contacts.main_link, "")
+        self.assertEqual(contacts.twitter, "")
+        self.assertEqual(contacts.website, "")
+        self.assertEqual(contacts.youtube, "")
 
 
-class PhotoModelTest(ExtendedTestCase):
+class PhotoModelTestCase(ExtendedTestCase):
     model = Photo
 
-    def test_photo(self):
+    def test_photo_model(self):
         user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
         photo = user.profile.photo
 
         self.assertIsInstance(photo, self.model)
 
-        self.assertIsNone(photo.file_id)
-        self.assertIsNone(photo.link)
+        self.assertEqual(photo.file_id, "")
+        self.assertEqual(photo.link, "")
+
+
+class PreferencesModelTestCase(ExtendedTestCase):
+    model = Preferences
+
+    def test_preferences_model(self):
+        user = self.UserModel.objects.create_user(
+            login="NewUser", email="new@user.com", password="pass")
+        preferences = user.profile.preferences
+
+        self.assertIsInstance(preferences, self.model)
+
+        self.assertEqual(preferences.theme, "")

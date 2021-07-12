@@ -1,259 +1,302 @@
+from django.utils.crypto import get_random_string
 from django.urls import reverse
-import json
 
-from utils.test import APIViewTestCase
-
-
-class ProfileStatusDetailAPIViewTest(APIViewTestCase):
-    def url(self, kwargs):
-        return reverse("profile_status_detail", kwargs=kwargs)
-
-    def test_status_detail_with_invalid_user_id(self):
-        url = self.url({"user_id": 9})
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(response.data["message"], "An error has occurred.")
-
-    def test_valid_status_detail(self):
-        user = self.UserModel.objects.create_user(login="NewUser", email="new@user.com",
-                                                  password="pass")
-        user.profile.status = "test"
-        user.save()
-
-        response = self.client.get(self.url({"user_id": 1}))
-
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(json.loads(response.content),
-                         user.profile.status)
+from utils.tests import APIViewTestCase
 
 
-class ProfileStatusUpdateAPIViewTest(APIViewTestCase):
-    url = reverse("profile_status_update")
-
-    def setUp(self):
-        self.credentials = {"email": "new@user.com", "password": "pass"}
-        self.UserModel.objects.create_user(login="NewUser", **self.credentials)
-        self.client.login(**self.credentials)
-
-    def test_valid_status_update(self):
-        response = self.client.put(
-            self.url, {"status": "Test"}, content_type="application/json")
-
-        self._common_api_response_tests(response)
-        user = self.UserModel.objects.get(id=1)
-        self.assertEqual(user.profile.status, "Test")
-
-    def test_status_update_with_blank_value(self):
-        response = self.client.put(
-            self.url, {"status": ""}, content_type="application/json")
-
-        self._common_api_response_tests(response)
-        user = self.UserModel.objects.get(id=1)
-        self.assertEqual(user.profile.status, "")
-
-    def test_status_update_with_none_value(self):
-        response = self.client.put(
-            self.url, {"status": None}, content_type="application/json")
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def test_status_update_with_long_value(self):
-        response = self.client.put(
-            self.url, {"status": "a"*320}, content_type="application/json")
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["messages"]
-                         [0], "Max Status length is 300 symbols")
-
-    def test_status_update_without_value(self):
-        response = self.client.put(self.url)
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(response.data["message"], "An error has occurred.")
-
-    def test_status_update_by_unauthorized_user(self):
-        self.client.logout()
-        response = self.client.put(
-            self.url, {"status": "New status"}, content_type="application/json")
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(
-            response.data["message"], "Authorization has been denied for this request.")
-
-
-class ProfileDetailAPIViewTest(APIViewTestCase):
-    def url(self, kwargs):
-        return reverse("profile_detail", kwargs=kwargs)
-
-    def setUp(self):
-        user = self.UserModel.objects.create_user(login="NewUser", email="new@user.com",
-                                                  password="pass")
-        profile = user.profile
-
-        profile.looking_for_a_job = True
-        profile.looking_for_a_job_description = "Test"
-        profile.about_me = "I am a view test"
-        profile.contacts.github = "https://github.com/HanSaloZu"
-        user.save()
-        self.profile = profile
-
-    def test_valid_profile_detail(self):
-        url = self.url({"user_id": 1})
-        response = self.client.get(url)
-        data = response.data
-        profile = self.profile
-
-        self.assertEqual(data["userId"], profile.user.id)
-        self.assertTrue(data["lookingForAJob"])
-        self.assertEqual(data["lookingForAJobDescription"],
-                         profile.looking_for_a_job_description)
-        self.assertEqual(data["fullName"], profile.fullname)
-        self.assertEqual(data["fullName"], profile.user.login)
-        self.assertEqual(data["aboutMe"], profile.about_me)
-        self.assertEqual(len(data["contacts"]), 8)
-        self.assertEqual(data["photo"], profile.photo.link)
-        self.assertEqual(data["contacts"]["github"], profile.contacts.github)
-        self.assertIsNone(data["contacts"]["facebook"])
-        self.assertIsNone(data["contacts"]["instagram"])
-        self.assertIsNone(data["contacts"]["mainLink"])
-        self.assertIsNone(data["contacts"]["twitter"])
-        self.assertIsNone(data["contacts"]["vk"])
-        self.assertIsNone(data["contacts"]["website"])
-        self.assertIsNone(data["contacts"]["youtube"])
-
-    def test_profile_detail_with_invalid_user_id(self):
-        url = reverse("profile_detail", kwargs={"user_id": 9})
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class ProfilePhotoUpdateAPIViewTest(APIViewTestCase):
-    url = reverse("profile_photo_update")
-
-    def setUp(self):
-        self.credentials = {"email": "new@user.com", "password": "pass"}
-        self.user = self.UserModel.objects.create_user(
-            login="NewUser", **self.credentials)
-
-    def test_photo_update_by_unauthorized_user(self):
-        response = self.client.put(self.url)
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(
-            response.data["message"], "Authorization has been denied for this request.")
-
-    def test_photo_update_without_file(self):
-        self.client.login(**self.credentials)
-        response = self.client.put(self.url)
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class ProfileUpdateAPIViewTest(APIViewTestCase):
-    url = reverse("profile_update")
+class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
+    url = reverse("profile")
 
     def setUp(self):
         credentials = {"email": "new@user.com", "password": "pass"}
-        self.UserModel.objects.create_user(
+        user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
+
+        user.profile.is_looking_for_a_job = True
+        user.profile.professional_skills = "Test"
+        user.profile.about_me = "I am a view test"
+        user.profile.contacts.github = "https://github.com/HanSaloZu"
+        user.save()
+
+        self.user = user
+        self.client.login(**credentials)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url)
+
+        self.unauthorized_client_error_response_test(response)
+
+    # Profile retrieving tests
+
+    def test_profile_detail(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["userId"], self.user.id)
+
+    # Profile update tests
+
+    def test_profile_update_without_contacts(self):
+        """
+        Profile update without contacts is valid and should return a 200 status code and a profile representation in the response body
+        """
+        payload = {
+            "fullname": "New User",
+            "aboutMe": get_random_string(length=70),
+            "isLookingForAJob": True,
+            "professionalSkills": "Backend web developer",
+            "status": "New status"
+        }
+        response = self.client.patch(
+            self.url, payload, content_type="application/json")
+        user = self.UserModel.objects.all().first()
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["userId"], user.id)
+
+        self.assertEqual(user.profile.fullname, payload["fullname"])
+        self.assertEqual(user.profile.about_me, payload["aboutMe"])
+        self.assertEqual(user.profile.status, payload["status"])
+        self.assertEqual(user.profile.is_looking_for_a_job,
+                         payload["isLookingForAJob"])
+        self.assertEqual(user.profile.professional_skills,
+                         payload["professionalSkills"])
+
+    def test_profile_update_with_contacts(self):
+        """
+        Valid profile update should return a 200 status code and a profile representation in the response body
+        """
+        payload = {
+            "fullname": "New Fullname",
+            "status": "",
+            "contacts": {
+                "github": "https://github.com/HanSaloZu",
+                "mainLink": "https://github.com/HanSaloZu",
+                "twitter": ""
+            }
+        }
+        response = self.client.patch(
+            self.url, payload, content_type="application/json")
+        user = self.UserModel.objects.all().first()
+        contacts = user.profile.contacts
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["userId"], user.id)
+
+        self.assertEqual(user.profile.fullname, payload["fullname"])
+        self.assertEqual(user.profile.status, payload["status"])
+
+        self.assertEqual(contacts.github, payload["contacts"]["github"])
+        self.assertEqual(contacts.main_link, payload["contacts"]["mainLink"])
+        self.assertEqual(contacts.twitter, payload["contacts"]["twitter"])
+        self.assertEqual(contacts.facebook,
+                         self.user.profile.contacts.facebook)
+
+    def test_profile_update_without_payload(self):
+        """
+        Profile update without payload is valid and should return a 200 status code and a profile representation in the response body
+        """
+        response = self.client.patch(self.url)
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["userId"], self.user.id)
+
+    def test_profile_update_with_invalid_payload(self):
+        """
+        Profile update with invalid payload should return a 400 status code
+        """
+        payload = {
+            "fullname": "",
+            "contacts": {
+                "github": "123",
+            }
+        }
+        response = self.client.patch(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "Fullname field cannot be empty",
+                "Invalid value for github field"
+            ],
+            fields_errors_dict_len=2
+        )
+
+
+class UpdatePhotoAPIViewTestCase(APIViewTestCase):
+    url = reverse("profile_photo_update")
+
+    def setUp(self):
+        credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
             login="NewUser", **credentials)
         self.client.login(**credentials)
 
-    def test_profile_update_by_unauthorized_user(self):
+    def test_request_by_unauthenticated_client(self):
         self.client.logout()
-        response = self.client.put(
-            self.url, {"fullName": "New User", "aboutMe": "About me!"}, content_type="application/json")
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_401_UNAUTHORIZED)
-        self.assertEqual(
-            response.data["message"], "Authorization has been denied for this request.")
-
-    def test_profile_update_with_only_required_fields(self):
-        request_data = {"fullName": "New User", "aboutMe": "About me!"}
-        response = self.client.put(
-            self.url, request_data, content_type="application/json")
-        user = self.UserModel.objects.all().first()
-
-        self._common_api_response_tests(response)
-        self.assertEqual(user.profile.fullname, request_data["fullName"])
-        self.assertEqual(user.profile.about_me, request_data["aboutMe"])
-        self.assertFalse(user.profile.looking_for_a_job)
-        self.assertIsNone(user.profile.looking_for_a_job_description)
-
-    def test_profile_update_with_contacts(self):
-        request_data = {"fullName": "New User", "aboutMe": "About me!", "contacts": {
-            "github": "https://github.com/HanSaloZu",
-            "mainLink": "https://github.com/HanSaloZu"
-        }}
-        response = self.client.put(
-            self.url, request_data, content_type="application/json")
-        user = self.UserModel.objects.all().first()
-
-        self._common_api_response_tests(response)
-        self.assertEqual(user.profile.contacts.github,
-                         request_data["contacts"]["github"])
-        self.assertEqual(user.profile.contacts.main_link,
-                         request_data["contacts"]["mainLink"])
-        self.assertIsNone(user.profile.contacts.facebook)
-        self.assertIsNone(user.profile.contacts.instagram)
-        self.assertIsNone(user.profile.contacts.twitter)
-        self.assertIsNone(user.profile.contacts.vk)
-        self.assertIsNone(user.profile.contacts.website)
-        self.assertIsNone(user.profile.contacts.youtube)
-
-    def test_profile_update_without_contacts(self):
-        request_data = {"fullName": "New User", "aboutMe": "About me!",
-                        "lookingForAJob": True, "lookingForAJobDescription": "I need a job!"}
-        response = self.client.put(
-            self.url, request_data, content_type="application/json")
-        user = self.UserModel.objects.all().first()
-
-        self._common_api_response_tests(response)
-        self.assertEqual(user.profile.looking_for_a_job,
-                         request_data["lookingForAJob"])
-        self.assertEqual(user.profile.looking_for_a_job_description,
-                         request_data["lookingForAJobDescription"])
-
-    def test_profile_update_without_data(self):
         response = self.client.put(self.url)
 
-        self._common_api_response_tests(
-            response, messages_list_len=2, result_code=1)
-        self.assertIn("The FullName field is required. (FullName)",
-                      response.data["messages"])
-        self.assertIn("The AboutMe field is required. (AboutMe)",
-                      response.data["messages"])
+        self.unauthorized_client_error_response_test(response)
 
-    def test_profile_update_with_invalid_data(self):
+    def test_photo_update_without_payload(self):
+        """
+        Photo update without payload should return a 400 error
+        """
+        response = self.client.put(self.url)
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "File not provided",
+            ],
+            fields_errors_dict_len=1
+        )
+
+    def test_photo_update_with_invalid_payload(self):
+        """
+        Photo update with invalid payload should return a 400 error
+        """
         response = self.client.put(
-            self.url, {"fullName": None, "aboutMe": None}, content_type="application/json")
+            self.url,
+            {"image": "test"},
+            content_type="multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW")
 
-        self._common_api_response_tests(
-            response, messages_list_len=2, result_code=1)
-        self.assertIn("The FullName field is required. (FullName)",
-                      response.data["messages"])
-        self.assertIn("The AboutMe field is required. (AboutMe)",
-                      response.data["messages"])
+        self.client_error_response_test(
+            response,
+            messages=[
+                "File not provided",
+            ],
+            fields_errors_dict_len=1
+        )
 
-    def test_profile_update_with_invalid_contacts(self):
+
+class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
+    url = reverse("profile_preferences")
+
+    def setUp(self):
+        credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
+
+        self.user.profile.preferences.theme = "dark"
+        self.user.save()
+
+        self.client.login(**credentials)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url)
+
+        self.unauthorized_client_error_response_test(response)
+
+    # Preferences retrieving tests
+
+    def test_get_preferences(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["theme"],
+                         self.user.profile.preferences.theme)
+
+     # Preferences update tests
+
+    def test_update_preferences(self):
+        """
+        Valid preferences update should return a 200 status code and a preferences representation in the response body
+        """
+        payload = {"theme": "light"}
         response = self.client.put(
-            self.url, {"fullName": "New User", "aboutMe": "About me!", "contacts": {
-                "github": "123"
-            }}, content_type="application/json")
+            self.url, payload, content_type="application/json")
 
-        self._common_api_response_tests(
-            response, messages_list_len=1, result_code=1)
-        self.assertEqual(response.data["messages"][0],
-                         "Invalid url format (Contacts->Github)")
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
-    def test_profile_update_with_contacts_equals_none(self):
+        user = self.UserModel.objects.first()
+        self.assertEqual(user.profile.preferences.theme, payload["theme"])
+        self.assertEqual(response.data["theme"], payload["theme"])
+
+    def test_update_preferences_with_invalid_payload(self):
+        """
+        Preferences update with invalid payload should return a 400 error
+        """
+        payload = {"theme": None}
         response = self.client.put(
-            self.url, {"fullName": "New User", "aboutMe": "About me!", "contacts": None}, content_type="application/json")
+            self.url, payload, content_type="application/json")
 
-        self._common_api_response_tests(response)
+        self.client_error_response_test(
+            response,
+            messages=["Theme field cannot be null"],
+            fields_errors_dict_len=1
+        )
+
+
+class UpdatePasswordAPIViewTestCase(APIViewTestCase):
+    url = reverse("update_password")
+
+    def setUp(self):
+        credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
+
+        self.client.login(**credentials)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.put(self.url)
+
+        self.unauthorized_client_error_response_test(response)
+
+    def test_update_password(self):
+        """
+        Valid password update should return a 204 status code
+        """
+        payload = {
+            "oldPassword": "pass",
+            "newPassword1": "newpassword",
+            "newPassword2": "newpassword"
+        }
+        response = self.client.put(
+            self.url, payload, content_type="application/json")
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
+
+        user = self.UserModel.objects.all().first()
+        self.assertIs(user.check_password(payload["newPassword1"]), True)
+
+    def test_update_password_with_different_passwords(self):
+        """
+        Password update with different passwords should return a 400 error
+        """
+        payload = {
+            "oldPassword": "pass",
+            "newPassword1": "invalid",
+            "newPassword2": "newpassword"
+        }
+        response = self.client.put(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            messages=["Passwords do not match"],
+            fields_errors_dict_len=1
+        )
+
+    def test_update_password_with_invalid_current_password(self):
+        """
+        Password update with invalid current password should return a 400 error
+        """
+        payload = {
+            "oldPassword": "invalid",
+            "newPassword1": "newpassword",
+            "newPassword2": "newpassword"
+        }
+        response = self.client.put(
+            self.url, payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            messages=["Invalid password"],
+            fields_errors_dict_len=1
+        )

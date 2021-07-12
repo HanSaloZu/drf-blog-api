@@ -1,93 +1,11 @@
 from urllib.parse import urlencode
 from django.urls import reverse
 
-from utils.test import APIViewTestCase
+from followers.models import FollowersModel
+from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
 
-class UserDetailAPIViewTest(APIViewTestCase):
-    url = reverse("user_detail")
-
-    def test_unauthorized_user_request_user_detail(self):
-        response = self.client.get(self.url)
-
-        self._common_api_response_tests(
-            response, result_code=1, messages_list_len=1)
-        message = response.data["messages"][0]
-        self.assertEqual(message, "You are not authorized")
-
-    def test_valid_user_detail(self):
-        credentials = {"email": "new@user.com", "password": "pass"}
-        user = self.UserModel.objects.create_user(
-            login="NewUser", **credentials)
-        self.client.login(**credentials)
-        response = self.client.get(self.url)
-
-        self._common_api_response_tests(response)
-        response_user_detail = response.data["data"]
-        self.assertEqual(response_user_detail["id"], user.id)
-        self.assertEqual(response_user_detail["login"], user.login)
-        self.assertEqual(response_user_detail["email"], user.email)
-
-
-class UserAuthenticationAPIViewTest(APIViewTestCase):
-    url = reverse("authentication")
-
-    def setUp(self):
-        self.credentials = {"email": "new@user.com", "password": "pass"}
-        self.user = self.UserModel.objects.create_user(
-            login="NewUser", **self.credentials)
-
-    def test_authentication_with_valid_data(self):
-        response = self.client.post(self.url, self.credentials)
-
-        self._common_api_response_tests(response)
-        self.assertEqual(response.data["data"]["userId"], self.user.id)
-
-    def test_authentication_with_invalid_email(self):
-        response = self.client.post(
-            self.url, {
-                "email": "123",
-                "password": self.credentials["password"]
-            })
-
-        self._common_api_response_tests(response, result_code=1,
-                                        messages_list_len=1, fields_errors_list_len=1)
-        self.assertEqual(response.data["messages"][0], "Enter valid Email")
-        self.assertEqual(response.data["fieldsErrors"][0]["field"], "email")
-        self.assertEqual(response.data["fieldsErrors"]
-                         [0]["error"], "Enter valid Email")
-
-    def test_authentication_with_invalid_password(self):
-        response = self.client.post(
-            self.url, {
-                "email": self.credentials["email"],
-                "password": "invalid"
-            })
-
-        self._common_api_response_tests(response, result_code=1,
-                                        messages_list_len=1, fields_errors_list_len=0)
-        self.assertEqual(response.data["messages"]
-                         [0], "Incorrect Email or Password")
-
-    def test_authentication_wihout_credentials(self):
-        response = self.client.post(self.url)
-
-        self._common_api_response_tests(response, result_code=1,
-                                        messages_list_len=2, fields_errors_list_len=2)
-        self.assertIn("Please enter your Email", response.data["messages"])
-        self.assertIn("Enter your password", response.data["messages"])
-
-    def test_logging_out(self):
-        self.client.login(**self.credentials)
-        response = self.client.delete(self.url)
-        self._common_api_response_tests(response)
-
-    def test_unauthorized_logging_out(self):
-        response = self.client.delete(self.url)
-        self._common_api_response_tests(response)
-
-
-class UsersListAPIViewsTest(APIViewTestCase):
+class UsersListAPIViewTestCase(ListAPIViewTestCase):
     def url(self, parameters={}):
         url = reverse("users_list")
         if parameters:
@@ -95,89 +13,287 @@ class UsersListAPIViewsTest(APIViewTestCase):
 
         return url
 
-    def common_users_list_response_tests(self, response, status_code=200, items_list_len=0, total_count=3, error=""):
-        self.assertEqual(response.status_code, status_code)
-        self.assertEqual(len(response.data["items"]), items_list_len)
-        self.assertEqual(response.data["totalCount"], total_count)
-        self.assertEqual(response.data["error"], error)
-
     def setUp(self):
-        self.credentials = {"email": "first@gmail.com", "password": "pass"}
+        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="First User", **self.credentials)
+            login="FirstUser", **credentials)
+        self.client.login(**credentials)
+
         self.second_user = self.UserModel.objects.create_user(
-            login="Second User", email="second@gmail.com", password="pass")
+            login="SecondUser", email="second@gmail.com", password="pass")
         self.third_user = self.UserModel.objects.create_user(
-            login="Third User", email="third@gmail.com", password="pass")
+            login="ThirdUser", email="third@gmail.com", password="pass")
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url())
+
+        self.unauthorized_client_error_response_test(response)
 
     def test_users_list_without_parameters(self):
         response = self.client.get(self.url())
 
-        self.common_users_list_response_tests(response, items_list_len=3)
-        user_data = response.data["items"][0]
-        self.assertIn("id", user_data)
-        self.assertIn("name", user_data)
-        self.assertIn("status", user_data)
-        self.assertIn("photo", user_data)
-        self.assertIn("followed", user_data)
+        self.check_common_details_of_list_view_response(
+            response, total_items=3, page_size=3)
 
-    def test_users_list_with_term(self):
-        response = self.client.get(self.url({"term": "First User"}))
+        list_item = response.data["items"][0]
+        self.assertEqual(len(list_item), 6)
+        self.assertIn("userId", list_item)
+        self.assertIn("login", list_item)
+        self.assertIn("status", list_item)
+        self.assertIn("photo", list_item)
+        self.assertIn("isFollowed", list_item)
+        self.assertIn("isAdmin", list_item)
 
-        self.common_users_list_response_tests(
-            response, items_list_len=1, total_count=1)
-        user_data = response.data["items"][0]
-        self.assertEqual(user_data["id"], self.first_user.id)
-        self.assertEqual(user_data["name"], self.first_user.login)
-        self.assertFalse(user_data["followed"])
-        self.assertIsNone(user_data["photo"])
-        self.assertEqual(user_data["status"], "")
+    def test_users_list_with_q_parameter(self):
+        response = self.client.get(self.url({"q": "FirstUser"}))
 
-        response = self.client.get(self.url({"term": "3333"}))
-        self.common_users_list_response_tests(
-            response, items_list_len=0, total_count=0)
+        self.check_common_details_of_list_view_response(
+            response, page_size=1, total_items=1)
 
-    def test_users_list_with_count_parameter(self):
-        response = self.client.get(self.url({"count": 2}))
-        self.common_users_list_response_tests(response, items_list_len=2)
+        list_item = response.data["items"][0]
+        self.assertEqual(list_item["userId"], self.first_user.id)
+        self.assertEqual(list_item["login"], self.first_user.login)
+        self.assertIs(list_item["isFollowed"], False)
 
-    def test_users_list_with_invalid_count_parameter(self):
-        response = self.client.get(self.url({"count": -5}))
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_500_INTERNAL_SERVER_ERROR)
+        response = self.client.get(self.url({"q": "3333"}))
+        self.check_common_details_of_list_view_response(response)
 
-    def test_users_list_with_large_count_parameter(self):
-        response = self.client.get(self.url({"count": 999}))
-        self.common_users_list_response_tests(
-            response, error="Max page size is 100 items", total_count=0)
+    def test_users_list_with_valid_limit_parameter(self):
+        response = self.client.get(self.url({"limit": 2}))
 
-    def test_users_list_with_page_parameter(self):
-        response = self.client.get(self.url({"count": 1, "page": 1}))
+        self.check_common_details_of_list_view_response(
+            response, total_items=3, total_pages=2, page_size=2)
 
-        self.common_users_list_response_tests(response, items_list_len=1)
-        user_data = response.data["items"][0]
-        self.assertEqual(user_data["id"], self.third_user.id)
+    def test_users_list_with_negative_limit_parameter(self):
+        """
+        When the value of the limit parameter is less than 0, error 400 is returned
+        """
+        response = self.client.get(self.url({"limit": -5}))
 
-        response = self.client.get(self.url({"count": 1, "page": 2}))
+        self.client_error_response_test(
+            response,
+            messages=["Minimum page size is 0 items"]
+        )
 
-        self.common_users_list_response_tests(response, items_list_len=1)
-        user_data = response.data["items"][0]
-        self.assertEqual(user_data["id"], self.second_user.id)
+    def test_users_list_with_large_limit_parameter(self):
+        """
+        When the value of the limit parameter is greater than 100, error 400 is returned
+        """
+        response = self.client.get(self.url({"limit": 999}))
 
-    def test_users_list_with_friend_flag(self):
-        self.client.login(**self.credentials)
-        self.first_user.following.create(
-            follower_user=self.first_user, following_user=self.second_user)
-        response = self.client.get(self.url({"friend": "true"}))
+        self.client_error_response_test(
+            response,
+            messages=["Maximum page size is 100 items"]
+        )
 
-        self.common_users_list_response_tests(
-            response, total_count=1, items_list_len=1)
-        self.assertEqual(response.data["items"][0]["id"], self.second_user.id)
-        self.assertTrue(response.data["items"][0]["followed"])
+    def test_users_list_with_valid_page_parameter(self):
+        response = self.client.get(self.url({"limit": 1, "page": 1}))
+        self.check_common_details_of_list_view_response(
+            response, total_items=3, total_pages=3, page_size=1)
 
-    def test_users_list_with_friend_flag_while_unauthorized(self):
-        self.second_user.following.create(
-            follower_user=self.second_user, following_user=self.first_user)
-        response = self.client.get(self.url({"friend": "true"}))
+        response = self.client.get(self.url({"limit": 1, "page": 2}))
+        self.check_common_details_of_list_view_response(
+            response, total_items=3, total_pages=3, page_size=1, page_number=2)
 
-        self.common_users_list_response_tests(response, total_count=0)
+    def test_users_list_with_invalid_page_parameter(self):
+        """
+        Users list with invalid page parameter should return a 400 error
+        """
+        response = self.client.get(self.url({"limit": 1, "page": "abc"}))
+
+        self.client_error_response_test(
+            response,
+            messages=["Invalid page number value"]
+        )
+
+    def test_users_list_with_invalid_limit_parameter(self):
+        """
+        Users list with invalid limit parameter should return a 400 error
+        """
+        response = self.client.get(self.url({"limit": "invalid"}))
+
+        self.client_error_response_test(
+            response,
+            messages=["Invalid limit value"]
+        )
+
+
+class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
+    def url(self, kwargs):
+        return reverse("user_profile_detail", kwargs=kwargs)
+
+    def setUp(self):
+        credentials = {"email": "first@gmail.com", "password": "pass"}
+        self.first_user = self.UserModel.objects.create_user(
+            login="FirstUser", **credentials)
+        self.client.login(**credentials)
+
+        self.second_user = self.UserModel.objects.create_user(
+            login="SecondUser", email="second@gmail.com", password="pass")
+        profile = self.second_user.profile
+        profile.is_looking_for_a_job = True
+        profile.professional_skills = "Test"
+        profile.contacts.github = "https://github.com/HanSaloZu"
+        self.second_user.save()
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url({"login": self.second_user.login}))
+
+        self.unauthorized_client_error_response_test(response)
+
+    def test_user_profile_detail(self):
+        """
+        Profile detail with valid login should return a 200 status code and a profile representation in the response body
+        """
+        response = self.client.get(self.url({"login": self.second_user.login}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["userId"], self.second_user.id)
+
+    def test_self_profile_detail(self):
+        """
+        Profile detail with login equals authenticated user login should return a 200 status code and a profile representation in the response body
+        """
+        response = self.client.get(self.url({"login": self.first_user.login}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertEqual(response.data["userId"], self.first_user.id)
+
+    def test_user_profile_detail_with_invalid_user_login(self):
+        """
+        Profile detail with invalid login should return a 400 error
+        """
+        url = self.url(kwargs={"login": "invalid"})
+        response = self.client.get(url)
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages=["Invalid login, user is not found"])
+
+
+class UserFollowersListAPIViewTestCase(ListAPIViewTestCase):
+    def url(self, kwargs={}, parameters={}):
+        url = reverse("user_followers_list", kwargs=kwargs)
+        if parameters:
+            url += "?" + urlencode(parameters)
+
+        return url
+
+    def setUp(self):
+        credentials = {"email": "first@gmail.com", "password": "pass"}
+        self.first_user = self.UserModel.objects.create_user(
+            login="FirstUser", **credentials)
+        self.client.login(**credentials)
+
+        self.second_user = self.UserModel.objects.create_user(
+            login="SecondUser", email="second@gmail.com", password="pass")
+        self.third_user = self.UserModel.objects.create_user(
+            login="ThirdUser", email="third@gmail.com", password="pass")
+
+        FollowersModel.follow(self.second_user, self.first_user)
+        FollowersModel.follow(self.third_user, self.first_user)
+
+        FollowersModel.follow(self.first_user, self.second_user)
+        FollowersModel.follow(self.second_user, self.third_user)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url({"login": self.second_user.login}))
+
+        self.unauthorized_client_error_response_test(response)
+
+    def test_followers_list(self):
+        response = self.client.get(self.url({"login": self.second_user.login}))
+
+        self.check_common_details_of_list_view_response(
+            response,
+            total_items=1,
+            page_size=1
+        )
+        self.assertEqual(response.data["items"]
+                         [0]["userId"], self.first_user.id)
+
+    def test_self_followers_list(self):
+        response = self.client.get(self.url({"login": self.first_user.login}))
+
+        self.check_common_details_of_list_view_response(
+            response,
+            total_items=2,
+            page_size=2
+        )
+
+    def test_followers_list_with_invalid_login(self):
+        response = self.client.get(self.url({"login": "Invalid"}))
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages=["Invalid login, user is not found"]
+        )
+
+
+class UserFollowingListAPIViewTestCase(ListAPIViewTestCase):
+    def url(self, kwargs={}, parameters={}):
+        url = reverse("user_following_list", kwargs=kwargs)
+        if parameters:
+            url += "?" + urlencode(parameters)
+
+        return url
+
+    def setUp(self):
+        credentials = {"email": "first@gmail.com", "password": "pass"}
+        self.first_user = self.UserModel.objects.create_user(
+            login="FirstUser", **credentials)
+        self.client.login(**credentials)
+
+        self.second_user = self.UserModel.objects.create_user(
+            login="SecondUser", email="second@gmail.com", password="pass")
+        self.third_user = self.UserModel.objects.create_user(
+            login="ThirdUser", email="third@gmail.com", password="pass")
+
+        FollowersModel.follow(self.first_user, self.second_user)
+        FollowersModel.follow(self.first_user, self.third_user)
+
+        FollowersModel.follow(self.third_user, self.second_user)
+        FollowersModel.follow(self.second_user, self.third_user)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url({"login": self.second_user.login}))
+
+        self.unauthorized_client_error_response_test(response)
+
+    def test_following_list(self):
+        response = self.client.get(self.url({"login": self.second_user.login}))
+
+        self.check_common_details_of_list_view_response(
+            response,
+            total_items=1,
+            page_size=1
+        )
+        self.assertEqual(response.data["items"]
+                         [0]["userId"], self.third_user.id)
+
+    def test_self_following_list(self):
+        response = self.client.get(self.url({"login": self.first_user.login}))
+
+        self.check_common_details_of_list_view_response(
+            response,
+            total_items=2,
+            page_size=2
+        )
+
+    def test_following_list_with_invalid_login(self):
+        response = self.client.get(self.url({"login": "Invalid"}))
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages=["Invalid login, user is not found"]
+        )

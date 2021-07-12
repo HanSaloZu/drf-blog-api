@@ -19,7 +19,8 @@ INSTALLED_APPS = [
 
     "users",
     "profiles",
-    "following"
+    "followers",
+    "authentication"
 ]
 
 MIDDLEWARE = [
@@ -28,7 +29,8 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware"
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware"
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -36,7 +38,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": ["templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -49,22 +51,23 @@ TEMPLATES = [
     },
 ]
 
-REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "utils.handlers.custom_exception_handler",
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "utils.authentication.CsrfExemptSessionAuthentication",
-        "rest_framework.authentication.BasicAuthentication"
-    )
-}
-
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 WSGI_APPLICATION = "config.wsgi.application"
 
 AUTH_USER_MODEL = "users.User"
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.AllowAllUsersModelBackend']
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 4,
+        }
+    },
+]
 
 LANGUAGE_CODE = "en-us"
 
