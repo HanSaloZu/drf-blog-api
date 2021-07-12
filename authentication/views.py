@@ -8,9 +8,8 @@ from utils.exceptions import InvalidData400, InactiveProfile403, Forbidden403
 from utils.shortcuts import raise_400_based_on_serializer
 
 from .services.email import send_profile_activation_email
-from .services.activation import get_user_by_uidb64_or_none
+from .services.activation import activate_user_profile
 from .serializers import LoginSerializer, RegistrationSerializer
-from .tokens import confirmation_token
 
 
 class AuthenticationAPIView(APIView):
@@ -58,13 +57,12 @@ class ProfileActivationAPIView(APIView):
         if request.user.is_authenticated:
             raise Forbidden403("You are already authenticated")
 
-        user = get_user_by_uidb64_or_none(request.data.get("uidb64", ""))
-        token = request.data.get("token", "")
-
-        if user is not None and confirmation_token.check_token(user, token):
-            user.is_active = True
-            user.save()
-
+        credentials = {
+            "uidb64": request.data.get("uidb64", ""),
+            "token": request.data.get("token", "")
+        }
+        user = activate_user_profile(credentials)
+        if user is not None and user.is_active:
             return Response(status=HTTP_204_NO_CONTENT)
 
         raise InvalidData400("Invalid credentials")

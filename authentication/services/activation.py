@@ -6,6 +6,8 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.conf import settings
 
+from ..tokens import confirmation_token
+
 
 User = get_user_model()
 
@@ -29,5 +31,15 @@ def get_user_by_uidb64_or_none(uidb64):
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
+
+    return user
+
+
+def activate_user_profile(credentials):
+    user = get_user_by_uidb64_or_none(credentials["uidb64"])
+
+    if user is not None and confirmation_token.check_token(user, credentials["token"]):
+        user.is_active = True
+        user.save()
 
     return user
