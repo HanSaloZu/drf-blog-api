@@ -1,8 +1,9 @@
-from .google_drive_api import GoogleDriveAPI
 from PIL import Image
 from os import remove
 
 from django.conf import settings
+
+from .google_drive_api import GoogleDriveAPI
 
 google_drive = GoogleDriveAPI()
 
