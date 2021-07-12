@@ -7,7 +7,7 @@ from ..services.activation import generate_uidb64
 from ..tokens import confirmation_token
 
 
-class AuthenticationAPIViewTest(APIViewTestCase):
+class AuthenticationAPIViewTestCase(APIViewTestCase):
     url = reverse("authentication")
 
     def setUp(self):
@@ -156,7 +156,7 @@ class AuthenticationAPIViewTest(APIViewTestCase):
         self.assertTrue(user.check_password(payload["password1"]))
 
 
-class ProfileActivationAPIViewTest(APIViewTestCase):
+class ProfileActivationAPIViewTestCase(APIViewTestCase):
     url = reverse("profile_activation")
 
     def setUp(self):

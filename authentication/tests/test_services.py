@@ -4,7 +4,7 @@ from ..services.activation import generate_uidb64, get_user_by_uidb64_or_none, a
 from ..tokens import confirmation_token
 
 
-class uidb64GenerationTest(ExtendedTestCase):
+class uidb64TestCase(ExtendedTestCase):
     def setUp(self):
         self.user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
@@ -22,7 +22,7 @@ class uidb64GenerationTest(ExtendedTestCase):
         self.assertIsNone(user)
 
 
-class ProfileActivationTokenGenerationTest(ExtendedTestCase):
+class ProfileActivationTokenTestCase(ExtendedTestCase):
     def setUp(self):
         self.first_user = self.UserModel.objects.create_user(
             login="FirstUser", email="first@user.com", password="pass")
@@ -39,7 +39,7 @@ class ProfileActivationTokenGenerationTest(ExtendedTestCase):
             self.second_user, token))
 
 
-class ProfileActivationTest(ExtendedTestCase):
+class ProfileActivationTestCase(ExtendedTestCase):
     def setUp(self):
         self.user = self.UserModel.objects.create_user(
             login="FirstUser", email="first@user.com", password="pass", is_active=False)

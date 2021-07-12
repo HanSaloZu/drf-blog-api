@@ -5,7 +5,7 @@ from followers.models import FollowersModel
 from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
 
-class UsersListAPIViewTest(ListAPIViewTestCase):
+class UsersListAPIViewTestCase(ListAPIViewTestCase):
     def url(self, parameters={}):
         url = reverse("users_list")
         if parameters:
@@ -107,7 +107,7 @@ class UsersListAPIViewTest(ListAPIViewTestCase):
         )
 
 
-class RetrieveUserProfileAPIViewTest(APIViewTestCase):
+class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
     def url(self, kwargs):
         return reverse("user_profile_detail", kwargs=kwargs)
 
@@ -154,7 +154,7 @@ class RetrieveUserProfileAPIViewTest(APIViewTestCase):
             messages=["Invalid login, user is not found"])
 
 
-class UserFollowersListAPIViewTest(ListAPIViewTestCase):
+class UserFollowersListAPIViewTestCase(ListAPIViewTestCase):
     def url(self, kwargs={}, parameters={}):
         url = reverse("user_followers_list", kwargs=kwargs)
         if parameters:
@@ -216,7 +216,7 @@ class UserFollowersListAPIViewTest(ListAPIViewTestCase):
         )
 
 
-class UserFollowingListAPIViewTest(ListAPIViewTestCase):
+class UserFollowingListAPIViewTestCase(ListAPIViewTestCase):
     def url(self, kwargs={}, parameters={}):
         url = reverse("user_following_list", kwargs=kwargs)
         if parameters:

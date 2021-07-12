@@ -4,7 +4,7 @@ from django.urls import reverse
 from utils.tests import APIViewTestCase
 
 
-class RetrieveUpdateProfileAPIViewTest(APIViewTestCase):
+class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
     url = reverse("profile")
 
     def setUp(self):
@@ -113,7 +113,7 @@ class RetrieveUpdateProfileAPIViewTest(APIViewTestCase):
         )
 
 
-class UpdatePhotoAPIViewTest(APIViewTestCase):
+class UpdatePhotoAPIViewTestCase(APIViewTestCase):
     url = reverse("profile_photo_update")
 
     def setUp(self):
@@ -154,7 +154,7 @@ class UpdatePhotoAPIViewTest(APIViewTestCase):
         )
 
 
-class RetrieveUpdatePreferencesAPIViewTest(APIViewTestCase):
+class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
     url = reverse("profile_preferences")
 
     def setUp(self):
@@ -207,7 +207,7 @@ class RetrieveUpdatePreferencesAPIViewTest(APIViewTestCase):
         )
 
 
-class UpdatePasswordAPIViewTest(APIViewTestCase):
+class UpdatePasswordAPIViewTestCase(APIViewTestCase):
     url = reverse("update_password")
 
     def setUp(self):

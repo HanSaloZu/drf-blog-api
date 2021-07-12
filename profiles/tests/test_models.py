@@ -3,7 +3,7 @@ from utils.tests import ExtendedTestCase
 from profiles.models import Profile, Contacts, Photo, Preferences
 
 
-class ProfileModelTest(ExtendedTestCase):
+class ProfileModelTestCase(ExtendedTestCase):
     model = Profile
 
     def test_profile(self):
@@ -21,7 +21,7 @@ class ProfileModelTest(ExtendedTestCase):
         self.assertEqual(profile.about_me, "")
 
 
-class ContactsModelTest(ExtendedTestCase):
+class ContactsModelTestCase(ExtendedTestCase):
     model = Contacts
 
     def test_contacts(self):
@@ -41,7 +41,7 @@ class ContactsModelTest(ExtendedTestCase):
         self.assertEqual(contacts.youtube, "")
 
 
-class PhotoModelTest(ExtendedTestCase):
+class PhotoModelTestCase(ExtendedTestCase):
     model = Photo
 
     def test_photo(self):
@@ -55,7 +55,7 @@ class PhotoModelTest(ExtendedTestCase):
         self.assertEqual(photo.link, "")
 
 
-class PreferencesModelTest(ExtendedTestCase):
+class PreferencesModelTestCase(ExtendedTestCase):
     model = Preferences
 
     def test_preferences(self):

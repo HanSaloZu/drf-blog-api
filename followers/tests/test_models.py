@@ -5,7 +5,7 @@ from utils.tests import ExtendedTestCase
 from ..models import FollowersModel
 
 
-class FollowersModelTest(ExtendedTestCase):
+class FollowersModelTestCase(ExtendedTestCase):
     model = FollowersModel
 
     def setUp(self):

@@ -8,7 +8,7 @@ from ..serializers import (UpdateProfileSerializer, UpdateContactsSerializer, Up
                            PreferencesSerializer, ProfileSerializer)
 
 
-class ProfileSerializerTest(ExtendedTestCase):
+class ProfileSerializerTestCase(ExtendedTestCase):
     serializer_class = ProfileSerializer
 
     def setUp(self):
@@ -51,7 +51,7 @@ class ProfileSerializerTest(ExtendedTestCase):
                          ["youtube"], instance.contacts.youtube)
 
 
-class UpdateProfileSerializerTest(TestCase):
+class UpdateProfileSerializerTestCase(TestCase):
     serializer_class = UpdateProfileSerializer
 
     def test_valid_serializer(self):
@@ -90,7 +90,7 @@ class UpdateProfileSerializerTest(TestCase):
         self.assertEqual(len(errors), 6)
 
 
-class UpdateContactsSerializerTest(TestCase):
+class UpdateContactsSerializerTestCase(TestCase):
     serializer_class = UpdateContactsSerializer
 
     def test_valid_serializer(self):
@@ -121,7 +121,7 @@ class UpdateContactsSerializerTest(TestCase):
         self.assertEqual(len(errors), 3)
 
 
-class UpdatePasswordSerializerTest(TestCase):
+class UpdatePasswordSerializerTestCase(TestCase):
     serializer_class = UpdatePasswordSerailizer
 
     def test_invalid_serializer(self):
@@ -151,7 +151,7 @@ class UpdatePasswordSerializerTest(TestCase):
         self.assertEqual(len(errors), 3)
 
 
-class PreferencesSerializerTest(TestCase):
+class PreferencesSerializerTestCase(TestCase):
     serializer_class = PreferencesSerializer
 
     def test_valid_serializer(self):

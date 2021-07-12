@@ -6,7 +6,7 @@ from utils.tests import ListAPIViewTestCase, APIViewTestCase
 from ..models import FollowersModel
 
 
-class FollowersListAPIViewTest(ListAPIViewTestCase):
+class FollowersListAPIViewTestCase(ListAPIViewTestCase):
     model = FollowersModel
 
     def url(self, parameters={}):
@@ -57,7 +57,7 @@ class FollowersListAPIViewTest(ListAPIViewTestCase):
                          [0]["userId"], self.second_user.id)
 
 
-class FollowingListAPIViewTest(ListAPIViewTestCase):
+class FollowingListAPIViewTestCase(ListAPIViewTestCase):
     url = reverse("following_list")
     model = FollowersModel
 
@@ -89,7 +89,7 @@ class FollowingListAPIViewTest(ListAPIViewTestCase):
                          [0]["userId"], self.second_user.id)
 
 
-class FollowingAPIViewTest(APIViewTestCase):
+class FollowingAPIViewTestCase(APIViewTestCase):
     model = FollowersModel
 
     def url(self, kwargs):

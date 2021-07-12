@@ -1,7 +1,7 @@
 from utils.tests import ExtendedTestCase
 
 
-class UserModelTest(ExtendedTestCase):
+class UserModelTestCase(ExtendedTestCase):
     def test_user(self):
         user_email = "new@user.com"
         user_login = "NewUser"

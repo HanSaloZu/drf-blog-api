@@ -7,7 +7,7 @@ from utils.tests import ExtendedTestCase
 from ..serializers import LoginSerializer, RegistrationSerializer
 
 
-class LoginSerializerTest(TestCase):
+class LoginSerializerTestCase(TestCase):
     serializer_class = LoginSerializer
 
     def test_valid_serializer(self):
@@ -44,7 +44,7 @@ class LoginSerializerTest(TestCase):
         self.assertIn("Invalid email", errors)
 
 
-class RegistrationSerializerTest(ExtendedTestCase):
+class RegistrationSerializerTestCase(ExtendedTestCase):
     serializer_class = RegistrationSerializer
 
     def setUp(self):
