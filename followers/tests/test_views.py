@@ -113,16 +113,22 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         self.unauthorized_client_error_response_test(response)
 
     def test_follow(self):
+        """
+        A valid follow request should return a 204 status code
+        """
         response = self.client.put(self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_204_NO_CONTENT)
-        self.assertTrue(self.model.is_following(
-            self.first_user, self.second_user))
-        self.assertFalse(self.model.is_following(
-            self.second_user, self.first_user))
+        self.assertIs(self.model.is_following(
+            self.first_user, self.second_user), True)
+        self.assertIs(self.model.is_following(
+            self.second_user, self.first_user), False)
 
     def test_self_follow(self):
+        """
+        Self follow should return a 400 error
+        """
         response = self.client.put(self.url({"login": self.first_user.login}))
 
         self.client_error_response_test(
@@ -131,6 +137,9 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         )
 
     def test_double_follow(self):
+        """
+        Duplicate follow should return a 400 error
+        """
         self.model.follow(self.first_user, self.second_user)
 
         response = self.client.put(self.url({"login": self.second_user.login}))
@@ -141,6 +150,9 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         )
 
     def test_follow_with_invalid_login(self):
+        """
+        A follow request with an invalid login should return a 404 error
+        """
         response = self.client.put(self.url({"login": "login"}))
 
         self.client_error_response_test(
@@ -151,6 +163,9 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         )
 
     def test_unfollow(self):
+        """
+        A valid unfollow request should return a 204 status code
+        """
         self.model.follow(self.first_user, self.second_user)
 
         response = self.client.delete(
@@ -158,19 +173,25 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_204_NO_CONTENT)
-        self.assertFalse(self.model.is_following(
-            self.first_user, self.second_user))
+        self.assertIs(self.model.is_following(
+            self.first_user, self.second_user), False)
 
     def test_unfollow_not_followed_user(self):
+        """
+        Unfollowing from an unfollowed user does not return an error
+        """
         response = self.client.delete(
             self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_204_NO_CONTENT)
-        self.assertFalse(self.model.is_following(
-            self.first_user, self.second_user))
+        self.assertIs(self.model.is_following(
+            self.first_user, self.second_user), False)
 
     def test_is_following(self):
+        """
+        If the user is being followed, the response status code should be 204, otherwise 404
+        """
         response = self.client.get(self.url({"login": self.second_user.login}))
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_404_NOT_FOUND)

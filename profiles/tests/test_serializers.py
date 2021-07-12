@@ -64,7 +64,7 @@ class UpdateProfileSerializerTestCase(TestCase):
         }
         serializer = self.serializer_class(data=data)
 
-        self.assertTrue(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), True)
         self.assertEqual(data, serializer.validated_data)
 
     def test_invalid_serializer(self):
@@ -78,7 +78,7 @@ class UpdateProfileSerializerTestCase(TestCase):
         }
         serializer = self.serializer_class(data=data)
 
-        self.assertFalse(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertIn("Fullname field cannot be empty", errors)
@@ -88,6 +88,14 @@ class UpdateProfileSerializerTestCase(TestCase):
         self.assertIn("Invalid value for is looking for a job field", errors)
         self.assertIn("Contacts field cannot be null", errors)
         self.assertEqual(len(errors), 6)
+
+    def test_serializer_without_data(self):
+        """
+        The serializer without data should be valid because it has no required fields
+        """
+        serializer = self.serializer_class(data={})
+
+        self.assertIs(serializer.is_valid(), True)
 
 
 class UpdateContactsSerializerTestCase(TestCase):
@@ -100,7 +108,7 @@ class UpdateContactsSerializerTestCase(TestCase):
         }
         serializer = self.serializer_class(data=data)
 
-        self.assertTrue(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), True)
         self.assertEqual(data, serializer.validated_data)
 
     def test_invalid_serializer(self):
@@ -112,13 +120,21 @@ class UpdateContactsSerializerTestCase(TestCase):
         }
         serializer = self.serializer_class(data=data)
 
-        self.assertFalse(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertIn("Invalid value for github field", errors)
         self.assertIn("Twitter field cannot be null", errors)
         self.assertIn("Facebook field value is too long", errors)
         self.assertEqual(len(errors), 3)
+
+    def test_serializer_without_data(self):
+        """
+        The serializer without data should be valid because it has no required fields
+        """
+        serializer = self.serializer_class(data={})
+
+        self.assertIs(serializer.is_valid(), True)
 
 
 class UpdatePasswordSerializerTestCase(TestCase):
@@ -132,7 +148,7 @@ class UpdatePasswordSerializerTestCase(TestCase):
         }
         serializer = self.serializer_class(data=data)
 
-        self.assertFalse(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertIn("New password field cannot be empty", errors)
@@ -140,9 +156,12 @@ class UpdatePasswordSerializerTestCase(TestCase):
         self.assertEqual(len(errors), 2)
 
     def test_serializer_without_data(self):
+        """
+        The serializer without data should be invalid because it has 3 required fields
+        """
         serializer = self.serializer_class(data={})
 
-        self.assertFalse(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertIn("Old password field is required", errors)
@@ -158,22 +177,25 @@ class PreferencesSerializerTestCase(TestCase):
         data = {"theme": ""}
         serializer = self.serializer_class(data=data)
 
-        self.assertTrue(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), True)
         self.assertEqual(data, serializer.validated_data)
 
     def test_invalid_serializer(self):
         data = {"theme": "a"*260}
         serializer = self.serializer_class(data=data)
 
-        self.assertFalse(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertIn("Theme field value is too long", errors)
         self.assertEqual(len(errors), 1)
 
     def test_serializer_without_data(self):
+        """
+        The serializer without data should be invalid because it has 1 required field
+        """
         serializer = self.serializer_class(data={})
 
-        self.assertFalse(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), False)
         self.assertEqual(
             serializer.errors["theme"][0], "Theme field is required")

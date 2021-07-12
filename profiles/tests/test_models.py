@@ -6,14 +6,14 @@ from profiles.models import Profile, Contacts, Photo, Preferences
 class ProfileModelTestCase(ExtendedTestCase):
     model = Profile
 
-    def test_profile(self):
+    def test_profile_model(self):
         user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
         profile = user.profile
 
         self.assertIsInstance(profile, self.model)
 
-        self.assertFalse(profile.is_looking_for_a_job)
+        self.assertIs(profile.is_looking_for_a_job, False)
         self.assertEqual(profile.professional_skills, "")
 
         self.assertEqual(profile.fullname, user.login)
@@ -24,7 +24,7 @@ class ProfileModelTestCase(ExtendedTestCase):
 class ContactsModelTestCase(ExtendedTestCase):
     model = Contacts
 
-    def test_contacts(self):
+    def test_contacts_model(self):
         user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
         contacts = user.profile.contacts
@@ -44,7 +44,7 @@ class ContactsModelTestCase(ExtendedTestCase):
 class PhotoModelTestCase(ExtendedTestCase):
     model = Photo
 
-    def test_photo(self):
+    def test_photo_model(self):
         user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
         photo = user.profile.photo
@@ -58,7 +58,7 @@ class PhotoModelTestCase(ExtendedTestCase):
 class PreferencesModelTestCase(ExtendedTestCase):
     model = Preferences
 
-    def test_preferences(self):
+    def test_preferences_model(self):
         user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
         preferences = user.profile.preferences

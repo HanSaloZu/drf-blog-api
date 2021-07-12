@@ -17,13 +17,16 @@ class LoginSerializerTestCase(TestCase):
         }
         serializer = self.serializer_class(data=data)
 
-        self.assertTrue(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), True)
         self.assertEqual(serializer.validated_data, data)
 
     def test_serializer_without_data(self):
+        """
+        The serializer without data should be invalid because it has 2 required fields
+        """
         serializer = self.serializer_class(data={})
 
-        self.assertFalse(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertEqual(len(errors), 2)
@@ -37,7 +40,7 @@ class LoginSerializerTestCase(TestCase):
         }
         serializer = self.serializer_class(data=data)
 
-        self.assertFalse(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertEqual(len(errors), 1)
@@ -61,7 +64,7 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
         }
         serializer = self.serializer_class(data=data)
 
-        self.assertTrue(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), True)
         self.assertEqual(data, serializer.validated_data)
 
     def test_invalid_serializer(self):
@@ -73,7 +76,7 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
         }
         serializer = self.serializer_class(data=data)
 
-        self.assertFalse(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertEqual(len(errors), 5)
@@ -85,6 +88,9 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
         self.assertIn("About me can't be empty", errors)
 
     def test_serializer_with_non_unique_login(self):
+        """
+        Using a non-unique login makes the serializer invalid
+        """
         data = {
             "login": "User",
             "email": "new@user.com",
@@ -94,7 +100,7 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
         }
         serializer = self.serializer_class(data=data)
 
-        self.assertFalse(serializer.is_valid())
+        self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertEqual(len(errors), 1)

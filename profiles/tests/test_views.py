@@ -38,6 +38,9 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
     # Profile update tests
 
     def test_profile_update_without_contacts(self):
+        """
+        Profile update without contacts is valid and should return a 200 status code and a profile representation in the response body
+        """
         payload = {
             "fullname": "New User",
             "aboutMe": get_random_string(length=70),
@@ -61,6 +64,9 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
                          payload["professionalSkills"])
 
     def test_profile_update_with_contacts(self):
+        """
+        Valid profile update should return a 200 status code and a profile representation in the response body
+        """
         payload = {
             "fullname": "New Fullname",
             "status": "",
@@ -88,12 +94,18 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
                          self.user.profile.contacts.facebook)
 
     def test_profile_update_without_payload(self):
+        """
+        Profile update without payload is valid and should return a 200 status code and a profile representation in the response body
+        """
         response = self.client.patch(self.url)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(response.data["userId"], self.user.id)
 
     def test_profile_update_with_invalid_payload(self):
+        """
+        Profile update with invalid payload should return a 400 status code
+        """
         payload = {
             "fullname": "",
             "contacts": {
@@ -129,6 +141,9 @@ class UpdatePhotoAPIViewTestCase(APIViewTestCase):
         self.unauthorized_client_error_response_test(response)
 
     def test_photo_update_without_payload(self):
+        """
+        Photo update without payload should return a 400 error
+        """
         response = self.client.put(self.url)
 
         self.client_error_response_test(
@@ -140,6 +155,9 @@ class UpdatePhotoAPIViewTestCase(APIViewTestCase):
         )
 
     def test_photo_update_with_invalid_payload(self):
+        """
+        Photo update with invalid payload should return a 400 error
+        """
         response = self.client.put(
             self.url,
             {"image": "test"},
@@ -185,6 +203,9 @@ class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
      # Preferences update tests
 
     def test_update_preferences(self):
+        """
+        Valid preferences update should return a 200 status code and a preferences representation in the response body
+        """
         payload = {"theme": "light"}
         response = self.client.put(
             self.url, payload, content_type="application/json")
@@ -196,6 +217,9 @@ class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
         self.assertEqual(response.data["theme"], payload["theme"])
 
     def test_update_preferences_with_invalid_payload(self):
+        """
+        Preferences update with invalid payload should return a 400 error
+        """
         payload = {"theme": None}
         response = self.client.put(
             self.url, payload, content_type="application/json")
@@ -224,6 +248,9 @@ class UpdatePasswordAPIViewTestCase(APIViewTestCase):
         self.unauthorized_client_error_response_test(response)
 
     def test_update_password(self):
+        """
+        Valid password update should return a 204 status code
+        """
         payload = {
             "oldPassword": "pass",
             "newPassword1": "newpassword",
@@ -236,9 +263,12 @@ class UpdatePasswordAPIViewTestCase(APIViewTestCase):
                          self.http_status.HTTP_204_NO_CONTENT)
 
         user = self.UserModel.objects.all().first()
-        self.assertTrue(user.check_password(payload["newPassword1"]))
+        self.assertIs(user.check_password(payload["newPassword1"]), True)
 
     def test_update_password_with_different_passwords(self):
+        """
+        Password update with different passwords should return a 400 error
+        """
         payload = {
             "oldPassword": "pass",
             "newPassword1": "invalid",
@@ -254,6 +284,9 @@ class UpdatePasswordAPIViewTestCase(APIViewTestCase):
         )
 
     def test_update_password_with_invalid_current_password(self):
+        """
+        Password update with invalid current password should return a 400 error
+        """
         payload = {
             "oldPassword": "invalid",
             "newPassword1": "newpassword",

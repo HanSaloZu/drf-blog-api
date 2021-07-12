@@ -23,20 +23,23 @@ class FollowersModelTestCase(ExtendedTestCase):
         s_user_followers = self.s_user.followers.all()
         self.assertEqual(s_user_followers.first(), pair)
 
-    def test_unfollow(self):
+    def test_valid_unfollowing(self):
         self.model.follow(self.f_user, self.s_user)
         self.model.follow(self.s_user, self.f_user)
 
         self.model.unfollow(user=self.f_user, subject=self.s_user)
 
         f_user_follows = self.f_user.following.all()
-        self.assertEqual(f_user_follows.exists(), False)
+        self.assertIs(f_user_follows.exists(), False)
 
         s_user_follows = self.s_user.following.all()
-        self.assertEqual(s_user_follows.exists(), True)
+        self.assertIs(s_user_follows.exists(), True)
         self.assertEqual(s_user_follows[0].following_user, self.f_user)
 
-    def test_constraint(self):
+    def test_double_following(self):
+        """
+        Double following should raise an IntegrityError
+        """
         self.model.follow(self.f_user, self.s_user)
 
         try:

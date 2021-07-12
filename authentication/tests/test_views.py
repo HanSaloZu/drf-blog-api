@@ -23,7 +23,10 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
 
     # Authentication test
 
-    def test_authentication(self):
+    def test_valid_authentication(self):
+        """
+        Valid authentication should return a 200 status code and a profile representation in the response body
+        """
         response = self.client.put(
             self.url, self.credentials, content_type="application/json")
 
@@ -31,6 +34,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
         self.assertEqual(response.data["userId"], self.user.id)
 
     def test_inactive_user_authentication(self):
+        """
+        Authentication of inactive users should return a 403 error
+        """
         response = self.client.put(
             self.url, self.inactive_user_credentials, content_type="application/json")
 
@@ -42,6 +48,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
         )
 
     def test_authentication_with_invalid_password(self):
+        """
+        Authentication with invalid password should return a 400 error
+        """
         payload = {
             "email": self.credentials["email"],
             "password": "invalid"
@@ -57,6 +66,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
         )
 
     def test_authentication_wihout_credentials(self):
+        """
+        Authentication without credentials should return a 400 error
+        """
         response = self.client.put(self.url)
 
         self.client_error_response_test(
@@ -67,7 +79,10 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
 
     # Logout test
 
-    def test_logout(self):
+    def test_valid_logout(self):
+        """
+        Valid logout should return a 204 status code
+        """
         self.client.login(**self.credentials)
         response = self.client.delete(self.url)
 
@@ -75,6 +90,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
                          self.http_status.HTTP_204_NO_CONTENT)
 
     def test_unauthenticated_client_logout(self):
+        """
+        Logging out by an unauthenticated client should return a 204 status code
+        """
         response = self.client.delete(self.url)
 
         self.assertEqual(response.status_code,
@@ -83,6 +101,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
     # Registration test
 
     def test_registration_request_by_authenticated_client(self):
+        """
+        A registration request from an authenticated client should return a 403 error
+        """
         self.client.login(**self.credentials)
 
         payload = {
@@ -103,6 +124,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
         )
 
     def test_registration_with_used_email(self):
+        """
+        Registration with the used email should return a 400 error
+        """
         payload = {
             "login": "Test-",
             "email": self.credentials["email"],
@@ -120,6 +144,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
         )
 
     def test_registration_with_different_passwords(self):
+        """
+        Registration with different passwords should return a 400 error
+        """
         payload = {
             "login": "Test_",
             "email": "test@test.com",
@@ -137,6 +164,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
         )
 
     def test_valid_registration(self):
+        """
+        Valid registration should return a 204 status code
+        """
         payload = {
             "login": "Test",
             "email": "test@test.com",
@@ -151,9 +181,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
                          self.http_status.HTTP_204_NO_CONTENT)
 
         user = self.UserModel.objects.all().get(login="Test")
-        self.assertFalse(user.is_active)
+        self.assertIs(user.is_active, False)
         self.assertEqual(user.profile.about_me, payload["aboutMe"])
-        self.assertTrue(user.check_password(payload["password1"]))
+        self.assertIs(user.check_password(payload["password1"]), True)
 
 
 class ProfileActivationAPIViewTestCase(APIViewTestCase):
@@ -164,6 +194,9 @@ class ProfileActivationAPIViewTestCase(APIViewTestCase):
             login="NewUser", email="new@user.com", password="pass", is_active=False)
 
     def test_profile_activation_request_by_authenticated_client(self):
+        """
+        A profile activation request from an authenticated client should return a 403 error
+        """
         credentials = {"email": "active@user.com", "password": "pass"}
         self.UserModel.objects.create_user(login="ActiveUser", **credentials)
         self.client.login(**credentials)
@@ -182,7 +215,10 @@ class ProfileActivationAPIViewTestCase(APIViewTestCase):
             messages=["You are already authenticated"]
         )
 
-    def test_profile_activation(self):
+    def test_valid_profile_activation(self):
+        """
+        Valid profile activation should return a 204 status code
+        """
         payload = {
             "token": confirmation_token.make_token(self.user),
             "uidb64": generate_uidb64(self.user)
@@ -194,10 +230,13 @@ class ProfileActivationAPIViewTestCase(APIViewTestCase):
                          self.http_status.HTTP_204_NO_CONTENT)
 
         user = self.UserModel.objects.get(id=self.user.id)
-        self.assertFalse(self.user.is_active)
-        self.assertTrue(user.is_active)
+        self.assertIs(self.user.is_active, False)
+        self.assertIs(user.is_active, True)
 
     def test_profile_activation_with_invalid_payload(self):
+        """
+        Profile activation with invalid credentials should return a 400 error
+        """
         payload = {
             "token": "invalid",
             "uidb64": "invalid"

@@ -54,7 +54,7 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
         list_item = response.data["items"][0]
         self.assertEqual(list_item["userId"], self.first_user.id)
         self.assertEqual(list_item["login"], self.first_user.login)
-        self.assertFalse(list_item["isFollowed"])
+        self.assertIs(list_item["isFollowed"], False)
 
         response = self.client.get(self.url({"q": "3333"}))
         self.check_common_details_of_list_view_response(response)
@@ -66,6 +66,9 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
             response, total_items=3, total_pages=2, page_size=2)
 
     def test_users_list_with_negative_limit_parameter(self):
+        """
+        When the value of the limit parameter is less than 0, error 400 is returned
+        """
         response = self.client.get(self.url({"limit": -5}))
 
         self.client_error_response_test(
@@ -74,6 +77,9 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
         )
 
     def test_users_list_with_large_limit_parameter(self):
+        """
+        When the value of the limit parameter is greater than 100, error 400 is returned
+        """
         response = self.client.get(self.url({"limit": 999}))
 
         self.client_error_response_test(
@@ -81,7 +87,7 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
             messages=["Maximum page size is 100 items"]
         )
 
-    def test_users_list_with_page_parameter(self):
+    def test_users_list_with_valid_page_parameter(self):
         response = self.client.get(self.url({"limit": 1, "page": 1}))
         self.check_common_details_of_list_view_response(
             response, total_items=3, total_pages=3, page_size=1)
@@ -91,6 +97,9 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
             response, total_items=3, total_pages=3, page_size=1, page_number=2)
 
     def test_users_list_with_invalid_page_parameter(self):
+        """
+        Users list with invalid page parameter should return a 400 error
+        """
         response = self.client.get(self.url({"limit": 1, "page": "abc"}))
 
         self.client_error_response_test(
@@ -99,6 +108,9 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
         )
 
     def test_users_list_with_invalid_limit_parameter(self):
+        """
+        Users list with invalid limit parameter should return a 400 error
+        """
         response = self.client.get(self.url({"limit": "invalid"}))
 
         self.client_error_response_test(
@@ -132,18 +144,27 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
         self.unauthorized_client_error_response_test(response)
 
     def test_user_profile_detail(self):
+        """
+        Profile detail with valid login should return a 200 status code and a profile representation in the response body
+        """
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(response.data["userId"], self.second_user.id)
 
     def test_self_profile_detail(self):
+        """
+        Profile detail with login equals authenticated user login should return a 200 status code and a profile representation in the response body
+        """
         response = self.client.get(self.url({"login": self.first_user.login}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(response.data["userId"], self.first_user.id)
 
     def test_user_profile_detail_with_invalid_user_login(self):
+        """
+        Profile detail with invalid login should return a 400 error
+        """
         url = self.url(kwargs={"login": "invalid"})
         response = self.client.get(url)
 
