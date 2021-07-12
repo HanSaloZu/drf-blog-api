@@ -1,6 +1,6 @@
 from utils.tests import ExtendedTestCase
 
-from ..services.activation import generate_uidb64, get_user_by_uidb64_or_none
+from ..services.activation import generate_uidb64, get_user_by_uidb64_or_none, activate_user_profile
 from ..tokens import confirmation_token
 
 
@@ -37,3 +37,28 @@ class ProfileActivationTokenGenerationTest(ExtendedTestCase):
         token = confirmation_token.make_token(self.first_user)
         self.assertFalse(confirmation_token.check_token(
             self.second_user, token))
+
+
+class ProfileActivationTest(ExtendedTestCase):
+    def setUp(self):
+        self.user = self.UserModel.objects.create_user(
+            login="FirstUser", email="first@user.com", password="pass", is_active=False)
+
+    def test_valid_activate_user_profile(self):
+        credentials = {
+            "uidb64": generate_uidb64(self.user),
+            "token": confirmation_token.make_token(self.user)
+        }
+
+        user = activate_user_profile(credentials)
+        self.assertIsInstance(user, self.UserModel)
+        self.assertTrue(user.is_active)
+
+    def test_activate_user_profile_with_invalid_credentials(self):
+        credentials = {
+            "uidb64": "1",
+            "token": "2"
+        }
+
+        user = activate_user_profile(credentials)
+        self.assertIsNone(user)
