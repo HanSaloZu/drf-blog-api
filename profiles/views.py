@@ -19,8 +19,7 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
 
     def patch(self, request):
         instance = request.user.profile
-        serializer = UpdateProfileSerializer(
-            instance, data=request.data, partial=True)
+        serializer = UpdateProfileSerializer(instance, data=request.data)
 
         if serializer.is_valid():
             instance = serializer.save()

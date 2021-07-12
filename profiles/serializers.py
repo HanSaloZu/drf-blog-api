@@ -79,11 +79,13 @@ class UpdateContactsSerializer(serializers.Serializer):
 
 class UpdateProfileSerializer(serializers.Serializer):
     isLookingForAJob = serializers.BooleanField(
+        required=False,
         allow_null=False,
         error_messages=get_error_messages("is looking for a job")
     )
 
     professionalSkills = serializers.CharField(
+        required=False,
         allow_blank=True,
         max_length=350,
         allow_null=False,
@@ -91,6 +93,7 @@ class UpdateProfileSerializer(serializers.Serializer):
     )
 
     fullname = serializers.CharField(
+        required=False,
         max_length=150,
         allow_blank=False,
         allow_null=False,
@@ -98,6 +101,7 @@ class UpdateProfileSerializer(serializers.Serializer):
     )
 
     status = serializers.CharField(
+        required=False,
         max_length=70,
         allow_null=False,
         allow_blank=True,
@@ -105,6 +109,7 @@ class UpdateProfileSerializer(serializers.Serializer):
     )
 
     aboutMe = serializers.CharField(
+        required=False,
         max_length=400,
         allow_blank=False,
         allow_null=False,
