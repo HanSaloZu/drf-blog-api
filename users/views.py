@@ -10,10 +10,17 @@ from .mixins import UsersListAPIViewMixin
 
 
 class UsersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+    """
+    Lists all users
+    """
     ...
 
 
 class UserFollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+    """
+    Lists the users following the specified user
+    """
+
     def filter_queryset(self, queryset, kwargs):
         target_user = get_profile_by_user_login_or_404(kwargs["login"]).user
         followers_ids = get_user_followers_ids_list(target_user)
@@ -22,6 +29,10 @@ class UserFollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
 
 
 class UserFollowingListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+    """
+    Lists the users who the specified user follows
+    """
+
     def filter_queryset(self, queryset, kwargs):
         target_user = get_profile_by_user_login_or_404(kwargs["login"]).user
         followings_ids = get_user_followings_ids_list(target_user)
@@ -30,6 +41,10 @@ class UserFollowingListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
 
 
 class RetrieveUserProfileAPIView(LoginRequiredAPIView, RetrieveAPIView):
+    """
+    Retrieves the profile of the specified user
+    """
+
     def retrieve(self, request, *args, **kwargs):
         instance = get_profile_by_user_login_or_404(kwargs["login"])
         serializer = ProfileSerializer(instance)

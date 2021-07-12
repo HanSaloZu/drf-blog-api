@@ -12,18 +12,32 @@ from .models import FollowersModel
 
 
 class FollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+    """
+    Lists the users following the authenticated user
+    """
+
     def filter_queryset(self, queryset, kwargs):
         followers_ids = get_user_followers_ids_list(self.request.user)
         return super().filter_queryset(queryset.filter(id__in=followers_ids), kwargs)
 
 
 class FollowingListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+    """
+    Lists the users who the authenticated user follows
+    """
+
     def filter_queryset(self, queryset, kwargs):
         followings_ids = get_user_followings_ids_list(self.request.user)
         return super().filter_queryset(queryset.filter(id__in=followings_ids), kwargs)
 
 
 class FollowingAPIView(LoginRequiredAPIView, APIView):
+    """
+    Check if the user is followed by the authenticated user(GET)
+    Follow the specified user(PUT)
+    Unfollow from the specified user(DELETE)
+    """
+
     model = FollowersModel
 
     def get(self, request, login):

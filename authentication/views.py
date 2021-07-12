@@ -13,6 +13,14 @@ from .serializers import LoginSerializer, RegistrationSerializer
 
 
 class AuthenticationAPIView(APIView):
+    """
+    Basic authentication functionality
+
+    Registration(POST)
+    Login(PUT)
+    Logout(DELETE)
+    """
+
     def post(self, request):
         if request.user.is_authenticated:
             raise Forbidden403("You are already authenticated")
@@ -53,6 +61,10 @@ class AuthenticationAPIView(APIView):
 
 
 class ProfileActivationAPIView(APIView):
+    """
+    Activates the user profile using the credentials sent by email after registration
+    """
+
     def post(self, request):
         if request.user.is_authenticated:
             raise Forbidden403("You are already authenticated")

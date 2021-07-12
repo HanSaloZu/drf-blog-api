@@ -13,6 +13,10 @@ from .serializers import (UpdateProfileSerializer, ProfileSerializer,
 
 
 class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
+    """
+    Retrieves and updates the authenticated user profile
+    """
+
     def get(self, request):
         serializer = ProfileSerializer(request.user.profile)
         return Response(serializer.data)
@@ -29,6 +33,10 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
 
 
 class UpdatePhotoAPIView(LoginRequiredAPIView, APIView):
+    """
+    Updates the photo of the authenticated user
+    """
+
     def put(self, request):
         image = request.data.get("image")
 
@@ -43,6 +51,10 @@ class UpdatePhotoAPIView(LoginRequiredAPIView, APIView):
 
 
 class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
+    """
+    Retrieves and updates the authenticated user preferences
+    """
+
     def get(self, request):
         serializer = PreferencesSerializer(request.user.profile.preferences)
         return Response(serializer.data)
@@ -59,6 +71,10 @@ class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
 
 
 class UpdatePasswordAPIView(LoginRequiredAPIView, APIView):
+    """
+    Updates the password of the authenticated user
+    """
+
     def put(self, request):
         instance = request.user
         serializer = UpdatePasswordSerailizer(
