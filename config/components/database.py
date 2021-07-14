@@ -1,10 +1,10 @@
 DATABASES = {
     "default": {
-        "ENGINE": environ.get("SQL_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": environ.get("SQL_DATABASE", BASE_DIR / "db.sqlite3"),
-        "USER": environ.get("SQL_USER", "user"),
-        "PASSWORD": environ.get("SQL_PASSWORD", "password"),
-        "HOST": environ.get("SQL_HOST", "localhost"),
-        "PORT": environ.get("SQL_PORT", "5432"),
+        "ENGINE": environ.get("DB_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": environ.get("DB_DATABASE", BASE_DIR / "db.sqlite3"),
+        "USER": environ.get("DB_USER", "user"),
+        "PASSWORD": environ.get("DB_PASSWORD", "password"),
+        "HOST": environ.get("DB_HOST", "localhost"),
+        "PORT": environ.get("DB_PORT", "5432"),
     }
 }
