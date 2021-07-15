@@ -22,7 +22,7 @@ worrying about files integrity.
 
 ```env
 # Common Django settings
-SECRET_KEY= # You can enter any random string here (this is used to provide cryptographic signing)
+SECRET_KEY= # You can enter any random string here(this is used to provide cryptographic signing)
 DEBUG=1 # 1-True, 0-False
 ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
 
@@ -31,7 +31,8 @@ ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
 CORS_ALLOWED_ORIGINS=localhost:3000 [::1]
 CORS_ORIGIN_WHITELIST=localhost:3000 [::1]
 
-EMAIL_CONFIRMATION_URL= # link that will be sent to the user's email after registration to activate the profile
+# link that will be sent to the user's email after registration to activate the profile
+EMAIL_CONFIRMATION_URL=
 
 # Send mail server configuration
 EMAIL_HOST= # mail server address(e.g smtp.gmail.com)
