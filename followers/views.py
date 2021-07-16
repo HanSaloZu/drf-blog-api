@@ -42,10 +42,7 @@ class FollowingAPIView(LoginRequiredAPIView, APIView):
 
     def get(self, request, login):
         target = get_profile_by_user_login_or_404(login).user
-
-        if self.model.is_following(request.user, target):
-            return Response(status=HTTP_204_NO_CONTENT)
-        return Response(status=HTTP_404_NOT_FOUND)
+        return Response(data={"isFollowed": self.model.is_following(request.user, target)})
 
     def put(self, request, login):
         if login == request.user.login:

@@ -190,16 +190,16 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
     def test_is_following(self):
         """
-        If the user is being followed, the response status code should be 204, otherwise 404
+        If the user is being followed, isFollowed should be True, otherwise False
         """
         response = self.client.get(self.url({"login": self.second_user.login}))
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isFollowed"], False)
 
         self.model.follow(self.first_user, self.second_user)
         response = self.client.get(self.url({"login": self.second_user.login}))
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isFollowed"], True)
 
     def test_is_following_with_invalid_login(self):
         response = self.client.get(self.url({"login": "invalid"}))
