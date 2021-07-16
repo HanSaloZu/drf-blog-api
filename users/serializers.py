@@ -4,7 +4,6 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    userId = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     photo = serializers.SerializerMethodField()
     isAdmin = serializers.SerializerMethodField()
@@ -28,5 +27,5 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["userId", "login", "status",
+        fields = ["id", "login", "status",
                   "photo", "isAdmin", "isFollowed"]

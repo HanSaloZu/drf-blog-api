@@ -54,7 +54,7 @@ class FollowersListAPIViewTestCase(ListAPIViewTestCase):
             page_size=1
         )
         self.assertEqual(response.data["items"]
-                         [0]["userId"], self.second_user.id)
+                         [0]["id"], self.second_user.id)
 
 
 class FollowingListAPIViewTestCase(ListAPIViewTestCase):
@@ -86,7 +86,7 @@ class FollowingListAPIViewTestCase(ListAPIViewTestCase):
             page_size=1
         )
         self.assertEqual(response.data["items"]
-                         [0]["userId"], self.second_user.id)
+                         [0]["id"], self.second_user.id)
 
 
 class FollowingAPIViewTestCase(APIViewTestCase):

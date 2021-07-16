@@ -38,7 +38,7 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
 
         list_item = response.data["items"][0]
         self.assertEqual(len(list_item), 6)
-        self.assertIn("userId", list_item)
+        self.assertIn("id", list_item)
         self.assertIn("login", list_item)
         self.assertIn("status", list_item)
         self.assertIn("photo", list_item)
@@ -52,7 +52,7 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
             response, page_size=1, total_items=1)
 
         list_item = response.data["items"][0]
-        self.assertEqual(list_item["userId"], self.first_user.id)
+        self.assertEqual(list_item["id"], self.first_user.id)
         self.assertEqual(list_item["login"], self.first_user.login)
         self.assertIs(list_item["isFollowed"], False)
 
@@ -215,7 +215,7 @@ class UserFollowersListAPIViewTestCase(ListAPIViewTestCase):
             page_size=1
         )
         self.assertEqual(response.data["items"]
-                         [0]["userId"], self.first_user.id)
+                         [0]["id"], self.first_user.id)
 
     def test_self_followers_list(self):
         response = self.client.get(self.url({"login": self.first_user.login}))
@@ -277,7 +277,7 @@ class UserFollowingListAPIViewTestCase(ListAPIViewTestCase):
             page_size=1
         )
         self.assertEqual(response.data["items"]
-                         [0]["userId"], self.third_user.id)
+                         [0]["id"], self.third_user.id)
 
     def test_self_following_list(self):
         response = self.client.get(self.url({"login": self.first_user.login}))
