@@ -29,7 +29,7 @@ class ContactsSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    userId = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
     login = serializers.SerializerMethodField()
     isLookingForAJob = serializers.SerializerMethodField()
     professionalSkills = serializers.SerializerMethodField()
@@ -38,7 +38,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     photo = serializers.SerializerMethodField()
     contacts = ContactsSerializer()
 
-    def get_userId(self, obj):
+    def get_id(self, obj):
         return obj.user.id
 
     def get_login(self, obj):
@@ -61,7 +61,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ["userId", "isLookingForAJob", "professionalSkills",
+        fields = ["id", "isLookingForAJob", "professionalSkills",
                   "isAdmin", "fullname", "login", "status", "aboutMe", "photo", "contacts"]
 
 

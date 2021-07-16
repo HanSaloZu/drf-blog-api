@@ -33,7 +33,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], self.user.id)
+        self.assertEqual(response.data["id"], self.user.id)
 
     # Profile update tests
 
@@ -53,7 +53,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         user = self.UserModel.objects.all().first()
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], user.id)
+        self.assertEqual(response.data["id"], user.id)
 
         self.assertEqual(user.profile.fullname, payload["fullname"])
         self.assertEqual(user.profile.about_me, payload["aboutMe"])
@@ -82,7 +82,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         contacts = user.profile.contacts
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], user.id)
+        self.assertEqual(response.data["id"], user.id)
 
         self.assertEqual(user.profile.fullname, payload["fullname"])
         self.assertEqual(user.profile.status, payload["status"])
@@ -100,7 +100,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         response = self.client.patch(self.url)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], self.user.id)
+        self.assertEqual(response.data["id"], self.user.id)
 
     def test_profile_update_with_invalid_payload(self):
         """

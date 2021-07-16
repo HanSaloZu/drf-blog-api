@@ -150,7 +150,7 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], self.second_user.id)
+        self.assertEqual(response.data["id"], self.second_user.id)
 
     def test_self_profile_detail(self):
         """
@@ -159,7 +159,7 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
         response = self.client.get(self.url({"login": self.first_user.login}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], self.first_user.id)
+        self.assertEqual(response.data["id"], self.first_user.id)
 
     def test_user_profile_detail_with_invalid_user_login(self):
         """

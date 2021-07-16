@@ -21,7 +21,7 @@ class ProfileSerializerTestCase(ExtendedTestCase):
         data = serializer.data
 
         self.assertEqual(len(data), 10)
-        self.assertEqual(data["userId"], instance.user.id)
+        self.assertEqual(data["id"], instance.user.id)
         self.assertEqual(data["isLookingForAJob"],
                          instance.is_looking_for_a_job)
         self.assertEqual(data["professionalSkills"],

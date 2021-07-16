@@ -31,7 +31,7 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             self.url, self.credentials, content_type="application/json")
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], self.user.id)
+        self.assertEqual(response.data["id"], self.user.id)
 
     def test_inactive_user_authentication(self):
         """
