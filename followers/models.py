@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, Error
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -9,6 +9,12 @@ class FollowersModel(models.Model):
         User, related_name="following", on_delete=models.CASCADE)
     following_user = models.ForeignKey(
         User, related_name="followers", on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        if self.follower_user == self.following_user:
+            raise Error(
+                "Attempted to create a follow object where follower_user == following_user")
+        super(FollowersModel, self).save(*args, **kwargs)
 
     @classmethod
     def follow(self, user, subject):
