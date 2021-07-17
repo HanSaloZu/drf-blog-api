@@ -127,27 +127,22 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
     def test_self_follow(self):
         """
-        Self follow should return a 400 error
+        Self follow should return a 204 status code
         """
         response = self.client.put(self.url({"login": self.first_user.login}))
 
-        self.client_error_response_test(
-            response,
-            messages=["You can't follow yourself"]
-        )
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
 
     def test_double_follow(self):
         """
-        Duplicate follow should return a 400 error
+        Duplicate follow should return a 204 status code
         """
         self.model.follow(self.first_user, self.second_user)
 
         response = self.client.put(self.url({"login": self.second_user.login}))
-
-        self.client_error_response_test(
-            response,
-            messages=["You are already following this user"]
-        )
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
 
     def test_follow_with_invalid_login(self):
         """

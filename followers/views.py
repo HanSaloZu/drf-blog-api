@@ -45,15 +45,11 @@ class FollowingAPIView(LoginRequiredAPIView, APIView):
         return Response(data={"isFollowed": self.model.is_following(request.user, target)})
 
     def put(self, request, login):
-        if login == request.user.login:
-            raise InvalidData400("You can't follow yourself")
-
         target = get_profile_by_user_login_or_404(login).user
 
-        if self.model.is_following(request.user, target):
-            raise InvalidData400("You are already following this user")
+        if not self.model.is_following(request.user, target) and login != request.user.login:
+            self.model.follow(request.user, target)
 
-        self.model.follow(request.user, target)
         return Response(status=HTTP_204_NO_CONTENT)
 
     def delete(self, request, login):
