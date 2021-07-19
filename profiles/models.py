@@ -14,6 +14,7 @@ class Profile(models.Model):
     fullname = models.CharField(max_length=150)
     status = models.CharField(max_length=70, blank=True)
     about_me = models.TextField(blank=True)
+    location = models.CharField(max_length=250, blank=True)
 
     class Meta:
         verbose_name = "profile"
