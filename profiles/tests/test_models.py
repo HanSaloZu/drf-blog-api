@@ -19,6 +19,8 @@ class ProfileModelTestCase(ExtendedTestCase):
         self.assertEqual(profile.fullname, user.login)
         self.assertEqual(profile.status, "")
         self.assertEqual(profile.about_me, "")
+        self.assertEqual(profile.location, "")
+        self.assertIsNone(profile.birthday)
 
 
 class ContactsModelTestCase(ExtendedTestCase):
