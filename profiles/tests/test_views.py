@@ -207,7 +207,7 @@ class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
         Valid preferences update should return a 200 status code and a preferences representation in the response body
         """
         payload = {"theme": "light"}
-        response = self.client.put(
+        response = self.client.patch(
             self.url, payload, content_type="application/json")
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
@@ -221,7 +221,7 @@ class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
         Preferences update with invalid payload should return a 400 error
         """
         payload = {"theme": None}
-        response = self.client.put(
+        response = self.client.patch(
             self.url, payload, content_type="application/json")
 
         self.client_error_response_test(

@@ -59,7 +59,7 @@ class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
         serializer = PreferencesSerializer(request.user.profile.preferences)
         return Response(serializer.data)
 
-    def put(self, request):
+    def patch(self, request):
         instance = request.user.profile.preferences
         serializer = PreferencesSerializer(instance, data=request.data)
 
