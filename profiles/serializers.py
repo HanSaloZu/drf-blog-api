@@ -156,7 +156,7 @@ class UpdateProfileSerializer(serializers.Serializer):
 
 class PreferencesSerializer(serializers.ModelSerializer):
     theme = serializers.CharField(
-        required=True,
+        required=False,
         allow_null=False,
         allow_blank=True,
         max_length=250,

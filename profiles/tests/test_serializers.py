@@ -192,10 +192,8 @@ class PreferencesSerializerTestCase(TestCase):
 
     def test_serializer_without_data(self):
         """
-        The serializer without data should be invalid because it has 1 required field
+        The serializer without data should be valid because it has no required fields
         """
         serializer = self.serializer_class(data={})
 
-        self.assertIs(serializer.is_valid(), False)
-        self.assertEqual(
-            serializer.errors["theme"][0], "Theme field is required")
+        self.assertIs(serializer.is_valid(), True)
