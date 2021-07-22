@@ -64,6 +64,16 @@ class Photo(ProfileImageModel):
         return f"{self.profile.user.login} photo"
 
 
+class Banner(ProfileImageModel):
+    class Meta:
+        verbose_name = "profile banner"
+        verbose_name_plural = "profiles banners"
+        db_table = "profiles_banners"
+
+    def __str__(self):
+        return f"{self.profile.user.login} banner"
+
+
 class Contacts(ProfileRelatedModel):
     facebook, github, instagram, main_link, twitter, vk, website, youtube = [
         models.URLField(blank=True) for i in range(8)
