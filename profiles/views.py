@@ -1,13 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
-from django.core.files import File
 
 from utils.views import LoginRequiredAPIView
-from utils.exceptions import InvalidData400
 from utils.shortcuts import raise_400_based_on_serializer
 
-from .services.photos import update_photo
+from .mixins import UpdateImageMixin
 from .serializers import (UpdateProfileSerializer, ProfileSerializer,
                           PreferencesSerializer, UpdatePasswordSerailizer)
 
@@ -32,40 +30,24 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
         raise_400_based_on_serializer(serializer)
 
 
-class UpdateAvatarAPIView(LoginRequiredAPIView, APIView):
+class UpdateAvatarAPIView(LoginRequiredAPIView, UpdateImageMixin, APIView):
     """
     Updates the avatar of the authenticated user profile
     """
+    image_field = "avatar"
 
-    def put(self, request):
-        avatar = request.data.get("avatar")
-
-        if isinstance(avatar, File):
-            instance = request.user.profile.avatar
-            link = update_photo(instance, avatar)
-
-            return Response({"avatar": link})
-
-        raise InvalidData400("File not provided",
-                             {"avatar": "File not provided"})
+    def get_object(self, request):
+        return request.user.profile.avatar
 
 
-class UpdateBannerAPIView(LoginRequiredAPIView, APIView):
+class UpdateBannerAPIView(LoginRequiredAPIView, UpdateImageMixin, APIView):
     """
     Updates the banner of the authenticated user profile
     """
+    image_field = "banner"
 
-    def put(self, request):
-        banner = request.data.get("banner")
-
-        if isinstance(banner, File):
-            instance = request.user.profile.banner
-            link = update_photo(instance, banner)
-
-            return Response({"banner": link})
-
-        raise InvalidData400("File not provided",
-                             {"banner": "File not provided"})
+    def get_object(self, request):
+        return request.user.profile.banner
 
 
 class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
