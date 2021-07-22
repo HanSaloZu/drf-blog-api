@@ -32,19 +32,19 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
         raise_400_based_on_serializer(serializer)
 
 
-class UpdatePhotoAPIView(LoginRequiredAPIView, APIView):
+class UpdateAvatarAPIView(LoginRequiredAPIView, APIView):
     """
-    Updates the photo of the authenticated user
+    Updates the avatar of the authenticated user
     """
 
     def put(self, request):
-        image = request.data.get("image")
+        avatar = request.data.get("avatar")
 
-        if isinstance(image, File):
-            instance = request.user.profile.photo
-            link = update_photo(instance, image)
+        if isinstance(avatar, File):
+            instance = request.user.profile.avatar
+            link = update_photo(instance, avatar)
 
-            return Response({"photo": link})
+            return Response({"avatar": link})
 
         raise InvalidData400("File not provided",
                              {"image": "File not provided"})

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Profile, Photo, Contacts, Preferences
+from .models import Profile, Avatar, Contacts, Preferences
 
 
 class NoAddPermissionAdminModel(admin.ModelAdmin):
@@ -24,8 +24,8 @@ class ProfileAdmin(NoAddPermissionAdminModel):
     )
 
 
-@admin.register(Photo)
-class PhotosAdmin(NoAddPermissionAdminModel):
+@admin.register(Avatar)
+class AvatarsAdmin(NoAddPermissionAdminModel):
     list_display = ("profile", "file_id", "link")
     list_display_links = ("profile", "file_id", "link")
     search_fields = ("profile__user__login",

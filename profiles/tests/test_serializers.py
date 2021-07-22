@@ -4,8 +4,8 @@ from django.test import TestCase
 from utils.shortcuts import generate_messages_list_by_serializer_errors
 from utils.tests import ExtendedTestCase
 
-from ..serializers import (UpdateProfileSerializer, UpdateContactsSerializer, UpdatePasswordSerailizer,
-                           PreferencesSerializer, ProfileSerializer)
+from ..serializers import (UpdateProfileSerializer, UpdateContactsSerializer,
+                           UpdatePasswordSerailizer, PreferencesSerializer, ProfileSerializer)
 
 
 class ProfileSerializerTestCase(ExtendedTestCase):
@@ -33,7 +33,7 @@ class ProfileSerializerTestCase(ExtendedTestCase):
         self.assertEqual(data["status"], instance.status)
         self.assertEqual(data["birthday"], instance.birthday)
         self.assertEqual(data["location"], instance.location)
-        self.assertEqual(data["photo"], instance.photo.link)
+        self.assertEqual(data["avatar"], instance.avatar.link)
 
         self.assertEqual(len(data["contacts"]), 8)
         self.assertEqual(data["contacts"]

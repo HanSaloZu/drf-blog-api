@@ -54,14 +54,14 @@ class ProfileImageModel(ProfileRelatedModel):
         abstract = True
 
 
-class Photo(ProfileImageModel):
+class Avatar(ProfileImageModel):
     class Meta:
-        verbose_name = "profile photo"
-        verbose_name_plural = "profiles photos"
-        db_table = "profiles_photos"
+        verbose_name = "profile avatar"
+        verbose_name_plural = "profiles avatars"
+        db_table = "profiles_avatars"
 
     def __str__(self):
-        return f"{self.profile.user.login} photo"
+        return f"{self.profile.user.login} avatar"
 
 
 class Banner(ProfileImageModel):

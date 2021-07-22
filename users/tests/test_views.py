@@ -41,7 +41,7 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
         self.assertIn("id", list_item)
         self.assertIn("login", list_item)
         self.assertIn("status", list_item)
-        self.assertIn("photo", list_item)
+        self.assertIn("avatar", list_item)
         self.assertIn("isFollowed", list_item)
         self.assertIn("isAdmin", list_item)
 

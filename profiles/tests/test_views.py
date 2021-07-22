@@ -132,8 +132,8 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         )
 
 
-class UpdatePhotoAPIViewTestCase(APIViewTestCase):
-    url = reverse("profile_photo_update")
+class UpdateAvatarAPIViewTestCase(APIViewTestCase):
+    url = reverse("profile_avatar_update")
 
     def setUp(self):
         credentials = {"email": "new@user.com", "password": "pass"}
@@ -147,9 +147,9 @@ class UpdatePhotoAPIViewTestCase(APIViewTestCase):
 
         self.unauthorized_client_error_response_test(response)
 
-    def test_photo_update_without_payload(self):
+    def test_avatar_update_without_payload(self):
         """
-        Photo update without payload should return a 400 error
+        Avatar update without payload should return a 400 error
         """
         response = self.client.put(self.url)
 
@@ -161,13 +161,13 @@ class UpdatePhotoAPIViewTestCase(APIViewTestCase):
             fields_errors_dict_len=1
         )
 
-    def test_photo_update_with_invalid_payload(self):
+    def test_avatar_update_with_invalid_payload(self):
         """
-        Photo update with invalid payload should return a 400 error
+        Avatar update with invalid payload should return a 400 error
         """
         response = self.client.put(
             self.url,
-            {"image": "test"},
+            {"avatar": "test"},
             content_type="multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW")
 
         self.client_error_response_test(

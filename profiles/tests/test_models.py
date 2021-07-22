@@ -1,6 +1,6 @@
 from utils.tests import ExtendedTestCase
 
-from profiles.models import Profile, Contacts, Photo, Preferences, Banner
+from profiles.models import Profile, Contacts, Avatar, Preferences, Banner
 
 
 class ProfileModelTestCase(ExtendedTestCase):
@@ -43,18 +43,18 @@ class ContactsModelTestCase(ExtendedTestCase):
         self.assertEqual(contacts.youtube, "")
 
 
-class PhotoModelTestCase(ExtendedTestCase):
-    model = Photo
+class AvatarModelTestCase(ExtendedTestCase):
+    model = Avatar
 
-    def test_photo_model(self):
+    def test_avatar_model(self):
         user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
-        photo = user.profile.photo
+        avatar = user.profile.avatar
 
-        self.assertIsInstance(photo, self.model)
+        self.assertIsInstance(avatar, self.model)
 
-        self.assertEqual(photo.file_id, "")
-        self.assertEqual(photo.link, "")
+        self.assertEqual(avatar.file_id, "")
+        self.assertEqual(avatar.link, "")
 
 
 class BannerModelTestCase(ExtendedTestCase):

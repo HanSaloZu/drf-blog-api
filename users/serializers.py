@@ -5,7 +5,7 @@ from .models import User
 
 class UserSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
-    photo = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
     isAdmin = serializers.SerializerMethodField()
     isFollowed = serializers.SerializerMethodField()
 
@@ -15,8 +15,8 @@ class UserSerializer(serializers.ModelSerializer):
     def get_status(self, obj):
         return obj.profile.status
 
-    def get_photo(self, obj):
-        return obj.profile.photo.link
+    def get_avatar(self, obj):
+        return obj.profile.avatar.link
 
     def get_isAdmin(self, obj):
         return obj.is_staff
@@ -28,4 +28,4 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "login", "status",
-                  "photo", "isAdmin", "isFollowed"]
+                  "avatar", "isAdmin", "isFollowed"]
