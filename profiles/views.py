@@ -34,7 +34,7 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
 
 class UpdateAvatarAPIView(LoginRequiredAPIView, APIView):
     """
-    Updates the avatar of the authenticated user
+    Updates the avatar of the authenticated user profile
     """
 
     def put(self, request):
@@ -47,7 +47,25 @@ class UpdateAvatarAPIView(LoginRequiredAPIView, APIView):
             return Response({"avatar": link})
 
         raise InvalidData400("File not provided",
-                             {"image": "File not provided"})
+                             {"avatar": "File not provided"})
+
+
+class UpdateBannerAPIView(LoginRequiredAPIView, APIView):
+    """
+    Updates the banner of the authenticated user profile
+    """
+
+    def put(self, request):
+        banner = request.data.get("banner")
+
+        if isinstance(banner, File):
+            instance = request.user.profile.banner
+            link = update_photo(instance, banner)
+
+            return Response({"banner": link})
+
+        raise InvalidData400("File not provided",
+                             {"banner": "File not provided"})
 
 
 class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
