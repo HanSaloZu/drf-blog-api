@@ -46,10 +46,15 @@ class Preferences(ProfileRelatedModel):
         return f"{self.profile.user.login} profile preferences"
 
 
-class Photo(ProfileRelatedModel):
+class ProfileImageModel(ProfileRelatedModel):
     file_id = models.CharField(max_length=50, blank=True)
     link = models.URLField(max_length=300, blank=True)
 
+    class Meta:
+        abstract = True
+
+
+class Photo(ProfileImageModel):
     class Meta:
         verbose_name = "profile photo"
         verbose_name_plural = "profiles photos"
