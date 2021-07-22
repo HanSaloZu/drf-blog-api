@@ -62,7 +62,8 @@ class UpdateProfileSerializerTestCase(TestCase):
             "aboutMe": get_random_string(length=70),
             "isLookingForAJob": True,
             "professionalSkills": "Backend web developer",
-            "status": "New status"
+            "status": "New status",
+            "location": "London"
         }
         serializer = self.serializer_class(data=data)
 
@@ -76,6 +77,7 @@ class UpdateProfileSerializerTestCase(TestCase):
             "status": get_random_string(length=100),
             "professionalSkills": None,
             "isLookingForAJob": "invalid",
+            "birthday": "08-21-2000",
             "contacts": None
         }
         serializer = self.serializer_class(data=data)
@@ -88,8 +90,9 @@ class UpdateProfileSerializerTestCase(TestCase):
         self.assertIn("Status field value is too long", errors)
         self.assertIn("Professional skills field cannot be null", errors)
         self.assertIn("Invalid value for is looking for a job field", errors)
+        self.assertIn("Invalid value for birthday field", errors)
         self.assertIn("Contacts field cannot be null", errors)
-        self.assertEqual(len(errors), 6)
+        self.assertEqual(len(errors), 7)
 
     def test_serializer_without_data(self):
         """

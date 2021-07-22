@@ -117,6 +117,21 @@ class UpdateProfileSerializer(serializers.Serializer):
         error_messages=get_error_messages("about me")
     )
 
+    birthday = serializers.DateField(
+        format="YYYY-MM-DD",
+        allow_null=False,
+        required=False,
+        error_messages=get_error_messages("birthday")
+    )
+
+    location = serializers.CharField(
+        allow_null=False,
+        allow_blank=False,
+        required=False,
+        max_length=250,
+        error_messages=get_error_messages("location")
+    )
+
     contacts = UpdateContactsSerializer(
         required=False,
         allow_null=False,
@@ -127,6 +142,8 @@ class UpdateProfileSerializer(serializers.Serializer):
         instance.fullname = validated_data.get("fullname", instance.fullname)
         instance.about_me = validated_data.get("aboutMe", instance.about_me)
         instance.status = validated_data.get("status", instance.status)
+        instance.location = validated_data.get("location", instance.location)
+        instance.birthday = validated_data.get("birthday", instance.birthday)
         instance.is_looking_for_a_job = validated_data.get(
             "isLookingForAJob", instance.is_looking_for_a_job)
         instance.professional_skills = validated_data.get(

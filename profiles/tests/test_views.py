@@ -46,7 +46,9 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             "aboutMe": get_random_string(length=70),
             "isLookingForAJob": True,
             "professionalSkills": "Backend web developer",
-            "status": "New status"
+            "status": "New status",
+            "location": "Berlin",
+            "birthday": "2000-01-19"
         }
         response = self.client.patch(
             self.url, payload, content_type="application/json")
@@ -58,6 +60,9 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         self.assertEqual(user.profile.fullname, payload["fullname"])
         self.assertEqual(user.profile.about_me, payload["aboutMe"])
         self.assertEqual(user.profile.status, payload["status"])
+        self.assertEqual(str(user.profile.birthday), payload["birthday"])
+        self.assertEqual(user.profile.location, payload["location"])
+
         self.assertEqual(user.profile.is_looking_for_a_job,
                          payload["isLookingForAJob"])
         self.assertEqual(user.profile.professional_skills,
@@ -108,6 +113,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         """
         payload = {
             "fullname": "",
+            "location": "a"*290,
             "contacts": {
                 "github": "123",
             }
@@ -119,9 +125,10 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             response,
             messages=[
                 "Fullname field cannot be empty",
-                "Invalid value for github field"
+                "Location field value is too long",
+                "Invalid value for github field",
             ],
-            fields_errors_dict_len=2
+            fields_errors_dict_len=3
         )
 
 
