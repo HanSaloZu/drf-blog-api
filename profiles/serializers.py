@@ -36,6 +36,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     isAdmin = serializers.SerializerMethodField()
     aboutMe = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
+    banner = serializers.SerializerMethodField()
     contacts = ContactsSerializer()
 
     def get_id(self, obj):
@@ -59,10 +60,13 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_avatar(self, obj):
         return obj.avatar.link
 
+    def get_banner(self, obj):
+        return obj.banner.link
+
     class Meta:
         model = Profile
         fields = ["id", "isLookingForAJob", "professionalSkills", "isAdmin",
-                  "fullname", "login", "status", "location", "birthday", "aboutMe", "avatar", "contacts"]
+                  "fullname", "login", "status", "location", "birthday", "aboutMe", "avatar", "banner", "contacts"]
 
 
 class UpdateContactsSerializer(serializers.Serializer):

@@ -20,7 +20,7 @@ class ProfileSerializerTestCase(ExtendedTestCase):
         serializer = self.serializer_class(instance=instance)
         data = serializer.data
 
-        self.assertEqual(len(data), 12)
+        self.assertEqual(len(data), 13)
         self.assertEqual(data["id"], instance.user.id)
         self.assertEqual(data["isLookingForAJob"],
                          instance.is_looking_for_a_job)
@@ -34,6 +34,7 @@ class ProfileSerializerTestCase(ExtendedTestCase):
         self.assertEqual(data["birthday"], instance.birthday)
         self.assertEqual(data["location"], instance.location)
         self.assertEqual(data["avatar"], instance.avatar.link)
+        self.assertEqual(data["banner"], instance.banner.link)
 
         self.assertEqual(len(data["contacts"]), 8)
         self.assertEqual(data["contacts"]
