@@ -61,8 +61,8 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ["id", "isLookingForAJob", "professionalSkills",
-                  "isAdmin", "fullname", "login", "status", "aboutMe", "photo", "contacts"]
+        fields = ["id", "isLookingForAJob", "professionalSkills", "isAdmin",
+                  "fullname", "login", "status", "location", "birthday", "aboutMe", "photo", "contacts"]
 
 
 class UpdateContactsSerializer(serializers.Serializer):
