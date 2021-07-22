@@ -179,6 +179,53 @@ class UpdateAvatarAPIViewTestCase(APIViewTestCase):
         )
 
 
+class UpdateBannerAPIViewTestCase(APIViewTestCase):
+    url = reverse("profile_banner_update")
+
+    def setUp(self):
+        credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
+        self.client.login(**credentials)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.put(self.url)
+
+        self.unauthorized_client_error_response_test(response)
+
+    def test_banner_update_without_payload(self):
+        """
+        Banner update without payload should return a 400 error
+        """
+        response = self.client.put(self.url)
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "File not provided",
+            ],
+            fields_errors_dict_len=1
+        )
+
+    def test_banner_update_with_invalid_payload(self):
+        """
+        Banner update with invalid payload should return a 400 error
+        """
+        response = self.client.put(
+            self.url,
+            {"banner": "test"},
+            content_type="multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW")
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "File not provided",
+            ],
+            fields_errors_dict_len=1
+        )
+
+
 class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
     url = reverse("profile_preferences")
 
