@@ -13,7 +13,7 @@ class UpdateImageMixin:
         image = request.data.get(self.image_field)
 
         if isinstance(image, File):
-            instance = self.get_object()
+            instance = self.get_object(request)
             link = update_photo(instance, image)
 
             return Response({self.image_field: link})
