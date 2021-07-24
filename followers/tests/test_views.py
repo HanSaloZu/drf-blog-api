@@ -54,7 +54,7 @@ class FollowersListAPIViewTestCase(ListAPIViewTestCase):
             page_size=1
         )
         self.assertEqual(response.data["items"]
-                         [0]["userId"], self.second_user.id)
+                         [0]["id"], self.second_user.id)
 
 
 class FollowingListAPIViewTestCase(ListAPIViewTestCase):
@@ -86,7 +86,7 @@ class FollowingListAPIViewTestCase(ListAPIViewTestCase):
             page_size=1
         )
         self.assertEqual(response.data["items"]
-                         [0]["userId"], self.second_user.id)
+                         [0]["id"], self.second_user.id)
 
 
 class FollowingAPIViewTestCase(APIViewTestCase):
@@ -127,27 +127,22 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
     def test_self_follow(self):
         """
-        Self follow should return a 400 error
+        Self follow should return a 204 status code
         """
         response = self.client.put(self.url({"login": self.first_user.login}))
 
-        self.client_error_response_test(
-            response,
-            messages=["You can't follow yourself"]
-        )
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
 
     def test_double_follow(self):
         """
-        Duplicate follow should return a 400 error
+        Duplicate follow should return a 204 status code
         """
         self.model.follow(self.first_user, self.second_user)
 
         response = self.client.put(self.url({"login": self.second_user.login}))
-
-        self.client_error_response_test(
-            response,
-            messages=["You are already following this user"]
-        )
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
 
     def test_follow_with_invalid_login(self):
         """
@@ -190,16 +185,16 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
     def test_is_following(self):
         """
-        If the user is being followed, the response status code should be 204, otherwise 404
+        If the user is being followed, isFollowed should be True, otherwise False
         """
         response = self.client.get(self.url({"login": self.second_user.login}))
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isFollowed"], False)
 
         self.model.follow(self.first_user, self.second_user)
         response = self.client.get(self.url({"login": self.second_user.login}))
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isFollowed"], True)
 
     def test_is_following_with_invalid_login(self):
         response = self.client.get(self.url({"login": "invalid"}))

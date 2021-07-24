@@ -14,6 +14,8 @@ class Profile(models.Model):
     fullname = models.CharField(max_length=150)
     status = models.CharField(max_length=70, blank=True)
     about_me = models.TextField(blank=True)
+    location = models.CharField(max_length=250, blank=True)
+    birthday = models.DateField(null=True)
 
     class Meta:
         verbose_name = "profile"
@@ -44,17 +46,32 @@ class Preferences(ProfileRelatedModel):
         return f"{self.profile.user.login} profile preferences"
 
 
-class Photo(ProfileRelatedModel):
+class ProfileImageModel(ProfileRelatedModel):
     file_id = models.CharField(max_length=50, blank=True)
     link = models.URLField(max_length=300, blank=True)
 
     class Meta:
-        verbose_name = "profile photo"
-        verbose_name_plural = "profiles photos"
-        db_table = "profiles_photos"
+        abstract = True
+
+
+class Avatar(ProfileImageModel):
+    class Meta:
+        verbose_name = "profile avatar"
+        verbose_name_plural = "profiles avatars"
+        db_table = "profiles_avatars"
 
     def __str__(self):
-        return f"{self.profile.user.login} photo"
+        return f"{self.profile.user.login} avatar"
+
+
+class Banner(ProfileImageModel):
+    class Meta:
+        verbose_name = "profile banner"
+        verbose_name_plural = "profiles banners"
+        db_table = "profiles_banners"
+
+    def __str__(self):
+        return f"{self.profile.user.login} banner"
 
 
 class Contacts(ProfileRelatedModel):

@@ -38,10 +38,10 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
 
         list_item = response.data["items"][0]
         self.assertEqual(len(list_item), 6)
-        self.assertIn("userId", list_item)
+        self.assertIn("id", list_item)
         self.assertIn("login", list_item)
         self.assertIn("status", list_item)
-        self.assertIn("photo", list_item)
+        self.assertIn("avatar", list_item)
         self.assertIn("isFollowed", list_item)
         self.assertIn("isAdmin", list_item)
 
@@ -52,7 +52,7 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
             response, page_size=1, total_items=1)
 
         list_item = response.data["items"][0]
-        self.assertEqual(list_item["userId"], self.first_user.id)
+        self.assertEqual(list_item["id"], self.first_user.id)
         self.assertEqual(list_item["login"], self.first_user.login)
         self.assertIs(list_item["isFollowed"], False)
 
@@ -150,7 +150,7 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], self.second_user.id)
+        self.assertEqual(response.data["id"], self.second_user.id)
 
     def test_self_profile_detail(self):
         """
@@ -159,7 +159,7 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
         response = self.client.get(self.url({"login": self.first_user.login}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], self.first_user.id)
+        self.assertEqual(response.data["id"], self.first_user.id)
 
     def test_user_profile_detail_with_invalid_user_login(self):
         """
@@ -215,7 +215,7 @@ class UserFollowersListAPIViewTestCase(ListAPIViewTestCase):
             page_size=1
         )
         self.assertEqual(response.data["items"]
-                         [0]["userId"], self.first_user.id)
+                         [0]["id"], self.first_user.id)
 
     def test_self_followers_list(self):
         response = self.client.get(self.url({"login": self.first_user.login}))
@@ -277,7 +277,7 @@ class UserFollowingListAPIViewTestCase(ListAPIViewTestCase):
             page_size=1
         )
         self.assertEqual(response.data["items"]
-                         [0]["userId"], self.third_user.id)
+                         [0]["id"], self.third_user.id)
 
     def test_self_following_list(self):
         response = self.client.get(self.url({"login": self.first_user.login}))

@@ -66,9 +66,7 @@ class ListAPIViewTestCase(APIViewTestCase):
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
         self.assertEqual(len(response.data["items"]), page_size)
-
-        page_details = response.data["page"]
-        self.assertEqual(page_details["totalItems"], total_items)
-        self.assertEqual(page_details["totalPages"], total_pages)
-        self.assertEqual(page_details["pageSize"], page_size)
-        self.assertEqual(page_details["pageNumber"], page_number)
+        self.assertEqual(response.data["totalItems"], total_items)
+        self.assertEqual(response.data["totalPages"], total_pages)
+        self.assertEqual(response.data["pageSize"], page_size)
+        self.assertEqual(response.data["pageNumber"], page_number)

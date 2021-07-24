@@ -9,13 +9,10 @@ google_drive = GoogleDriveAPI()
 
 
 def upload_photo(file):
-    image = Image.open(file)
-    resized_image = image.resize((300, 300))
-
     # Save file temporarily in the media folder
+    image = Image.open(file)
     path = settings.MEDIA_ROOT / file.name
-    resized_image.save(path,
-                       quality="web_maximum", subsampling=0)
+    image.save(path, quality="web_maximum", subsampling=0)
 
     response = google_drive.upload_file(path)
     remove(path)  # Remove file from media folder

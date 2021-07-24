@@ -5,10 +5,10 @@ from .views import (UsersListAPIView, RetrieveUserProfileAPIView,
 
 urlpatterns = [
     path("", UsersListAPIView.as_view(), name="users_list"),
-    path("<str:login>/profile", RetrieveUserProfileAPIView.as_view(),
+    path("<str:login>/", RetrieveUserProfileAPIView.as_view(),
          name="user_profile_detail"),
-    path("<str:login>/followers", UserFollowersListAPIView.as_view(),
+    path("<str:login>/followers/", UserFollowersListAPIView.as_view(),
          name="user_followers_list"),
-    path("<str:login>/following", UserFollowingListAPIView.as_view(),
+    path("<str:login>/following/", UserFollowingListAPIView.as_view(),
          name="user_following_list")
 ]

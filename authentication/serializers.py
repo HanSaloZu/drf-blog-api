@@ -96,6 +96,27 @@ class RegistrationSerializer(serializers.Serializer):
         })
     )
 
+    birthday = serializers.DateField(
+        format="YYYY-MM-DD",
+        allow_null=False,
+        required=True,
+        error_messages=get_error_messages_for_registration_serializer(
+            "birthday", {
+                "invalid": "Invalid birthday value"
+            })
+    )
+
+    location = serializers.CharField(
+        allow_null=False,
+        allow_blank=False,
+        required=True,
+        max_length=250,
+        error_messages=get_error_messages_for_registration_serializer(
+            "location", {
+                "max_length": "Location must be up to 250 characters long",
+            })
+    )
+
     def validate(self, data):
         if User.objects.all().filter(login=data["login"]).exists():
             raise serializers.ValidationError(
@@ -119,6 +140,8 @@ class RegistrationSerializer(serializers.Serializer):
             is_active=False
         )
         instance.profile.about_me = validated_data["aboutMe"]
+        instance.profile.birthday = validated_data["birthday"]
+        instance.profile.location = validated_data["location"]
         instance.save()
 
         return instance

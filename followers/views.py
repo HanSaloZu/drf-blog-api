@@ -1,9 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_204_NO_CONTENT
 
 from utils.views import LoginRequiredAPIView
-from utils.exceptions import InvalidData400
 from users.mixins import UsersListAPIViewMixin
 from profiles.selectors import get_profile_by_user_login_or_404
 
@@ -42,21 +41,14 @@ class FollowingAPIView(LoginRequiredAPIView, APIView):
 
     def get(self, request, login):
         target = get_profile_by_user_login_or_404(login).user
-
-        if self.model.is_following(request.user, target):
-            return Response(status=HTTP_204_NO_CONTENT)
-        return Response(status=HTTP_404_NOT_FOUND)
+        return Response(data={"isFollowed": self.model.is_following(request.user, target)})
 
     def put(self, request, login):
-        if login == request.user.login:
-            raise InvalidData400("You can't follow yourself")
-
         target = get_profile_by_user_login_or_404(login).user
 
-        if self.model.is_following(request.user, target):
-            raise InvalidData400("You are already following this user")
+        if not self.model.is_following(request.user, target) and login != request.user.login:
+            self.model.follow(request.user, target)
 
-        self.model.follow(request.user, target)
         return Response(status=HTTP_204_NO_CONTENT)
 
     def delete(self, request, login):

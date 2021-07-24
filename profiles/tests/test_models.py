@@ -1,6 +1,6 @@
 from utils.tests import ExtendedTestCase
 
-from profiles.models import Profile, Contacts, Photo, Preferences
+from profiles.models import Profile, Contacts, Avatar, Preferences, Banner
 
 
 class ProfileModelTestCase(ExtendedTestCase):
@@ -19,6 +19,8 @@ class ProfileModelTestCase(ExtendedTestCase):
         self.assertEqual(profile.fullname, user.login)
         self.assertEqual(profile.status, "")
         self.assertEqual(profile.about_me, "")
+        self.assertEqual(profile.location, "")
+        self.assertIsNone(profile.birthday)
 
 
 class ContactsModelTestCase(ExtendedTestCase):
@@ -41,18 +43,32 @@ class ContactsModelTestCase(ExtendedTestCase):
         self.assertEqual(contacts.youtube, "")
 
 
-class PhotoModelTestCase(ExtendedTestCase):
-    model = Photo
+class AvatarModelTestCase(ExtendedTestCase):
+    model = Avatar
 
-    def test_photo_model(self):
+    def test_avatar_model(self):
         user = self.UserModel.objects.create_user(
             login="NewUser", email="new@user.com", password="pass")
-        photo = user.profile.photo
+        avatar = user.profile.avatar
 
-        self.assertIsInstance(photo, self.model)
+        self.assertIsInstance(avatar, self.model)
 
-        self.assertEqual(photo.file_id, "")
-        self.assertEqual(photo.link, "")
+        self.assertEqual(avatar.file_id, "")
+        self.assertEqual(avatar.link, "")
+
+
+class BannerModelTestCase(ExtendedTestCase):
+    model = Banner
+
+    def test_banner_model(self):
+        user = self.UserModel.objects.create_user(
+            login="NewUser", email="new@user.com", password="pass")
+        banner = user.profile.banner
+
+        self.assertIsInstance(banner, self.model)
+
+        self.assertEqual(banner.file_id, "")
+        self.assertEqual(banner.link, "")
 
 
 class PreferencesModelTestCase(ExtendedTestCase):

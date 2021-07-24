@@ -29,16 +29,17 @@ class ContactsSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    userId = serializers.SerializerMethodField()
+    id = serializers.SerializerMethodField()
     login = serializers.SerializerMethodField()
     isLookingForAJob = serializers.SerializerMethodField()
     professionalSkills = serializers.SerializerMethodField()
     isAdmin = serializers.SerializerMethodField()
     aboutMe = serializers.SerializerMethodField()
-    photo = serializers.SerializerMethodField()
+    avatar = serializers.SerializerMethodField()
+    banner = serializers.SerializerMethodField()
     contacts = ContactsSerializer()
 
-    def get_userId(self, obj):
+    def get_id(self, obj):
         return obj.user.id
 
     def get_login(self, obj):
@@ -56,13 +57,16 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_aboutMe(self, obj):
         return obj.about_me
 
-    def get_photo(self, obj):
-        return obj.photo.link
+    def get_avatar(self, obj):
+        return obj.avatar.link
+
+    def get_banner(self, obj):
+        return obj.banner.link
 
     class Meta:
         model = Profile
-        fields = ["userId", "isLookingForAJob", "professionalSkills",
-                  "isAdmin", "fullname", "login", "status", "aboutMe", "photo", "contacts"]
+        fields = ["id", "isLookingForAJob", "professionalSkills", "isAdmin",
+                  "fullname", "login", "status", "location", "birthday", "aboutMe", "avatar", "banner", "contacts"]
 
 
 class UpdateContactsSerializer(serializers.Serializer):
@@ -117,6 +121,21 @@ class UpdateProfileSerializer(serializers.Serializer):
         error_messages=get_error_messages("about me")
     )
 
+    birthday = serializers.DateField(
+        format="YYYY-MM-DD",
+        allow_null=False,
+        required=False,
+        error_messages=get_error_messages("birthday")
+    )
+
+    location = serializers.CharField(
+        allow_null=False,
+        allow_blank=False,
+        required=False,
+        max_length=250,
+        error_messages=get_error_messages("location")
+    )
+
     contacts = UpdateContactsSerializer(
         required=False,
         allow_null=False,
@@ -127,6 +146,8 @@ class UpdateProfileSerializer(serializers.Serializer):
         instance.fullname = validated_data.get("fullname", instance.fullname)
         instance.about_me = validated_data.get("aboutMe", instance.about_me)
         instance.status = validated_data.get("status", instance.status)
+        instance.location = validated_data.get("location", instance.location)
+        instance.birthday = validated_data.get("birthday", instance.birthday)
         instance.is_looking_for_a_job = validated_data.get(
             "isLookingForAJob", instance.is_looking_for_a_job)
         instance.professional_skills = validated_data.get(
@@ -156,7 +177,7 @@ class UpdateProfileSerializer(serializers.Serializer):
 
 class PreferencesSerializer(serializers.ModelSerializer):
     theme = serializers.CharField(
-        required=True,
+        required=False,
         allow_null=False,
         allow_blank=True,
         max_length=250,

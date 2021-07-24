@@ -1,13 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
-from django.core.files import File
 
 from utils.views import LoginRequiredAPIView
-from utils.exceptions import InvalidData400
 from utils.shortcuts import raise_400_based_on_serializer
 
-from .services.photos import update_photo
+from .mixins import UpdateImageMixin
 from .serializers import (UpdateProfileSerializer, ProfileSerializer,
                           PreferencesSerializer, UpdatePasswordSerailizer)
 
@@ -32,22 +30,24 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
         raise_400_based_on_serializer(serializer)
 
 
-class UpdatePhotoAPIView(LoginRequiredAPIView, APIView):
+class UpdateAvatarAPIView(LoginRequiredAPIView, UpdateImageMixin, APIView):
     """
-    Updates the photo of the authenticated user
+    Updates the avatar of the authenticated user profile
     """
+    image_field = "avatar"
 
-    def put(self, request):
-        image = request.data.get("image")
+    def get_object(self, request):
+        return request.user.profile.avatar
 
-        if isinstance(image, File):
-            instance = request.user.profile.photo
-            link = update_photo(instance, image)
 
-            return Response({"photo": link})
+class UpdateBannerAPIView(LoginRequiredAPIView, UpdateImageMixin, APIView):
+    """
+    Updates the banner of the authenticated user profile
+    """
+    image_field = "banner"
 
-        raise InvalidData400("File not provided",
-                             {"image": "File not provided"})
+    def get_object(self, request):
+        return request.user.profile.banner
 
 
 class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
@@ -59,7 +59,7 @@ class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
         serializer = PreferencesSerializer(request.user.profile.preferences)
         return Response(serializer.data)
 
-    def put(self, request):
+    def patch(self, request):
         instance = request.user.profile.preferences
         serializer = PreferencesSerializer(instance, data=request.data)
 

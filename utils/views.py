@@ -52,19 +52,15 @@ class ListAPIViewMixin(APIView):
 
         paginator = Paginator(queryset, kwargs["limit"])
         page = paginator.get_page(kwargs["page"])
+        page_size = len(page.object_list)
 
         serializer = self.serializer_class(
             page, many=True, context={"request": request})
 
         return Response({
             "items": serializer.data,
-            "page": {
-                "totalItems": paginator.count,  # total number of items, across all pages
-                "totalPages": paginator.num_pages,
-
-                # pageSize - number of items on the current page
-                "pageSize": len(page.object_list),
-
-                "pageNumber": page.number
-            }
+            "totalItems": paginator.count,  # total number of items, across all pages
+            "totalPages": paginator.num_pages,  # total number of pages
+            "pageSize": page_size,  # number of items on the current page
+            "pageNumber": page.number  # current page number
         })

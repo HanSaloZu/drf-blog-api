@@ -1,5 +1,4 @@
-from django.db import IntegrityError, transaction
-from django.contrib.auth import get_user_model
+from django.db import IntegrityError, transaction, Error
 
 from utils.tests import ExtendedTestCase
 from ..models import FollowersModel
@@ -43,9 +42,19 @@ class FollowersModelTestCase(ExtendedTestCase):
         self.model.follow(self.f_user, self.s_user)
 
         try:
-            # Duplicates should be prevented.
             with transaction.atomic():
                 self.model.follow(self.f_user, self.s_user)
-            self.fail('Duplicate following allowed')
+            self.fail("Duplicate following is allowed")
         except IntegrityError:
+            pass
+
+    def test_invalid_following(self):
+        """
+        Following with follower_user == following_user should raise an error
+        """
+        try:
+            with transaction.atomic():
+                self.model.follow(self.f_user, self.f_user)
+            self.fail("Following with follower_user == following_user is allowed")
+        except Error:
             pass

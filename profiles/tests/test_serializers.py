@@ -4,8 +4,8 @@ from django.test import TestCase
 from utils.shortcuts import generate_messages_list_by_serializer_errors
 from utils.tests import ExtendedTestCase
 
-from ..serializers import (UpdateProfileSerializer, UpdateContactsSerializer, UpdatePasswordSerailizer,
-                           PreferencesSerializer, ProfileSerializer)
+from ..serializers import (UpdateProfileSerializer, UpdateContactsSerializer,
+                           UpdatePasswordSerailizer, PreferencesSerializer, ProfileSerializer)
 
 
 class ProfileSerializerTestCase(ExtendedTestCase):
@@ -20,8 +20,8 @@ class ProfileSerializerTestCase(ExtendedTestCase):
         serializer = self.serializer_class(instance=instance)
         data = serializer.data
 
-        self.assertEqual(len(data), 10)
-        self.assertEqual(data["userId"], instance.user.id)
+        self.assertEqual(len(data), 13)
+        self.assertEqual(data["id"], instance.user.id)
         self.assertEqual(data["isLookingForAJob"],
                          instance.is_looking_for_a_job)
         self.assertEqual(data["professionalSkills"],
@@ -31,7 +31,10 @@ class ProfileSerializerTestCase(ExtendedTestCase):
         self.assertEqual(data["login"], instance.user.login)
         self.assertEqual(data["aboutMe"], instance.about_me)
         self.assertEqual(data["status"], instance.status)
-        self.assertEqual(data["photo"], instance.photo.link)
+        self.assertEqual(data["birthday"], instance.birthday)
+        self.assertEqual(data["location"], instance.location)
+        self.assertEqual(data["avatar"], instance.avatar.link)
+        self.assertEqual(data["banner"], instance.banner.link)
 
         self.assertEqual(len(data["contacts"]), 8)
         self.assertEqual(data["contacts"]
@@ -60,7 +63,8 @@ class UpdateProfileSerializerTestCase(TestCase):
             "aboutMe": get_random_string(length=70),
             "isLookingForAJob": True,
             "professionalSkills": "Backend web developer",
-            "status": "New status"
+            "status": "New status",
+            "location": "London"
         }
         serializer = self.serializer_class(data=data)
 
@@ -74,6 +78,7 @@ class UpdateProfileSerializerTestCase(TestCase):
             "status": get_random_string(length=100),
             "professionalSkills": None,
             "isLookingForAJob": "invalid",
+            "birthday": "08-21-2000",
             "contacts": None
         }
         serializer = self.serializer_class(data=data)
@@ -86,8 +91,9 @@ class UpdateProfileSerializerTestCase(TestCase):
         self.assertIn("Status field value is too long", errors)
         self.assertIn("Professional skills field cannot be null", errors)
         self.assertIn("Invalid value for is looking for a job field", errors)
+        self.assertIn("Invalid value for birthday field", errors)
         self.assertIn("Contacts field cannot be null", errors)
-        self.assertEqual(len(errors), 6)
+        self.assertEqual(len(errors), 7)
 
     def test_serializer_without_data(self):
         """
@@ -192,10 +198,8 @@ class PreferencesSerializerTestCase(TestCase):
 
     def test_serializer_without_data(self):
         """
-        The serializer without data should be invalid because it has 1 required field
+        The serializer without data should be valid because it has no required fields
         """
         serializer = self.serializer_class(data={})
 
-        self.assertIs(serializer.is_valid(), False)
-        self.assertEqual(
-            serializer.errors["theme"][0], "Theme field is required")
+        self.assertIs(serializer.is_valid(), True)

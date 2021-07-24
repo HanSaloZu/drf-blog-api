@@ -31,7 +31,7 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             self.url, self.credentials, content_type="application/json")
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], self.user.id)
+        self.assertEqual(response.data["id"], self.user.id)
 
     def test_inactive_user_authentication(self):
         """
@@ -111,7 +111,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             "email": "test@test.com",
             "password1": "pass",
             "password2": "pass",
-            "aboutMe": get_random_string(length=80)
+            "aboutMe": get_random_string(length=80),
+            "location": "London",
+            "birthday": "1997-08-21"
         }
         response = self.client.post(
             self.url, payload, content_type="application/json")
@@ -132,7 +134,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             "email": self.credentials["email"],
             "password1": "pass",
             "password2": "pass",
-            "aboutMe": get_random_string(length=80)
+            "aboutMe": get_random_string(length=80),
+            "location": "London",
+            "birthday": "1997-08-21"
         }
         response = self.client.post(
             self.url, payload, content_type="application/json")
@@ -152,7 +156,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             "email": "test@test.com",
             "password1": "pass",
             "password2": "different password",
-            "aboutMe": get_random_string(length=80)
+            "aboutMe": get_random_string(length=80),
+            "location": "London",
+            "birthday": "1997-08-21"
         }
         response = self.client.post(
             self.url, payload, content_type="application/json")
@@ -172,7 +178,9 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             "email": "test@test.com",
             "password1": "pass",
             "password2": "pass",
-            "aboutMe": get_random_string(length=80)
+            "aboutMe": get_random_string(length=80),
+            "location": "London",
+            "birthday": "1997-08-21"
         }
         response = self.client.post(
             self.url, payload, content_type="application/json")
@@ -183,6 +191,8 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
         user = self.UserModel.objects.all().get(login="Test")
         self.assertIs(user.is_active, False)
         self.assertEqual(user.profile.about_me, payload["aboutMe"])
+        self.assertEqual(user.profile.location, payload["location"])
+        self.assertEqual(str(user.profile.birthday), payload["birthday"])
         self.assertIs(user.check_password(payload["password1"]), True)
 
 

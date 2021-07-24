@@ -60,32 +60,41 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
             "email": "new@user.com",
             "password1": "strongpassword",
             "password2": "strongpassword",
-            "aboutMe": get_random_string(length=80)
+            "aboutMe": get_random_string(length=80),
+            "location": "London",
+            "birthday": "1997-08-21"
         }
         serializer = self.serializer_class(data=data)
 
         self.assertIs(serializer.is_valid(), True)
-        self.assertEqual(data, serializer.validated_data)
+        validated_data = dict(serializer.validated_data)
+        self.assertEqual(data.pop("birthday"),
+                         str(validated_data.pop("birthday")))
+        self.assertEqual(data, validated_data)
 
     def test_invalid_serializer(self):
         data = {
             "login": "New:;.!?@User",
             "email": None,
             "password1": "s",
-            "aboutMe": ""
+            "aboutMe": "",
+            "location": "",
+            "birthday": "21-08-1997"
         }
         serializer = self.serializer_class(data=data)
 
         self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
-        self.assertEqual(len(errors), 5)
+        self.assertEqual(len(errors), 7)
         self.assertIn(
             "Login can only contain letters, numbers, underscores and hyphens", errors)
         self.assertIn("Email is required", errors)
         self.assertIn("Password must be at least 4 characters", errors)
         self.assertIn("You should repeat your password", errors)
         self.assertIn("About me can't be empty", errors)
+        self.assertIn("Location can't be empty", errors)
+        self.assertIn("Invalid birthday value", errors)
 
     def test_serializer_with_non_unique_login(self):
         """
@@ -96,7 +105,9 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
             "email": "new@user.com",
             "password1": "strongpassword",
             "password2": "strongpassword",
-            "aboutMe": get_random_string(length=80)
+            "aboutMe": get_random_string(length=80),
+            "location": "London",
+            "birthday": "1997-08-21"
         }
         serializer = self.serializer_class(data=data)
 

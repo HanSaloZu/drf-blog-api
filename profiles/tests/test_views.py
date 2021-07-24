@@ -33,7 +33,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], self.user.id)
+        self.assertEqual(response.data["id"], self.user.id)
 
     # Profile update tests
 
@@ -46,18 +46,23 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             "aboutMe": get_random_string(length=70),
             "isLookingForAJob": True,
             "professionalSkills": "Backend web developer",
-            "status": "New status"
+            "status": "New status",
+            "location": "Berlin",
+            "birthday": "2000-01-19"
         }
         response = self.client.patch(
             self.url, payload, content_type="application/json")
         user = self.UserModel.objects.all().first()
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], user.id)
+        self.assertEqual(response.data["id"], user.id)
 
         self.assertEqual(user.profile.fullname, payload["fullname"])
         self.assertEqual(user.profile.about_me, payload["aboutMe"])
         self.assertEqual(user.profile.status, payload["status"])
+        self.assertEqual(str(user.profile.birthday), payload["birthday"])
+        self.assertEqual(user.profile.location, payload["location"])
+
         self.assertEqual(user.profile.is_looking_for_a_job,
                          payload["isLookingForAJob"])
         self.assertEqual(user.profile.professional_skills,
@@ -82,7 +87,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         contacts = user.profile.contacts
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], user.id)
+        self.assertEqual(response.data["id"], user.id)
 
         self.assertEqual(user.profile.fullname, payload["fullname"])
         self.assertEqual(user.profile.status, payload["status"])
@@ -100,7 +105,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         response = self.client.patch(self.url)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["userId"], self.user.id)
+        self.assertEqual(response.data["id"], self.user.id)
 
     def test_profile_update_with_invalid_payload(self):
         """
@@ -108,6 +113,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         """
         payload = {
             "fullname": "",
+            "location": "a"*290,
             "contacts": {
                 "github": "123",
             }
@@ -119,14 +125,15 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             response,
             messages=[
                 "Fullname field cannot be empty",
-                "Invalid value for github field"
+                "Location field value is too long",
+                "Invalid value for github field",
             ],
-            fields_errors_dict_len=2
+            fields_errors_dict_len=3
         )
 
 
-class UpdatePhotoAPIViewTestCase(APIViewTestCase):
-    url = reverse("profile_photo_update")
+class UpdateAvatarAPIViewTestCase(APIViewTestCase):
+    url = reverse("profile_avatar_update")
 
     def setUp(self):
         credentials = {"email": "new@user.com", "password": "pass"}
@@ -140,9 +147,9 @@ class UpdatePhotoAPIViewTestCase(APIViewTestCase):
 
         self.unauthorized_client_error_response_test(response)
 
-    def test_photo_update_without_payload(self):
+    def test_avatar_update_without_payload(self):
         """
-        Photo update without payload should return a 400 error
+        Avatar update without payload should return a 400 error
         """
         response = self.client.put(self.url)
 
@@ -154,13 +161,60 @@ class UpdatePhotoAPIViewTestCase(APIViewTestCase):
             fields_errors_dict_len=1
         )
 
-    def test_photo_update_with_invalid_payload(self):
+    def test_avatar_update_with_invalid_payload(self):
         """
-        Photo update with invalid payload should return a 400 error
+        Avatar update with invalid payload should return a 400 error
         """
         response = self.client.put(
             self.url,
-            {"image": "test"},
+            {"avatar": "test"},
+            content_type="multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW")
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "File not provided",
+            ],
+            fields_errors_dict_len=1
+        )
+
+
+class UpdateBannerAPIViewTestCase(APIViewTestCase):
+    url = reverse("profile_banner_update")
+
+    def setUp(self):
+        credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
+        self.client.login(**credentials)
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.put(self.url)
+
+        self.unauthorized_client_error_response_test(response)
+
+    def test_banner_update_without_payload(self):
+        """
+        Banner update without payload should return a 400 error
+        """
+        response = self.client.put(self.url)
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "File not provided",
+            ],
+            fields_errors_dict_len=1
+        )
+
+    def test_banner_update_with_invalid_payload(self):
+        """
+        Banner update with invalid payload should return a 400 error
+        """
+        response = self.client.put(
+            self.url,
+            {"banner": "test"},
             content_type="multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW")
 
         self.client_error_response_test(
@@ -207,7 +261,7 @@ class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
         Valid preferences update should return a 200 status code and a preferences representation in the response body
         """
         payload = {"theme": "light"}
-        response = self.client.put(
+        response = self.client.patch(
             self.url, payload, content_type="application/json")
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
@@ -221,7 +275,7 @@ class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
         Preferences update with invalid payload should return a 400 error
         """
         payload = {"theme": None}
-        response = self.client.put(
+        response = self.client.patch(
             self.url, payload, content_type="application/json")
 
         self.client_error_response_test(
