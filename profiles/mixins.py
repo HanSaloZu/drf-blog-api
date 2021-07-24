@@ -19,4 +19,4 @@ class UpdateImageMixin:
             return Response({self.image_field: link})
 
         raise InvalidData400("File not provided",
-                             {self.image_field: "File not provided"})
+                             {self.image_field: ["File not provided"]})
