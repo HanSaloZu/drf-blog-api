@@ -27,13 +27,13 @@ class ProfileAdmin(NoAddPermissionAdminModel):
 
 @admin.register(Avatar)
 class AvatarsAdmin(NoAddPermissionAdminModel):
-    list_display = ("profile", "file_id", "link")
-    list_display_links = ("profile", "file_id", "link")
+    list_display = ("profile", "link")
+    list_display_links = ("profile", "link")
     search_fields = ("profile__user__login",
                      "profile__user__email", "profile__fullname")
     fields = ("file_id", "link")
 
-    def has_change_permission(self, request):
+    def has_change_permission(self, request, obj=None):
         return False
 
 
