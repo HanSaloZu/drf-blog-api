@@ -8,6 +8,11 @@ class NoAddPermissionAdminModel(admin.ModelAdmin):
         return False
 
 
+class NoChangePermissionAdminModel(admin.ModelAdmin):
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Profile)
 class ProfileAdmin(NoAddPermissionAdminModel):
     list_display = ("user", "fullname", "is_looking_for_a_job", "birthday")
@@ -26,15 +31,12 @@ class ProfileAdmin(NoAddPermissionAdminModel):
 
 
 @admin.register(Avatar)
-class AvatarsAdmin(NoAddPermissionAdminModel):
+class AvatarsAdmin(NoAddPermissionAdminModel, NoChangePermissionAdminModel):
     list_display = ("profile", "link")
     list_display_links = ("profile", "link")
     search_fields = ("profile__user__login",
                      "profile__user__email", "profile__fullname")
     fields = ("file_id", "link")
-
-    def has_change_permission(self, request, obj=None):
-        return False
 
 
 @admin.register(Contacts)
