@@ -10,16 +10,17 @@ class NoAddPermissionAdminModel(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(NoAddPermissionAdminModel):
-    list_display = ("user", "fullname", "is_looking_for_a_job", "status")
+    list_display = ("user", "fullname", "is_looking_for_a_job", "birthday")
     list_display_links = ("user", "fullname", "is_looking_for_a_job")
     list_filter = ("is_looking_for_a_job",)
     search_fields = ("user__login", "fullname")
     fieldsets = (
         (None, {
-            "fields": ("fullname", "status", "about_me")
+            "fields": ("fullname", "status", "about_me", "location",
+                       "birthday")
         }),
         ("Job", {
-            "fields": ("is_looking_for_a_job", "professionalSkills")
+            "fields": ("is_looking_for_a_job", "professional_skills")
         })
     )
 
