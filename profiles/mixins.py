@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 from utils.exceptions import InvalidData400
 
-from .services.images import update_photo
+from .services.images import update_image
 
 
 class UpdateImageMixin:
@@ -14,7 +14,7 @@ class UpdateImageMixin:
 
         if isinstance(image, File):
             instance = self.get_object(request)
-            link = update_photo(instance, image)
+            link = update_image(instance, image)
 
             return Response({self.image_field: link})
 
