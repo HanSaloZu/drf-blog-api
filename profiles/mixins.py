@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 from utils.exceptions import InvalidData400
 
-from .services.photos import update_photo
+from .services.images import update_photo
 
 
 class UpdateImageMixin:
