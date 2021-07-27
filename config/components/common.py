@@ -20,7 +20,8 @@ INSTALLED_APPS = [
     "users",
     "profiles",
     "followers",
-    "authentication"
+    "authentication",
+    "posts"
 ]
 
 MIDDLEWARE = [
