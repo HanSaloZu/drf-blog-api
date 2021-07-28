@@ -41,20 +41,14 @@ class FollowersModelTestCase(ExtendedTestCase):
         """
         self.model.follow(self.f_user, self.s_user)
 
-        try:
+        with self.assertRaises(IntegrityError):
             with transaction.atomic():
                 self.model.follow(self.f_user, self.s_user)
-            self.fail("Duplicate following is allowed")
-        except IntegrityError:
-            pass
 
     def test_invalid_following(self):
         """
         Following with follower_user == following_user should raise an error
         """
-        try:
+        with self.assertRaises(Error):
             with transaction.atomic():
                 self.model.follow(self.f_user, self.f_user)
-            self.fail("Following with follower_user == following_user is allowed")
-        except Error:
-            pass
