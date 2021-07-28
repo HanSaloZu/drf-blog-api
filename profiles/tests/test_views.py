@@ -114,6 +114,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         payload = {
             "fullname": "",
             "location": "a"*290,
+            "aboutMe": "a"*802,
             "contacts": {
                 "github": "123",
             }
@@ -126,9 +127,10 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             messages=[
                 "Fullname field cannot be empty",
                 "Location field value is too long",
+                "About me field value is too long"
                 "Invalid value for github field",
             ],
-            fields_errors_dict_len=3
+            fields_errors_dict_len=4
         )
 
 

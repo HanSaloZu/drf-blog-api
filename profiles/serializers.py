@@ -114,7 +114,7 @@ class UpdateProfileSerializer(serializers.Serializer):
 
     aboutMe = serializers.CharField(
         required=False,
-        max_length=400,
+        max_length=800,
         allow_blank=False,
         allow_null=False,
         min_length=70,
