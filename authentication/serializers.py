@@ -40,9 +40,8 @@ def get_error_messages_for_registration_serializer(field_name, extend):
         "blank": f"{capitalized_field_name} can't be empty",
         "null": f"{capitalized_field_name} is required",
     }
-    error_messages.update(extend)
 
-    return error_messages
+    return error_messages | extend
 
 
 class RegistrationSerializer(serializers.Serializer):
@@ -91,8 +90,10 @@ class RegistrationSerializer(serializers.Serializer):
         allow_null=False,
         required=True,
         min_length=70,
+        max_length=800,
         error_messages=get_error_messages_for_registration_serializer("about me", {
-            "min_length": "About me must be at least 70 characters"
+            "min_length": "About me must be at least 70 characters",
+            "max_length": "About me must be up to 800 characters long"
         })
     )
 
