@@ -127,8 +127,8 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             messages=[
                 "Fullname field cannot be empty",
                 "Location field value is too long",
-                "About me field value is too long"
-                "Invalid value for github field",
+                "About me field value is too long",
+                "Invalid value for github field"
             ],
             fields_errors_dict_len=4
         )
