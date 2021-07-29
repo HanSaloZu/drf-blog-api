@@ -11,7 +11,7 @@ class Profile(models.Model):
     is_looking_for_a_job = models.BooleanField(default=False)
     professional_skills = models.TextField(blank=True)
 
-    fullname = models.CharField(max_length=150)
+    fullname = models.CharField(max_length=50)
     status = models.CharField(max_length=70, blank=True)
     about_me = models.TextField(blank=True)
     location = models.CharField(max_length=250, blank=True)
