@@ -46,7 +46,7 @@ def get_error_messages_for_registration_serializer(field_name, extend):
 
 class RegistrationSerializer(serializers.Serializer):
     login = serializers.SlugField(
-        max_length=150,
+        max_length=50,
         allow_blank=False,
         allow_null=False,
         required=True,
