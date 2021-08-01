@@ -1,8 +1,9 @@
 from datetime import datetime
+from django.db import IntegrityError, transaction
 
 from utils.tests import ExtendedTestCase
 
-from ..models import Post
+from ..models import Post, Like
 
 
 class PostModelTestCase(ExtendedTestCase):
@@ -21,3 +22,39 @@ class PostModelTestCase(ExtendedTestCase):
         self.assertEqual(post.body, "Body")
         self.assertIsInstance(post.created_at, datetime)
         self.assertIsInstance(post.updated_at, datetime)
+
+
+class LikeModelTestCase(ExtendedTestCase):
+    model = Like
+
+    def setUp(self):
+        self.user = self.UserModel.objects.create_user(
+            login="FirstUser", email="first@user.com", password="pass")
+        self.post = Post.objects.create(
+            author=self.user, title="Test post", body="Body")
+
+    def test_valid_like(self):
+        self.model.objects.create(user=self.user, post=self.post)
+        like_object = self.model.objects.all().first()
+
+        self.assertEqual(self.model.objects.all().count(), 1)
+        self.assertEqual(like_object.user, self.user)
+        self.assertEqual(like_object.post, self.post)
+
+    def test_valid_unlike(self):
+        self.model.objects.create(user=self.user, post=self.post)
+        self.assertEqual(self.model.objects.all().count(), 1)
+
+        self.model.objects.all().first().delete()
+        self.assertEqual(self.model.objects.all().count(), 0)
+
+    def test_double_like(self):
+        """
+        Double like should raise an IntegrityError
+        """
+        self.model.objects.create(user=self.user, post=self.post)
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                self.model.objects.create(user=self.user, post=self.post)
+
