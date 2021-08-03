@@ -32,4 +32,4 @@ class UserAdmin(BaseUserAdmin):
                        "password2", "is_staff", "is_superuser", "is_active"),
         }),
     )
-    ordering = ('email',)
+    ordering = ("-id",)
