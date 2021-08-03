@@ -7,7 +7,7 @@ from users.mixins import UsersListAPIViewMixin
 from profiles.selectors import get_profile_by_user_login_or_404
 
 from .selectors import get_user_followers_ids_list, get_user_followings_ids_list
-from .models import FollowersModel
+from .models import Follower
 
 
 class FollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
@@ -37,7 +37,7 @@ class FollowingAPIView(LoginRequiredAPIView, APIView):
     Unfollow from the specified user(DELETE)
     """
 
-    model = FollowersModel
+    model = Follower
 
     def get(self, request, login):
         target = get_profile_by_user_login_or_404(login).user

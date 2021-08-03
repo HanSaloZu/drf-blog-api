@@ -1,7 +1,7 @@
 from urllib.parse import urlencode
 from django.urls import reverse
 
-from followers.models import FollowersModel
+from followers.models import Follower
 from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
 
@@ -194,11 +194,11 @@ class UserFollowersListAPIViewTestCase(ListAPIViewTestCase):
         self.third_user = self.UserModel.objects.create_user(
             login="ThirdUser", email="third@gmail.com", password="pass")
 
-        FollowersModel.follow(self.second_user, self.first_user)
-        FollowersModel.follow(self.third_user, self.first_user)
+        Follower.follow(self.second_user, self.first_user)
+        Follower.follow(self.third_user, self.first_user)
 
-        FollowersModel.follow(self.first_user, self.second_user)
-        FollowersModel.follow(self.second_user, self.third_user)
+        Follower.follow(self.first_user, self.second_user)
+        Follower.follow(self.second_user, self.third_user)
 
     def test_request_by_unauthenticated_client(self):
         self.client.logout()
@@ -256,11 +256,11 @@ class UserFollowingListAPIViewTestCase(ListAPIViewTestCase):
         self.third_user = self.UserModel.objects.create_user(
             login="ThirdUser", email="third@gmail.com", password="pass")
 
-        FollowersModel.follow(self.first_user, self.second_user)
-        FollowersModel.follow(self.first_user, self.third_user)
+        Follower.follow(self.first_user, self.second_user)
+        Follower.follow(self.first_user, self.third_user)
 
-        FollowersModel.follow(self.third_user, self.second_user)
-        FollowersModel.follow(self.second_user, self.third_user)
+        Follower.follow(self.third_user, self.second_user)
+        Follower.follow(self.second_user, self.third_user)
 
     def test_request_by_unauthenticated_client(self):
         self.client.logout()

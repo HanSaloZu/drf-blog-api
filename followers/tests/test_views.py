@@ -3,11 +3,11 @@ from urllib.parse import urlencode
 
 from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
-from ..models import FollowersModel
+from ..models import Follower
 
 
 class FollowersListAPIViewTestCase(ListAPIViewTestCase):
-    model = FollowersModel
+    model = Follower
 
     def url(self, parameters={}):
         url = reverse("followers_list")
@@ -59,7 +59,7 @@ class FollowersListAPIViewTestCase(ListAPIViewTestCase):
 
 class FollowingListAPIViewTestCase(ListAPIViewTestCase):
     url = reverse("following_list")
-    model = FollowersModel
+    model = Follower
 
     def setUp(self):
         credentials = {"email": "first@gmail.com", "password": "pass"}
@@ -90,7 +90,7 @@ class FollowingListAPIViewTestCase(ListAPIViewTestCase):
 
 
 class FollowingAPIViewTestCase(APIViewTestCase):
-    model = FollowersModel
+    model = Follower
 
     def url(self, kwargs):
         return reverse("following", kwargs=kwargs)

@@ -1,11 +1,11 @@
 from django.db import IntegrityError, transaction, Error
 
 from utils.tests import ExtendedTestCase
-from ..models import FollowersModel
+from ..models import Follower
 
 
-class FollowersModelTestCase(ExtendedTestCase):
-    model = FollowersModel
+class FollowerModelTestCase(ExtendedTestCase):
+    model = Follower
 
     def setUp(self):
         self.f_user = self.UserModel.objects.create_user(
