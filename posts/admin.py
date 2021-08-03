@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Post
+from .models import Post, Like
 
 
 @admin.register(Post)
@@ -15,3 +15,10 @@ class PostAdmin(admin.ModelAdmin):
         }),
     )
     ordering = ("-created_at",)
+
+
+@admin.register(Like)
+class LikeAdmin(admin.ModelAdmin):
+    list_display = ("user", "post")
+    list_display_links = ("user", "post")
+    search_fields = ("user__login", "post__id", "post__title")
