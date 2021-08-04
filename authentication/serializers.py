@@ -52,7 +52,8 @@ class RegistrationSerializer(serializers.Serializer):
         required=True,
         error_messages=get_error_messages_for_registration_serializer("login", {
             "max_length": "Login must be up to 150 characters long",
-            "invalid": "Login can only contain letters, numbers, underscores and hyphens"
+            "invalid": ("Login can only contain English letters, numbers, " +
+                        "underscores and hyphens")
         })
     )
 
