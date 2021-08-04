@@ -31,4 +31,4 @@ class Like(models.Model):
         db_table = "likes"
 
     def __str__(self):
-        return f"{self.user.login} liked {self.post.id} post"
+        return f"{self.user.login} liked post #{self.post.id}"
