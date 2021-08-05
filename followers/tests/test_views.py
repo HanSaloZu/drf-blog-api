@@ -3,12 +3,10 @@ from urllib.parse import urlencode
 
 from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
-from ..models import Follower
+from ..services import follow, is_following, unfollow
 
 
 class FollowersListAPIViewTestCase(ListAPIViewTestCase):
-    model = Follower
-
     def url(self, parameters={}):
         url = reverse("followers_list")
         if parameters:
@@ -27,8 +25,8 @@ class FollowersListAPIViewTestCase(ListAPIViewTestCase):
         self.third_user = self.UserModel.objects.create_user(
             login="ThirdUser", email="third@gmail.com", password="pass")
 
-        self.model.follow(self.second_user, self.first_user)
-        self.model.follow(self.third_user, self.first_user)
+        follow(self.second_user, self.first_user)
+        follow(self.third_user, self.first_user)
 
     def test_request_by_unauthenticated_client(self):
         self.client.logout()
@@ -59,7 +57,6 @@ class FollowersListAPIViewTestCase(ListAPIViewTestCase):
 
 class FollowingListAPIViewTestCase(ListAPIViewTestCase):
     url = reverse("following_list")
-    model = Follower
 
     def setUp(self):
         credentials = {"email": "first@gmail.com", "password": "pass"}
@@ -69,7 +66,7 @@ class FollowingListAPIViewTestCase(ListAPIViewTestCase):
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
-        self.model.follow(self.first_user, self.second_user)
+        follow(self.first_user, self.second_user)
 
     def test_request_by_unauthenticated_client(self):
         self.client.logout()
@@ -90,8 +87,6 @@ class FollowingListAPIViewTestCase(ListAPIViewTestCase):
 
 
 class FollowingAPIViewTestCase(APIViewTestCase):
-    model = Follower
-
     def url(self, kwargs):
         return reverse("following", kwargs=kwargs)
 
@@ -120,9 +115,9 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_204_NO_CONTENT)
-        self.assertIs(self.model.is_following(
+        self.assertIs(is_following(
             self.first_user, self.second_user), True)
-        self.assertIs(self.model.is_following(
+        self.assertIs(is_following(
             self.second_user, self.first_user), False)
 
     def test_self_follow(self):
@@ -138,7 +133,7 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         """
         Duplicate follow should return a 204 status code
         """
-        self.model.follow(self.first_user, self.second_user)
+        follow(self.first_user, self.second_user)
 
         response = self.client.put(self.url({"login": self.second_user.login}))
         self.assertEqual(response.status_code,
@@ -161,14 +156,14 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         """
         A valid unfollow request should return a 204 status code
         """
-        self.model.follow(self.first_user, self.second_user)
+        follow(self.first_user, self.second_user)
 
         response = self.client.delete(
             self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_204_NO_CONTENT)
-        self.assertIs(self.model.is_following(
+        self.assertIs(is_following(
             self.first_user, self.second_user), False)
 
     def test_unfollow_not_followed_user(self):
@@ -180,7 +175,7 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_204_NO_CONTENT)
-        self.assertIs(self.model.is_following(
+        self.assertIs(is_following(
             self.first_user, self.second_user), False)
 
     def test_is_following(self):
@@ -191,7 +186,7 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertIs(response.data["isFollowed"], False)
 
-        self.model.follow(self.first_user, self.second_user)
+        follow(self.first_user, self.second_user)
         response = self.client.get(self.url({"login": self.second_user.login}))
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertIs(response.data["isFollowed"], True)

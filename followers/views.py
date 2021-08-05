@@ -7,7 +7,7 @@ from users.mixins import UsersListAPIViewMixin
 from profiles.selectors import get_profile_by_user_login_or_404
 
 from .selectors import get_user_followers_ids_list, get_user_followings_ids_list
-from .models import Follower
+from .services import is_following, follow, unfollow
 
 
 class FollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
@@ -37,24 +37,23 @@ class FollowingAPIView(LoginRequiredAPIView, APIView):
     Unfollow from the specified user(DELETE)
     """
 
-    model = Follower
-
     def get(self, request, login):
         target = get_profile_by_user_login_or_404(login).user
-        return Response(data={"isFollowed": self.model.is_following(request.user, target)})
+        return Response(data={"isFollowed": is_following(request.user, target)})
 
     def put(self, request, login):
         target = get_profile_by_user_login_or_404(login).user
 
-        if not self.model.is_following(request.user, target) and login != request.user.login:
-            self.model.follow(request.user, target)
+        if not is_following(request.user, target):
+            if login != request.user.login:
+                follow(request.user, target)
 
         return Response(status=HTTP_204_NO_CONTENT)
 
     def delete(self, request, login):
         target = get_profile_by_user_login_or_404(login).user
 
-        if self.model.is_following(request.user, target):
-            self.model.unfollow(request.user, target)
+        if is_following(request.user, target):
+            unfollow(request.user, target)
 
         return Response(status=HTTP_204_NO_CONTENT)
