@@ -4,7 +4,7 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from django.contrib.auth import authenticate, login, logout
 
 from profiles.serializers import ProfileSerializer
-from utils.exceptions import InvalidData400, InactiveProfile403, Forbidden403
+from utils.exceptions import BadRequest400, InactiveProfile403, Forbidden403
 from utils.shortcuts import raise_400_based_on_serializer
 
 from .services.email import send_profile_activation_email
@@ -51,7 +51,7 @@ class AuthenticationAPIView(APIView):
             elif user and not user.is_active:
                 raise InactiveProfile403
 
-            raise InvalidData400("Incorrect email or password")
+            raise BadRequest400("Incorrect email or password")
 
         raise_400_based_on_serializer(serializer)
 
@@ -77,4 +77,4 @@ class ProfileActivationAPIView(APIView):
         if user is not None and user.is_active:
             return Response(status=HTTP_204_NO_CONTENT)
 
-        raise InvalidData400("Invalid credentials")
+        raise BadRequest400("Invalid credentials")

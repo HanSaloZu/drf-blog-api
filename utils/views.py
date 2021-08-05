@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 
-from .exceptions import NotAuthenticated401, InvalidData400, custom_exception_handler
+from .exceptions import (NotAuthenticated401, BadRequest400,
+                         custom_exception_handler)
 
 
 class LoginRequiredAPIView:
@@ -36,17 +37,17 @@ class ListAPIViewMixin(APIView):
         try:
             kwargs["limit"] = int(request.query_params.get("limit", 10))
         except ValueError:
-            raise InvalidData400("Invalid limit value")
+            raise BadRequest400("Invalid limit value")
 
         if kwargs["limit"] > 100:
-            raise InvalidData400("Maximum page size is 100 items")
+            raise BadRequest400("Maximum page size is 100 items")
         elif kwargs["limit"] < 0:
-            raise InvalidData400("Minimum page size is 0 items")
+            raise BadRequest400("Minimum page size is 0 items")
 
         try:
             kwargs["page"] = int(request.query_params.get("page", 1))
         except ValueError:
-            raise InvalidData400("Invalid page number value")
+            raise BadRequest400("Invalid page number value")
 
         queryset = self.filter_queryset(self.queryset, kwargs)
 

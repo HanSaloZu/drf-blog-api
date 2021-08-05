@@ -1,4 +1,4 @@
-from .exceptions import InvalidData400
+from .exceptions import BadRequest400
 
 
 def generate_messages_list_by_serializer_errors(errors):
@@ -20,9 +20,9 @@ def generate_messages_list_by_serializer_errors(errors):
 def raise_400_based_on_serializer(serializer):
     if serializer.is_valid():
         raise ValueError(
-            "Can't raise InvalidData400 based on a valid serializer")
+            "Can't raise BadRequest400 based on a valid serializer")
 
     errors = serializer.errors
     messages = generate_messages_list_by_serializer_errors(errors)
 
-    raise InvalidData400(messages, errors)
+    raise BadRequest400(messages, errors)
