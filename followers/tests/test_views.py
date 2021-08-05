@@ -1,6 +1,8 @@
 from django.urls import reverse
 from urllib.parse import urlencode
 
+from rest_framework.status import HTTP_404_NOT_FOUND
+
 from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
 from ..services import follow, is_following, unfollow
@@ -109,35 +111,38 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
     def test_follow(self):
         """
-        A valid follow request should return a 204 status code
+        A valid follow request should return isFollowed: True
         """
         response = self.client.put(self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_204_NO_CONTENT)
-        self.assertIs(is_following(
-            self.first_user, self.second_user), True)
-        self.assertIs(is_following(
-            self.second_user, self.first_user), False)
+                         self.http_status.HTTP_200_OK)
+        self.assertIs(is_following(self.first_user, self.second_user), True)
+        self.assertIs(response.data["isFollowed"], True)
 
     def test_self_follow(self):
         """
-        Self follow should return a 204 status code
+        Self follow should return a 400 error
         """
         response = self.client.put(self.url({"login": self.first_user.login}))
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_204_NO_CONTENT)
+        self.client_error_response_test(
+            response,
+            messages=["You cannot follow yourself"]
+        )
+        self.assertIs(is_following(self.first_user, self.first_user), False)
 
     def test_double_follow(self):
         """
-        Duplicate follow should return a 204 status code
+        Duplicate follow should return isFollowed: True
         """
         follow(self.first_user, self.second_user)
 
         response = self.client.put(self.url({"login": self.second_user.login}))
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_204_NO_CONTENT)
+                         self.http_status.HTTP_200_OK)
+        self.assertIs(is_following(self.first_user, self.second_user), True)
+        self.assertIs(response.data["isFollowed"], True)
 
     def test_follow_with_invalid_login(self):
         """
@@ -154,7 +159,7 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
     def test_unfollow(self):
         """
-        A valid unfollow request should return a 204 status code
+        A valid unfollow request should return isFollowed: False
         """
         follow(self.first_user, self.second_user)
 
@@ -162,21 +167,24 @@ class FollowingAPIViewTestCase(APIViewTestCase):
             self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code,
-                         self.http_status.HTTP_204_NO_CONTENT)
-        self.assertIs(is_following(
-            self.first_user, self.second_user), False)
+                         self.http_status.HTTP_200_OK)
+        self.assertIs(is_following(self.first_user, self.second_user), False)
+        self.assertIs(response.data["isFollowed"], False)
 
     def test_unfollow_not_followed_user(self):
         """
-        Unfollowing from an unfollowed user does not return an error
+        Unfollowing from an unfollowed user should return a 404 error
         """
         response = self.client.delete(
             self.url({"login": self.second_user.login}))
 
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_204_NO_CONTENT)
-        self.assertIs(is_following(
-            self.first_user, self.second_user), False)
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages=["You are not yet followed this user"]
+        )
+        self.assertIs(is_following(self.first_user, self.second_user), False)
 
     def test_is_following(self):
         """
