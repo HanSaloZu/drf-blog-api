@@ -22,7 +22,7 @@ class ProfileAdmin(NoAddPermissionAdminModel):
     fieldsets = (
         (None, {
             "fields": ("fullname", "status", "about_me", "location",
-                       "birthday")
+                       "birthday", "theme")
         }),
         ("Job", {
             "fields": ("is_looking_for_a_job", "professional_skills")
