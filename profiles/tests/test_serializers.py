@@ -5,7 +5,7 @@ from utils.shortcuts import generate_messages_list_by_serializer_errors
 from utils.tests import ExtendedTestCase
 
 from ..serializers import (UpdateProfileSerializer, UpdateContactsSerializer,
-                           UpdatePasswordSerailizer, PreferencesSerializer, ProfileSerializer)
+                           UpdatePasswordSerailizer, ProfileSerializer)
 
 
 class ProfileSerializerTestCase(ExtendedTestCase):
@@ -174,32 +174,3 @@ class UpdatePasswordSerializerTestCase(TestCase):
         self.assertIn("New password field is required", errors)
         self.assertIn("Repeat new password field is required", errors)
         self.assertEqual(len(errors), 3)
-
-
-class PreferencesSerializerTestCase(TestCase):
-    serializer_class = PreferencesSerializer
-
-    def test_valid_serializer(self):
-        data = {"theme": ""}
-        serializer = self.serializer_class(data=data)
-
-        self.assertIs(serializer.is_valid(), True)
-        self.assertEqual(data, serializer.validated_data)
-
-    def test_invalid_serializer(self):
-        data = {"theme": "a"*260}
-        serializer = self.serializer_class(data=data)
-
-        self.assertIs(serializer.is_valid(), False)
-
-        errors = generate_messages_list_by_serializer_errors(serializer.errors)
-        self.assertIn("Theme field value is too long", errors)
-        self.assertEqual(len(errors), 1)
-
-    def test_serializer_without_data(self):
-        """
-        The serializer without data should be valid because it has no required fields
-        """
-        serializer = self.serializer_class(data={})
-
-        self.assertIs(serializer.is_valid(), True)

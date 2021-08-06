@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Profile, Contacts, Preferences
+from .models import Profile, Contacts
 
 
 def get_error_messages(field_name):
@@ -173,20 +173,6 @@ class UpdateProfileSerializer(serializers.Serializer):
 
         instance.save()
         return instance
-
-
-class PreferencesSerializer(serializers.ModelSerializer):
-    theme = serializers.CharField(
-        required=False,
-        allow_null=False,
-        allow_blank=True,
-        max_length=250,
-        error_messages=get_error_messages("theme")
-    )
-
-    class Meta:
-        model = Preferences
-        fields = ["theme"]
 
 
 class UpdatePasswordSerailizer(serializers.Serializer):
