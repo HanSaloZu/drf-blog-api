@@ -228,65 +228,6 @@ class UpdateBannerAPIViewTestCase(APIViewTestCase):
         )
 
 
-class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
-    url = reverse("profile_preferences")
-
-    def setUp(self):
-        credentials = {"email": "new@user.com", "password": "pass"}
-        self.user = self.UserModel.objects.create_user(
-            login="NewUser", **credentials)
-
-        self.user.profile.preferences.theme = "dark"
-        self.user.save()
-
-        self.client.login(**credentials)
-
-    def test_request_by_unauthenticated_client(self):
-        self.client.logout()
-        response = self.client.get(self.url)
-
-        self.unauthorized_client_error_response_test(response)
-
-    # Preferences retrieving tests
-
-    def test_get_preferences(self):
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["theme"],
-                         self.user.profile.preferences.theme)
-
-     # Preferences update tests
-
-    def test_update_preferences(self):
-        """
-        Valid preferences update should return a 200 status code and a preferences representation in the response body
-        """
-        payload = {"theme": "light"}
-        response = self.client.patch(
-            self.url, payload, content_type="application/json")
-
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-
-        user = self.UserModel.objects.first()
-        self.assertEqual(user.profile.preferences.theme, payload["theme"])
-        self.assertEqual(response.data["theme"], payload["theme"])
-
-    def test_update_preferences_with_invalid_payload(self):
-        """
-        Preferences update with invalid payload should return a 400 error
-        """
-        payload = {"theme": None}
-        response = self.client.patch(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            messages=["Theme field cannot be null"],
-            fields_errors_dict_len=1
-        )
-
-
 class UpdatePasswordAPIViewTestCase(APIViewTestCase):
     url = reverse("update_password")
 

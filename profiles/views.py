@@ -7,7 +7,7 @@ from utils.shortcuts import raise_400_based_on_serializer
 
 from .mixins import UpdateImageMixin
 from .serializers import (UpdateProfileSerializer, ProfileSerializer,
-                          PreferencesSerializer, UpdatePasswordSerailizer)
+                          UpdatePasswordSerailizer)
 
 
 class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
@@ -48,26 +48,6 @@ class UpdateBannerAPIView(LoginRequiredAPIView, UpdateImageMixin, APIView):
 
     def get_object(self, request):
         return request.user.profile.banner
-
-
-class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
-    """
-    Retrieves and updates the authenticated user preferences
-    """
-
-    def get(self, request):
-        serializer = PreferencesSerializer(request.user.profile.preferences)
-        return Response(serializer.data)
-
-    def patch(self, request):
-        instance = request.user.profile.preferences
-        serializer = PreferencesSerializer(instance, data=request.data)
-
-        if serializer.is_valid():
-            instance = serializer.save()
-            return Response(PreferencesSerializer(instance).data)
-
-        raise_400_based_on_serializer(serializer)
 
 
 class UpdatePasswordAPIView(LoginRequiredAPIView, APIView):
