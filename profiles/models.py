@@ -34,18 +34,6 @@ class ProfileRelatedModel(models.Model):
         abstract = True
 
 
-class Preferences(ProfileRelatedModel):
-    theme = models.CharField(max_length=250, blank=True)
-
-    class Meta:
-        verbose_name = "profile preferences"
-        verbose_name_plural = "profiles preferences"
-        db_table = "profiles_preferences"
-
-    def __str__(self):
-        return f"{self.profile.user.login} profile preferences"
-
-
 class ProfileImageModel(ProfileRelatedModel):
     file_id = models.CharField(max_length=50, blank=True)
     link = models.URLField(max_length=300, blank=True)

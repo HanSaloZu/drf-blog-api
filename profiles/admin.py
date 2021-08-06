@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Profile, Avatar, Contacts, Preferences, Banner
+from .models import Profile, Avatar, Contacts, Banner
 
 
 class NoAddPermissionAdminModel(admin.ModelAdmin):
@@ -58,13 +58,3 @@ class ContactsAdmin(NoAddPermissionAdminModel):
                      "profile__user__email", "profile__fullname")
     fields = ("facebook", "github", "instagram",
               "main_link", "twitter", "vk", "website", "youtube")
-
-
-@admin.register(Preferences)
-class PreferencesAdmin(NoAddPermissionAdminModel):
-    list_display = ("profile", "theme")
-    list_display_links = ("profile", "theme")
-    search_fields = ("profile__user__login",
-                     "profile__user__email", "profile__fullname")
-    list_filter = ("theme",)
-    fields = ("theme",)
