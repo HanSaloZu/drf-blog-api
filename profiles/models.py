@@ -35,7 +35,7 @@ class ProfileRelatedModel(models.Model):
         abstract = True
 
 
-class ImageModel(ProfileRelatedModel):
+class ImageModel(models.Model):
     file_id = models.CharField(max_length=50, blank=True)
     link = models.URLField(max_length=300, blank=True)
 
@@ -43,7 +43,7 @@ class ImageModel(ProfileRelatedModel):
         abstract = True
 
 
-class Avatar(ImageModel):
+class Avatar(ProfileRelatedModel, ImageModel):
     class Meta:
         verbose_name = "profile avatar"
         verbose_name_plural = "profiles avatars"
@@ -53,7 +53,7 @@ class Avatar(ImageModel):
         return f"{self.profile.user.login} avatar"
 
 
-class Banner(ImageModel):
+class Banner(ProfileRelatedModel, ImageModel):
     class Meta:
         verbose_name = "profile banner"
         verbose_name_plural = "profiles banners"
