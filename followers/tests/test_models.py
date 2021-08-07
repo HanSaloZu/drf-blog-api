@@ -15,9 +15,6 @@ class FollowerModelTestCase(ExtendedTestCase):
         self.s_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@user.com", password="pass")
 
-    def tearDown(self):
-        self.model.objects.all().delete()
-
     def test_valid_following(self):
         pair = follow(self.f_user, self.s_user)
 
