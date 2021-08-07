@@ -64,6 +64,7 @@ class UpdateProfileSerializerTestCase(TestCase):
             "isLookingForAJob": True,
             "professionalSkills": "Backend web developer",
             "status": "New status",
+            "theme": "dark",
             "location": "London"
         }
         serializer = self.serializer_class(data=data)
@@ -97,7 +98,8 @@ class UpdateProfileSerializerTestCase(TestCase):
 
     def test_serializer_without_data(self):
         """
-        The serializer without data should be valid because it has no required fields
+        The serializer without data should be valid
+        because it has no required fields
         """
         serializer = self.serializer_class(data={})
 

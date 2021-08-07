@@ -39,7 +39,8 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
 
     def test_profile_update_without_contacts(self):
         """
-        Profile update without contacts is valid and should return a 200 status code and a profile representation in the response body
+        Profile update without contacts is valid
+        and should return a 200 status code and a profile representation
         """
         payload = {
             "fullname": "New User",
@@ -47,6 +48,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             "isLookingForAJob": True,
             "professionalSkills": "Backend web developer",
             "status": "New status",
+            "theme": "dark",
             "location": "Berlin",
             "birthday": "2000-01-19"
         }
@@ -60,6 +62,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         self.assertEqual(user.profile.fullname, payload["fullname"])
         self.assertEqual(user.profile.about_me, payload["aboutMe"])
         self.assertEqual(user.profile.status, payload["status"])
+        self.assertEqual(user.profile.theme, payload["theme"])
         self.assertEqual(str(user.profile.birthday), payload["birthday"])
         self.assertEqual(user.profile.location, payload["location"])
 
@@ -70,7 +73,8 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
 
     def test_profile_update_with_contacts(self):
         """
-        Valid profile update should return a 200 status code and a profile representation in the response body
+        Valid profile update should return a 200 status code
+        and a profile representation in the response body
         """
         payload = {
             "fullname": "New Fullname",
@@ -100,7 +104,8 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
 
     def test_profile_update_without_payload(self):
         """
-        Profile update without payload is valid and should return a 200 status code and a profile representation in the response body
+        Profile update without payload is valid
+        and should return a 200 status code and a profile representation
         """
         response = self.client.patch(self.url)
 
@@ -115,6 +120,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             "fullname": "",
             "location": "a"*290,
             "aboutMe": "a"*802,
+            "theme": None,
             "contacts": {
                 "github": "123",
             }
@@ -128,9 +134,10 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
                 "Fullname field cannot be empty",
                 "Location field value is too long",
                 "About me field value is too long",
+                "Theme field cannot be null",
                 "Invalid value for github field"
             ],
-            fields_errors_dict_len=4
+            fields_errors_dict_len=5
         )
 
 
