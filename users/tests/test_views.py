@@ -145,21 +145,25 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
 
     def test_user_profile_detail(self):
         """
-        Profile detail with valid login should return a 200 status code and a profile representation in the response body
+        Profile detail with valid login should return a 200 status code
+        and a profile representation in the response body
         """
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.second_user.id)
+        self.assertNotIn("theme", response.data)
 
     def test_self_profile_detail(self):
         """
-        Profile detail with login equals authenticated user login should return a 200 status code and a profile representation in the response body
+        Profile detail with login equals authenticated user login
+        should return a 200 status code and a profile representation
         """
         response = self.client.get(self.url({"login": self.first_user.login}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.first_user.id)
+        self.assertNotIn("theme", response.data)
 
     def test_user_profile_detail_with_invalid_user_login(self):
         """

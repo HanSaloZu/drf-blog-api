@@ -5,7 +5,8 @@ from utils.shortcuts import generate_messages_list_by_serializer_errors
 from utils.tests import ExtendedTestCase
 
 from ..serializers import (UpdateProfileSerializer, UpdateContactsSerializer,
-                           UpdatePasswordSerailizer, ProfileSerializer)
+                           UpdatePasswordSerailizer, ProfileSerializer,
+                           AuthenticatedUserProfileSerializer)
 
 
 class ProfileSerializerTestCase(ExtendedTestCase):
@@ -52,6 +53,22 @@ class ProfileSerializerTestCase(ExtendedTestCase):
                          ["website"], instance.contacts.website)
         self.assertEqual(data["contacts"]
                          ["youtube"], instance.contacts.youtube)
+
+
+class AuthenticatedUserProfileSerializerTestCase(ExtendedTestCase):
+    serializer_class = AuthenticatedUserProfileSerializer
+
+    def setUp(self):
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", email="new@user.com", password="pass")
+
+    def test_serializer_with_instance(self):
+        instance = self.user.profile
+        serializer = self.serializer_class(instance=instance)
+        data = serializer.data
+
+        self.assertEqual(len(data), 14)
+        self.assertEqual(data["theme"], instance.theme)
 
 
 class UpdateProfileSerializerTestCase(TestCase):

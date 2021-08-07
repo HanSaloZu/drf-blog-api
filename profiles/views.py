@@ -6,8 +6,8 @@ from utils.views import LoginRequiredAPIView
 from utils.shortcuts import raise_400_based_on_serializer
 
 from .mixins import UpdateImageMixin
-from .serializers import (UpdateProfileSerializer, ProfileSerializer,
-                          UpdatePasswordSerailizer)
+from .serializers import (UpdateProfileSerializer, UpdatePasswordSerailizer,
+                          AuthenticatedUserProfileSerializer)
 
 
 class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
@@ -16,7 +16,7 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
     """
 
     def get(self, request):
-        serializer = ProfileSerializer(request.user.profile)
+        serializer = AuthenticatedUserProfileSerializer(request.user.profile)
         return Response(serializer.data)
 
     def patch(self, request):
@@ -25,7 +25,7 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
 
         if serializer.is_valid():
             instance = serializer.save()
-            return Response(ProfileSerializer(instance).data)
+            return Response(AuthenticatedUserProfileSerializer(instance).data)
 
         raise_400_based_on_serializer(serializer)
 
