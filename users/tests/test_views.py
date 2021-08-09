@@ -5,7 +5,7 @@ from followers.services import follow
 from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
 
-class UsersListAPIViewTestCase(ListAPIViewTestCase):
+class ListUsersAPIViewTestCase(ListAPIViewTestCase):
     def url(self, parameters={}):
         url = reverse("users_list")
         if parameters:

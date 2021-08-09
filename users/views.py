@@ -4,12 +4,13 @@ from rest_framework.generics import RetrieveAPIView
 from utils.views import LoginRequiredAPIView
 from profiles.serializers import ProfileSerializer
 from profiles.selectors import get_profile_by_user_login_or_404
-from followers.selectors import get_user_followers_ids_list, get_user_followings_ids_list
+from followers.selectors import (get_user_followers_ids_list,
+                                 get_user_followings_ids_list)
 
 from .mixins import UsersListAPIViewMixin
 
 
-class UsersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+class ListUsersAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
     """
     Lists all users
     """
