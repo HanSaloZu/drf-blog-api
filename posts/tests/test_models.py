@@ -41,13 +41,6 @@ class LikeModelTestCase(ExtendedTestCase):
         self.assertEqual(like_object.user, self.user)
         self.assertEqual(like_object.post, self.post)
 
-    def test_valid_unlike(self):
-        self.model.objects.create(user=self.user, post=self.post)
-        self.assertEqual(self.model.objects.all().count(), 1)
-
-        self.model.objects.all().first().delete()
-        self.assertEqual(self.model.objects.all().count(), 0)
-
     def test_double_like(self):
         """
         Double like should raise an IntegrityError
