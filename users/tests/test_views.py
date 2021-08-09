@@ -241,7 +241,7 @@ class ListUserFollowersAPIViewTestCase(ListAPIViewTestCase):
         )
 
 
-class UserFollowingListAPIViewTestCase(ListAPIViewTestCase):
+class ListUserFollowingAPIViewTestCase(ListAPIViewTestCase):
     def url(self, kwargs={}, parameters={}):
         url = reverse("user_following_list", kwargs=kwargs)
         if parameters:

@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import (ListUsersAPIView, RetrieveUserProfileAPIView,
-                    ListUserFollowersAPIView, UserFollowingListAPIView)
+                    ListUserFollowersAPIView, ListUserFollowingAPIView)
 
 urlpatterns = [
     path("", ListUsersAPIView.as_view(), name="users_list"),
@@ -9,6 +9,6 @@ urlpatterns = [
          name="user_profile_detail"),
     path("<str:login>/followers/", ListUserFollowersAPIView.as_view(),
          name="user_followers_list"),
-    path("<str:login>/following/", UserFollowingListAPIView.as_view(),
+    path("<str:login>/following/", ListUserFollowingAPIView.as_view(),
          name="user_following_list")
 ]
