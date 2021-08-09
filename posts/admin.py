@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import Post, Like
+from utils.admin import NoChangePermissionAdminModel, NoAddPermissionAdminModel
+
+from .models import Post, Like, Attachment
 
 
 @admin.register(Post)
@@ -22,3 +24,10 @@ class LikeAdmin(admin.ModelAdmin):
     list_display = ("user", "post")
     list_display_links = ("user", "post")
     search_fields = ("user__login", "post__id", "post__title")
+
+
+@admin.register(Attachment)
+class AttachmentAdmin(NoAddPermissionAdminModel, NoChangePermissionAdminModel):
+    list_display = ("post", "link")
+    list_display_links = ("post",)
+    search_fields = ("post__title", "post__body", "post__author__login")
