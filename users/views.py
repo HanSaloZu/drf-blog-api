@@ -17,7 +17,7 @@ class ListUsersAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
     ...
 
 
-class UserFollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+class ListUserFollowersAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
     """
     Lists the users following the specified user
     """
@@ -26,7 +26,9 @@ class UserFollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
         target_user = get_profile_by_user_login_or_404(kwargs["login"]).user
         followers_ids = get_user_followers_ids_list(target_user)
 
-        return super().filter_queryset(queryset.filter(id__in=followers_ids), kwargs)
+        return super().filter_queryset(
+            queryset.filter(id__in=followers_ids), kwargs
+        )
 
 
 class UserFollowingListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):

@@ -179,7 +179,7 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
             messages=["Invalid login, user is not found"])
 
 
-class UserFollowersListAPIViewTestCase(ListAPIViewTestCase):
+class ListUserFollowersAPIViewTestCase(ListAPIViewTestCase):
     def url(self, kwargs={}, parameters={}):
         url = reverse("user_followers_list", kwargs=kwargs)
         if parameters:
