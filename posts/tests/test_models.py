@@ -1,9 +1,9 @@
 from datetime import datetime
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, transaction, Error
 
 from utils.tests import ExtendedTestCase
 
-from ..models import Post, Like
+from ..models import Post, Like, Attachment
 
 
 class PostModelTestCase(ExtendedTestCase):
@@ -58,3 +58,39 @@ class LikeModelTestCase(ExtendedTestCase):
             with transaction.atomic():
                 self.model.objects.create(user=self.user, post=self.post)
 
+
+class AttachmentModelTestCase(ExtendedTestCase):
+    model = Attachment
+
+    def setUp(self):
+        self.user = self.UserModel.objects.create_user(
+            login="FirstUser", email="first@user.com", password="pass")
+        self.post = Post.objects.create(
+            author=self.user, title="Test post", body="Body")
+
+    def test_create_attachment(self):
+        self.model.objects.create(
+            post=self.post, file_id="1", link="http://localhost:8000/1")
+        attachment = self.model.objects.get(post=self.post)
+
+        self.assertIsInstance(attachment, Attachment)
+
+        self.assertEqual(attachment.file_id, "1")
+        self.assertEqual(attachment.link, "http://localhost:8000/1")
+
+    def test_create_attachments_over_limit(self):
+        """
+        The maximum number of attachments for a post is 10.
+        When creating attachments over the limit, an error should be raised
+        """
+        for i in range(10):
+            self.model.objects.create(
+                post=self.post, file_id=f"{i}", link=f"http://localhost:8000/{i}")
+
+        with self.assertRaises(Error):
+            with transaction.atomic():
+                self.model.objects.create(
+                    post=self.post,
+                    file_id="10",
+                    link=f"http://localhost:8000/10"
+                )
