@@ -1,7 +1,13 @@
+from rest_framework import serializers
 from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED
 from rest_framework.generics import RetrieveAPIView
+from django.urls import reverse
 
+from authentication.serializers import RegistrationSerializer
 from utils.views import LoginRequiredAPIView
+from utils.exceptions import Forbidden403
+from utils.shortcuts import raise_400_based_on_serializer
 from profiles.serializers import ProfileSerializer
 from profiles.selectors import get_profile_by_user_login_or_404
 from followers.selectors import (get_user_followers_ids_list,
@@ -10,11 +16,31 @@ from followers.selectors import (get_user_followers_ids_list,
 from .mixins import UsersListAPIViewMixin
 
 
-class ListUsersAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+class ListCreateUsersAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
     """
-    Lists all users
+    Lists all users or creates one
     """
-    ...
+
+    def post(self, request):
+        if not request.user.is_staff:
+            raise Forbidden403(
+                "You don't have permission to access this resource")
+
+        serializer = RegistrationSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user = serializer.save()
+            user.is_active = True
+            user.save()
+
+            return Response(
+                data=ProfileSerializer(user.profile).data,
+                status=HTTP_201_CREATED,
+                headers={"Location": reverse(
+                    "user_profile_detail", kwargs={"login": user.login})}
+            )
+
+        raise_400_based_on_serializer(serializer)
 
 
 class ListUserFollowersAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):

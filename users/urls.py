@@ -1,10 +1,10 @@
 from django.urls import path
 
-from .views import (ListUsersAPIView, RetrieveUserProfileAPIView,
+from .views import (ListCreateUsersAPIView, RetrieveUserProfileAPIView,
                     ListUserFollowersAPIView, ListUserFollowingAPIView)
 
 urlpatterns = [
-    path("", ListUsersAPIView.as_view(), name="users_list"),
+    path("", ListCreateUsersAPIView.as_view(), name="users_list"),
     path("<str:login>/", RetrieveUserProfileAPIView.as_view(),
          name="user_profile_detail"),
     path("<str:login>/followers/", ListUserFollowersAPIView.as_view(),

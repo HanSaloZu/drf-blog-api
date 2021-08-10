@@ -1,11 +1,12 @@
 from urllib.parse import urlencode
 from django.urls import reverse
+from django.utils.crypto import get_random_string
 
 from followers.services import follow
 from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
 
-class ListUsersAPIViewTestCase(ListAPIViewTestCase):
+class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
     def url(self, parameters={}):
         url = reverse("users_list")
         if parameters:
@@ -15,7 +16,7 @@ class ListUsersAPIViewTestCase(ListAPIViewTestCase):
 
     def setUp(self):
         credentials = {"email": "first@gmail.com", "password": "pass"}
-        self.first_user = self.UserModel.objects.create_user(
+        self.first_user = self.UserModel.objects.create_superuser(
             login="FirstUser", **credentials)
         self.client.login(**credentials)
 
@@ -29,6 +30,8 @@ class ListUsersAPIViewTestCase(ListAPIViewTestCase):
         response = self.client.get(self.url())
 
         self.unauthorized_client_error_response_test(response)
+
+    # List user
 
     def test_users_list_without_parameters(self):
         response = self.client.get(self.url())
@@ -116,6 +119,87 @@ class ListUsersAPIViewTestCase(ListAPIViewTestCase):
         self.client_error_response_test(
             response,
             messages=["Invalid limit value"]
+        )
+
+    # Create user
+
+    def test_user_creation_by_common_user(self):
+        """
+        A request to create a user from a non-administrator
+        should return a 403 status code
+        """
+        self.client.logout()
+        credentials = {"email": "common@user.com", "password": "pass"}
+        self.first_user = self.UserModel.objects.create_user(
+            login="CommonUser", **credentials)
+        self.client.login(**credentials)
+
+        payload = {
+            "login": "NewUser",
+            "email": "test@test.com",
+            "password1": "pass",
+            "password2": "pass",
+            "aboutMe": get_random_string(length=80),
+            "location": "London",
+            "birthday": "1997-08-21"
+        }
+        response = self.client.post(self.url(), payload)
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data["messages"][0],
+                         "You don't have permission to access this resource")
+
+    def test_valid_user_creation(self):
+        """
+        Valid user creation should return a 201 status code
+        and and a user representation
+        """
+        payload = {
+            "login": "NewUser",
+            "email": "test@test.com",
+            "password1": "pass",
+            "password2": "pass",
+            "aboutMe": get_random_string(length=80),
+            "location": "London",
+            "birthday": "1997-08-21"
+        }
+        response = self.client.post(self.url(), payload)
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data), 13)
+        self.assertEqual(response.data["login"], payload["login"])
+        self.assertEqual(response.data["aboutMe"], payload["aboutMe"])
+        self.assertFalse(response.data["isAdmin"])
+
+        user = self.UserModel.objects.get(login=payload["login"])
+        self.assertTrue(user.is_active)
+
+    def test_invalid_user_creation(self):
+        """
+        Invalid user creation should return a 400 status code
+        """
+        payload = {
+            "login": "",
+            "password1": "1",
+            "password2": "1",
+            "aboutMe": get_random_string(length=68),
+            "location": "London",
+            "birthday": "21-08-1997"
+        }
+        response = self.client.post(self.url(), payload)
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "Login can't be empty",
+                "Email field is required",
+                "Password must be at least 4 characters",
+                "About me must be at least 70 characters",
+                "Invalid birthday value"
+            ],
+            fields_errors_dict_len=5
         )
 
 
