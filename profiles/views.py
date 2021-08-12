@@ -1,10 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
+from rest_framework.generics import ListAPIView
 
 from utils.views import LoginRequiredAPIView
 from utils.shortcuts import raise_400_based_on_serializer
 from posts.mixins import ListPostsAPIViewMixin
+from posts.selectors import get_liked_posts
 
 from .mixins import UpdateImageMixin
 from .serializers import (UpdateProfileSerializer, UpdatePasswordSerailizer,
@@ -76,3 +78,12 @@ class ListPostsAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):
     def filter_queryset(self, queryset, kwargs):
         posts = queryset.filter(author=self.request.user)
         return super().filter_queryset(posts, kwargs)
+
+
+class ListLikedPostsAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):
+    """
+    Lists liked posts
+    """
+
+    def get_queryset(self):
+        return get_liked_posts(self.request.user)
