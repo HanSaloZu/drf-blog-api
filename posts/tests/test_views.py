@@ -157,7 +157,8 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         """
         payload = {
             "title": "",
-            "body": None
+            "body": None,
+            "attachments": True
         }
         response = self.client.patch(
             self.url({"id": 1}), payload, content_type="application/json")
@@ -166,9 +167,10 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             response,
             messages=[
                 "Title field cannot be empty",
-                "Body field cannot be null"
+                "Body field cannot be null",
+                "Attachments should be a list of items"
             ],
-            fields_errors_dict_len=2
+            fields_errors_dict_len=3
         )
 
     def test_update_foreign_post(self):
