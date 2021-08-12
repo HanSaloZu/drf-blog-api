@@ -62,7 +62,7 @@ class CreateUpdatePostSerializer(serializers.Serializer):
     )
 
     body = serializers.CharField(
-        required=False,
+        required=True,
         max_length=2000,
         allow_blank=True,
         allow_null=False,
@@ -70,6 +70,7 @@ class CreateUpdatePostSerializer(serializers.Serializer):
     )
 
     attachments = serializers.ListField(
+        required=False,
         child=serializers.ImageField(
             error_messages={
                 "invalid_image": "Invalid image in attached files"
