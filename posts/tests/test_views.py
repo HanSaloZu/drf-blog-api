@@ -1,6 +1,8 @@
 from django.urls import reverse
+from django.utils.crypto import get_random_string
+from urllib.parse import urlencode
 
-from utils.tests import APIViewTestCase
+from utils.tests import APIViewTestCase, ListAPIViewTestCase
 
 from ..models import Post, Attachment, Like
 
@@ -200,4 +202,146 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             code="notFound",
             status=self.http_status.HTTP_404_NOT_FOUND,
             messages=["Invalid id, post is not found"]
+        )
+
+
+class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
+    def url(self, parameters={}):
+        url = reverse("list_create_post")
+        if parameters:
+            url += "?" + urlencode(parameters)
+
+        return url
+
+    def setUp(self):
+        credentials = {"email": "user@gmail.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="User", **credentials)
+        self.client.login(**credentials)
+
+        Post.objects.create(author=self.user, title="First post", body="Body")
+        Post.objects.create(author=self.user, title="Second post", body="")
+        Post.objects.create(author=self.user, title="Last post", body="1")
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url())
+
+        self.unauthorized_client_error_response_test(response)
+
+    # Posts list
+
+    def test_posts_list(self):
+        """
+        A posts list request should return a list of 3 posts
+        """
+        response = self.client.get(self.url())
+
+        self.check_common_details_of_list_view_response(
+            response,
+            total_items=3,
+            page_size=3
+        )
+
+        self.assertEqual(response.data["items"][1]["title"], "Second post")
+
+    def test_posts_list_with_q_parameter(self):
+        """
+        A posts list request with the q parameter
+        should return a list of posts matching the q parameter
+        """
+        # Searching by title
+        response = self.client.get(self.url({"q": "Second post"}))
+
+        self.check_common_details_of_list_view_response(
+            response,
+            total_items=1,
+            page_size=1
+        )
+
+        post = response.data["items"][0]
+        self.assertEqual(post["title"], "Second post")
+        self.assertEqual(post["author"]["id"], self.user.id)
+
+        # Searching by body
+        response = self.client.get(self.url({"q": "1"}))
+
+        self.check_common_details_of_list_view_response(
+            response,
+            total_items=1,
+            page_size=1
+        )
+
+        post = response.data["items"][0]
+        self.assertEqual(post["title"], "Last post")
+
+    def test_posts_list_with_limit_parameter(self):
+        """
+        A request for a list of posts with the limit parameter
+        should return a list of posts
+        with the number of posts equal to the limit parameter
+        """
+        response = self.client.get(self.url({"limit": 1}))
+
+        self.check_common_details_of_list_view_response(
+            response,
+            total_items=3,
+            total_pages=3,
+            page_size=1
+        )
+
+        self.assertEqual(response.data["items"][0]["title"], "Last post")
+
+    # Create post
+
+    def test_valid_post_creation(self):
+        """
+        Valid post creation should return a 201 status code
+        and a post representation
+        """
+        payload = {
+            "title": "New post",
+            "body": "Body"
+        }
+        response = self.client.post(
+            self.url(), payload, content_type="application/json")
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_201_CREATED)
+
+        post = Post.objects.get(title=payload["title"])
+        self.assertEqual(response.data["id"], post.id)
+        self.assertEqual(response.data["title"], payload["title"])
+        self.assertEqual(response.data["body"], payload["body"])
+        self.assertEqual(response.data["title"], post.title)
+        self.assertEqual(response.data["body"], post.body)
+        self.assertEqual(response.data["createdAt"], post.created_at)
+        self.assertEqual(response.data["updatedAt"], post.updated_at)
+        self.assertEqual(response.data["likes"], 0)
+        self.assertIs(response.data["isLiked"], False)
+
+        self.assertEqual(len(response.data["attachments"]), 0)
+        self.assertEqual(response.data["author"]["id"], self.user.id)
+
+    def test_invalid_post_creation(self):
+        """
+        Invalid post creation should return a 400 status code
+        and a list of errors
+        """
+        payload = {
+            "title": None,
+            "body": get_random_string(length=2001),
+            "attachments": False
+        }
+        response = self.client.post(
+            self.url(), payload, content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "Title field cannot be null",
+                "Body field value is too long",
+                "Attachments should be a list of items"
+            ],
+            fields_errors_dict_len=3
         )
