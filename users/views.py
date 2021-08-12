@@ -12,6 +12,7 @@ from profiles.serializers import ProfileSerializer
 from profiles.selectors import get_profile_by_user_login_or_404
 from followers.selectors import (get_user_followers_ids_list,
                                  get_user_followings_ids_list)
+from posts.mixins import ListPostsAPIViewMixin
 
 from .mixins import ListUsersAPIViewMixin
 
@@ -81,3 +82,15 @@ class RetrieveUserProfileAPIView(LoginRequiredAPIView, RetrieveAPIView):
         serializer = ProfileSerializer(instance)
 
         return Response(serializer.data)
+
+
+class ListUserPostsAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):
+    """
+    Lists the posts of the specified user
+    """
+
+    def filter_queryset(self, queryset, kwargs):
+        target_user = get_profile_by_user_login_or_404(kwargs["login"]).user
+        posts = queryset.filter(author=target_user)
+
+        return super().filter_queryset(posts, kwargs)
