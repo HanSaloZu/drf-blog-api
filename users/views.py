@@ -13,10 +13,10 @@ from profiles.selectors import get_profile_by_user_login_or_404
 from followers.selectors import (get_user_followers_ids_list,
                                  get_user_followings_ids_list)
 
-from .mixins import UsersListAPIViewMixin
+from .mixins import ListUsersAPIViewMixin
 
 
-class ListCreateUsersAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+class ListCreateUsersAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
     """
     Lists all users or creates one
     """
@@ -43,7 +43,7 @@ class ListCreateUsersAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
         raise_400_based_on_serializer(serializer)
 
 
-class ListUserFollowersAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+class ListUserFollowersAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
     """
     Lists the users following the specified user
     """
@@ -57,7 +57,7 @@ class ListUserFollowersAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
         )
 
 
-class ListUserFollowingAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+class ListUserFollowingAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
     """
     Lists the users who the specified user follows
     """

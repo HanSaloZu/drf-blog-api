@@ -7,7 +7,7 @@ from .serializers import UserSerializer
 User = get_user_model()
 
 
-class UsersListAPIViewMixin(ListAPIViewMixin):
+class ListUsersAPIViewMixin(ListAPIViewMixin):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 

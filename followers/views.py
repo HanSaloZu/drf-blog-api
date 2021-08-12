@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 from utils.views import LoginRequiredAPIView
 from utils.exceptions import NotFound404, BadRequest400
-from users.mixins import UsersListAPIViewMixin
+from users.mixins import ListUsersAPIViewMixin
 from profiles.selectors import get_profile_by_user_login_or_404
 
 from .selectors import (get_user_followers_ids_list,
@@ -11,24 +11,30 @@ from .selectors import (get_user_followers_ids_list,
 from .services import is_following, follow, unfollow
 
 
-class FollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+class FollowersListAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
     """
     Lists the users following the authenticated user
     """
 
     def filter_queryset(self, queryset, kwargs):
         followers_ids = get_user_followers_ids_list(self.request.user)
-        return super().filter_queryset(queryset.filter(id__in=followers_ids), kwargs)
+        return super().filter_queryset(
+            queryset.filter(id__in=followers_ids),
+            kwargs
+        )
 
 
-class FollowingListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+class FollowingListAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
     """
     Lists the users who the authenticated user follows
     """
 
     def filter_queryset(self, queryset, kwargs):
         followings_ids = get_user_followings_ids_list(self.request.user)
-        return super().filter_queryset(queryset.filter(id__in=followings_ids), kwargs)
+        return super().filter_queryset(
+            queryset.filter(id__in=followings_ids),
+            kwargs
+        )
 
 
 class FollowingAPIView(LoginRequiredAPIView, APIView):
