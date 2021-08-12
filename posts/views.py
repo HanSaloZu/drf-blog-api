@@ -1,6 +1,7 @@
+from django.urls import reverse
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT
+from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_201_CREATED
 
 from utils.views import LoginRequiredAPIView
 from utils.exceptions import Forbidden403
@@ -9,6 +10,32 @@ from utils.shortcuts import raise_400_based_on_serializer
 from .serializers import PostSerializer, CreateUpdatePostSerializer
 from .selectors import get_post_by_id_or_404
 from .services import delete_post
+from .mixins import ListPostsAPIViewMixin
+
+
+class ListCreatePostAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):
+    """
+    Lists all posts or creates one
+    """
+
+    def post(self, request):
+        serializer = CreateUpdatePostSerializer(
+            data=request.data, context={"request": request})
+
+        if serializer.is_valid():
+            post = serializer.save()
+
+            return Response(
+                data=self.serializer_class(post, context={
+                    "request": request
+                }).data,
+                status=HTTP_201_CREATED,
+                headers={
+                    "Location": reverse("post", kwargs={"id": post.id})
+                }
+            )
+
+        raise_400_based_on_serializer(serializer)
 
 
 class RetrieveUpdateDestroyPostAPIView(LoginRequiredAPIView, APIView):
