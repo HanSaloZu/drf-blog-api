@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.http import QueryDict
 
 from users.serializers import UserSerializer
 
@@ -87,11 +88,11 @@ class CreateUpdatePostSerializer(serializers.Serializer):
         # Handling the case when {attachments: ['']} or {attachments: ''}
 
         if "attachments" in data:
-            if isinstance(data, dict):
-                data_dict = data.copy()
-            else:
+            if isinstance(data, QueryDict):
                 # get a dict representation of QueryDict
                 data_dict = data.dict()
+            else:
+                data_dict = data.copy()
 
             if data_dict["attachments"] == "":
                 data_dict["attachments"] = []
