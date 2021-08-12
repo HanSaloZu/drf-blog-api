@@ -24,6 +24,9 @@ class ListAPIViewMixin(APIView):
     serializer_class = None
     queryset = None
 
+    def get_queryset(self):
+        return self.queryset
+
     def get(self, request, *args, **kwargs):
         """
         Query parameters:
@@ -49,7 +52,7 @@ class ListAPIViewMixin(APIView):
         except ValueError:
             raise BadRequest400("Invalid page number value")
 
-        queryset = self.filter_queryset(self.queryset, kwargs)
+        queryset = self.filter_queryset(self.get_queryset(), kwargs)
 
         paginator = Paginator(queryset, kwargs["limit"])
         page = paginator.get_page(kwargs["page"])
