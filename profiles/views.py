@@ -6,7 +6,7 @@ from rest_framework.generics import ListAPIView
 from utils.views import LoginRequiredAPIView
 from utils.shortcuts import raise_400_based_on_serializer
 from posts.mixins import ListPostsAPIViewMixin
-from posts.selectors import get_liked_posts
+from posts.selectors import get_liked_posts, get_post_by_id_or_404
 
 from .mixins import UpdateImageMixin
 from .serializers import (UpdateProfileSerializer, UpdatePasswordSerailizer,
@@ -87,3 +87,39 @@ class ListLikedPostsAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):
 
     def get_queryset(self):
         return get_liked_posts(self.request.user)
+
+
+class RetrieveCreateDestroyLikedPostAPIView(LoginRequiredAPIView, APIView):
+    """
+    Retrieves, creates, and destroys liked post
+    """
+
+    def get(self, request, id):
+        post = get_post_by_id_or_404(id)
+        is_liked = request.user.like_set.all().filter(post_id=post.id).exists()
+
+        return Response(data={
+            "isLiked": is_liked
+        })
+
+    def put(self, request, id):
+        post = get_post_by_id_or_404(id)
+        is_liked = request.user.like_set.all().filter(post_id=post.id).exists()
+
+        if not is_liked:
+            request.user.like_set.create(post=post, user=request.user)
+
+        return Response(data={
+            "isLiked": True
+        })
+
+    def delete(self, request, id):
+        post = get_post_by_id_or_404(id)
+        like_object = request.user.like_set.all().filter(post_id=post.id)
+
+        if like_object.exists():
+            like_object.delete()
+
+        return Response(data={
+            "isLiked": False
+        })
