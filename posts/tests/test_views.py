@@ -152,7 +152,7 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
 
     def test_invalid_post_update(self):
         """
-        Incalid post updating should return a 400 status code
+        Invalid post updating should return a 400 status code
         and a list of errors
         """
         payload = {
