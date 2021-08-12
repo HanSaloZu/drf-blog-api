@@ -2,6 +2,7 @@ from django.utils.crypto import get_random_string
 from django.urls import reverse
 
 from utils.tests import APIViewTestCase
+from posts.models import Post, Like
 
 
 class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
@@ -303,4 +304,120 @@ class UpdatePasswordAPIViewTestCase(APIViewTestCase):
             response,
             messages=["Invalid password"],
             fields_errors_dict_len=1
+        )
+
+
+class RetrieveCreateDestroyLikedPostAPIViewTestCase(APIViewTestCase):
+    def url(self, kwargs):
+        return reverse("liked_posts", kwargs=kwargs)
+
+    def setUp(self):
+        credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
+        self.client.login(**credentials)
+
+        self.first_post = Post.objects.create(
+            author=self.user, title="First post")
+        self.second_post = Post.objects.create(
+            author=self.user, title="Second post")
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url({"id": self.first_post.id}))
+
+        self.unauthorized_client_error_response_test(response)
+
+    # Check if is liked
+
+    def test_check_if_post_is_liked(self):
+        """
+        Checking if post is liked should return a 200 status code
+        and isLiked flag
+        """
+        # not liked
+        response = self.client.get(self.url({"id": self.first_post.id}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isLiked"], False)
+
+        # liked
+        Like.objects.create(post=self.second_post, user=self.user)
+
+        response = self.client.get(self.url({"id": self.second_post.id}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isLiked"], True)
+
+    def test_check_if_post_is_liked_with_invalid_id(self):
+        """
+        Checking if post is liked with invalid id
+        should return a 404 status code
+        """
+        response = self.client.get(self.url({"id": 99}))
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages=["Invalid id, post is not found"]
+        )
+
+    # Like post
+
+    def test_like_post(self):
+        """
+        Post liking should return a 200 status code
+        and isLiked: True
+        """
+        response = self.client.put(self.url({"id": self.first_post.id}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isLiked"], True)
+        self.assertTrue(Like.objects.filter(
+            post=self.first_post,
+            user=self.user
+        ).exists())
+
+    def test_like_post_with_invalid_id(self):
+        """
+        Liking post with invalid id should return a 404 status code
+        """
+        response = self.client.put(self.url({"id": 99}))
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages=["Invalid id, post is not found"]
+        )
+
+    # Unlike post
+
+    def test_unlike_post(self):
+        """
+        Post unliking should return a 200 status code
+        and isLiked: False
+        """
+        Like.objects.create(post=self.second_post, user=self.user)
+        response = self.client.delete(self.url({"id": self.second_post.id}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isLiked"], False)
+        self.assertFalse(Like.objects.filter(
+            post=self.second_post,
+            user=self.user
+        ).exists())
+
+    def test_unlike_post_with_invalid_id(self):
+        """
+        Unliking post with invalid id should return a 404 status code
+        """
+        response = self.client.delete(self.url({"id": 99}))
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages=["Invalid id, post is not found"]
         )
