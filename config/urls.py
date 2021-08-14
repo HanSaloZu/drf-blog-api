@@ -11,7 +11,8 @@ urlpatterns = [
     path("api/v1/followers/", include("followers.followers_urls")),
     path("api/v1/following/", include("followers.following_urls")),
     path("api/v1/users/", include("users.urls")),
-    path("api/v1/posts/", include("posts.urls"))
+    path("api/v1/posts/", include("posts.urls")),
+    path("api/v1/news/", include("news.urls"))
 ]
 
 if settings.DEBUG:
