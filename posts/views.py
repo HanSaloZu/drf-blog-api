@@ -71,7 +71,7 @@ class RetrieveUpdateDestroyPostAPIView(LoginRequiredAPIView, APIView):
     def delete(self, request, id):
         instance = get_post_by_id_or_404(id)
 
-        if instance.author == request.user:
+        if instance.author == request.user or request.user.is_staff:
             delete_post(instance)
             return Response(status=HTTP_204_NO_CONTENT)
 

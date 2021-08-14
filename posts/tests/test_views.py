@@ -93,7 +93,7 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
 
     def test_delete_post(self):
         """
-        Valid post deleting should return a 200 status code
+        Valid post deleting should return a 204 status code
         """
         response = self.client.delete(self.url({"id": 1}))
 
@@ -116,6 +116,28 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             messages=["You don't have permission to delete this post"]
         )
         self.assertTrue(Post.objects.all().filter(id=2).exists())
+
+    def test_delete_foreign_post_by_admin_user(self):
+        """
+        Admin users can delete any posts.
+        Valid post deleting should return a 204 status code
+        """
+        self.client.logout()
+        credentials = {"email": "admin@user.com", "password": "admin"}
+        self.UserModel.objects.create_superuser(login="Admin", **credentials)
+        self.client.login(**credentials)
+
+        response = self.client.delete(self.url({"id": 1}))
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Post.objects.all().filter(id=1).exists())
+
+        response = self.client.delete(self.url({"id": 2}))
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Post.objects.all().filter(id=2).exists())
 
     def test_delete_post_with_invalid_id(self):
         """
