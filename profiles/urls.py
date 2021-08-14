@@ -15,7 +15,7 @@ urlpatterns = [
     path("posts/", ListPostsAPIView.as_view(), name="posts_list"),
     path("liked/", ListLikedPostsAPIView.as_view(),
          name="liked_posts_list"),
-    path("liked/<int:id>",
+    path("liked/<int:id>/",
          RetrieveCreateDestroyLikedPostAPIView.as_view(),
          name="liked_posts")
 ]
