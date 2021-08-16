@@ -213,6 +213,34 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             messages=["You don't have permission to edit this post"]
         )
 
+    def test_update_foreign_post_by_admin_user(self):
+        """
+        Admin users can update any posts.
+        Valid post updating should return a 200 status code
+        and an updated post representation
+        """
+        self.client.logout()
+        credentials = {"email": "admin@gmail.com", "password": "admin"}
+        admin = self.UserModel.objects.create_superuser(
+            login="Admin", **credentials)
+        self.client.login(**credentials)
+
+        payload = {
+            "title": "New title",
+            "body": "New body"
+        }
+        response = self.client.patch(
+            self.url({"id": 1}), payload, content_type="application/json")
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+        post = Post.objects.get(id=1)
+        self.assertEqual(payload["title"], response.data["title"])
+        self.assertEqual(payload["body"], response.data["body"])
+        self.assertEqual(response.data["title"], post.title)
+        self.assertEqual(response.data["body"], post.body)
+        self.assertNotEqual(post.author, admin)
+
     def test_update_post_with_invalid_id(self):
         """
         Updating a post with an invalid id should return a 404 status code

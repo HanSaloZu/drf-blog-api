@@ -53,20 +53,20 @@ class RetrieveUpdateDestroyPostAPIView(LoginRequiredAPIView, APIView):
     def patch(self, request, id):
         instance = get_post_by_id_or_404(id)
 
-        if instance.author != request.user:
-            raise Forbidden403("You don't have permission to edit this post")
+        if request.user.is_staff or instance.author == request.user:
+            serializer = CreateUpdatePostSerializer(
+                instance, request.data, partial=True)
 
-        serializer = CreateUpdatePostSerializer(
-            instance, request.data, partial=True)
+            if serializer.is_valid():
+                instance = serializer.save()
+                return Response(PostSerializer(
+                    instance,
+                    context={"request": request}
+                ).data)
 
-        if serializer.is_valid():
-            instance = serializer.save()
-            return Response(PostSerializer(
-                instance,
-                context={"request": request}
-            ).data)
+            raise_400_based_on_serializer(serializer)
 
-        raise_400_based_on_serializer(serializer)
+        raise Forbidden403("You don't have permission to edit this post")
 
     def delete(self, request, id):
         instance = get_post_by_id_or_404(id)
