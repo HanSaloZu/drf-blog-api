@@ -1,1 +1,1 @@
-default_app_config = "users.apps.BansConfig"
+default_app_config = "bans.apps.BansConfig"
