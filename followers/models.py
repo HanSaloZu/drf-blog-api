@@ -10,12 +10,6 @@ class Follower(models.Model):
     following_user = models.ForeignKey(
         User, related_name="followers", on_delete=models.CASCADE)
 
-    def save(self, *args, **kwargs):
-        if self.follower_user == self.following_user:
-            raise Error(
-                "Attempted to create a follow object where follower_user == following_user")
-        super(Follower, self).save(*args, **kwargs)
-
     class Meta:
         unique_together = ["follower_user", "following_user"]
         verbose_name = "follower"
@@ -23,3 +17,9 @@ class Follower(models.Model):
 
     def __str__(self):
         return f"{self.follower_user} followed {self.following_user}"
+
+    def save(self, *args, **kwargs):
+        if self.follower_user == self.following_user:
+            raise Error(
+                "Attempted to create a follow object where follower_user == following_user")
+        super(Follower, self).save(*args, **kwargs)
