@@ -70,13 +70,13 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
 
     def test_users_list_with_negative_limit_parameter(self):
         """
-        When the value of the limit parameter is less than 0, error 400 is returned
+        When the value of the limit parameter is less than 1, error 400 is returned
         """
         response = self.client.get(self.url({"limit": -5}))
 
         self.client_error_response_test(
             response,
-            messages=["Minimum page size is 0 items"]
+            messages=["Minimum page size is 1 item"]
         )
 
     def test_users_list_with_large_limit_parameter(self):

@@ -44,8 +44,8 @@ class ListAPIViewMixin(APIView):
 
         if kwargs["limit"] > 100:
             raise BadRequest400("Maximum page size is 100 items")
-        elif kwargs["limit"] < 0:
-            raise BadRequest400("Minimum page size is 0 items")
+        elif kwargs["limit"] < 1:
+            raise BadRequest400("Minimum page size is 1 item")
 
         try:
             kwargs["page"] = int(request.query_params.get("page", 1))
