@@ -22,7 +22,8 @@ INSTALLED_APPS = [
     "followers",
     "authentication",
     "posts",
-    "news"
+    "news",
+    "bans"
 ]
 
 MIDDLEWARE = [
