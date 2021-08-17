@@ -17,6 +17,7 @@ class Ban(models.Model):
         verbose_name = "ban"
         verbose_name_plural = "bans"
         db_table = "bans"
+        ordering = ["-banned_at"]
 
     def __str__(self):
         return f"{self.receiver.login} banned by {self.creator.login}"
