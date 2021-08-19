@@ -3,6 +3,7 @@ from django.db import IntegrityError, transaction, Error
 from utils.tests import ExtendedTestCase
 
 from ..models import Ban
+from ..services import ban
 
 
 class BanModelTestCase(ExtendedTestCase):
@@ -17,8 +18,7 @@ class BanModelTestCase(ExtendedTestCase):
             login="User", email="user@gmail.com", password="pass")
 
     def test_ban(self):
-        self.model.objects.create(
-            receiver=self.user, creator=self.admin, reason="Ban")
+        ban(receiver=self.user, creator=self.admin, reason="Ban")
         ban_object = self.model.objects.all().first()
 
         self.assertIsInstance(ban_object, Ban)
@@ -31,13 +31,11 @@ class BanModelTestCase(ExtendedTestCase):
         Double ban should raise an IntegrityError
         """
 
-        self.model.objects.create(
-            receiver=self.user, creator=self.admin)
+        ban(receiver=self.user, creator=self.admin)
 
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                self.model.objects.create(
-                    receiver=self.user, creator=self.admin, reason="Ban")
+                ban(receiver=self.user, creator=self.admin, reason="Ban")
 
     def test_self_ban(self):
         """
@@ -46,8 +44,7 @@ class BanModelTestCase(ExtendedTestCase):
 
         with self.assertRaises(Error):
             with transaction.atomic():
-                self.model.objects.create(
-                    receiver=self.admin, creator=self.admin)
+                ban(receiver=self.admin, creator=self.admin)
 
     def test_ban_with_common_user_as_creator(self):
         """
@@ -57,8 +54,7 @@ class BanModelTestCase(ExtendedTestCase):
 
         with self.assertRaises(Error):
             with transaction.atomic():
-                self.model.objects.create(
-                    receiver=self.admin, creator=self.user)
+                ban(receiver=self.admin, creator=self.user)
 
     def test_ban_with_admin_as_receiver(self):
         """
@@ -68,5 +64,4 @@ class BanModelTestCase(ExtendedTestCase):
 
         with self.assertRaises(Error):
             with transaction.atomic():
-                self.model.objects.create(
-                    receiver=self.admin, creator=self.second_admin)
+                ban(receiver=self.admin, creator=self.second_admin)
