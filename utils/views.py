@@ -4,18 +4,33 @@ from rest_framework.views import APIView
 from django.core.paginator import Paginator
 
 from .exceptions import (NotAuthenticated401, BadRequest400,
-                         custom_exception_handler)
+                         Forbidden403, custom_exception_handler)
+
+
+def get_exception_json_response(exception, messages=[]):
+    response = custom_exception_handler(exception(messages))
+    response.accepted_renderer = JSONRenderer()
+    response.accepted_media_type = "application/json"
+    response.renderer_context = {}
+
+    return response
 
 
 class LoginRequiredAPIView:
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            response = custom_exception_handler(NotAuthenticated401())
-            response.accepted_renderer = JSONRenderer()
-            response.accepted_media_type = "application/json"
-            response.renderer_context = {}
+            return get_exception_json_response(NotAuthenticated401)
 
-            return response
+        return super().dispatch(request, *args, **kwargs)
+
+
+class AdminRequiredAPIView(LoginRequiredAPIView):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not request.user.is_staff:
+            return get_exception_json_response(
+                Forbidden403,
+                ["You don't have permission to access this resource"]
+            )
 
         return super().dispatch(request, *args, **kwargs)
 
