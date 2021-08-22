@@ -60,6 +60,7 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         self.assertIn("http://localhost:8000/2", response.data["attachments"])
 
         author = response.data["author"]
+        self.assertEqual(len(author), 4)
         self.assertEqual(author["id"], self.user.id)
         self.assertEqual(author["login"], self.user.login)
 
@@ -311,6 +312,7 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
 
         post = response.data["items"][0]
         self.assertEqual(post["title"], "Second post")
+        self.assertEqual(len(post["author"]), 4)
         self.assertEqual(post["author"]["id"], self.user.id)
 
         # Searching by body
