@@ -1,9 +1,9 @@
 from django.core.files import File
 from rest_framework.response import Response
 
-from utils.exceptions import InvalidData400
+from utils.exceptions import BadRequest400
 
-from .services.photos import update_photo
+from .services.images import update_image
 
 
 class UpdateImageMixin:
@@ -14,9 +14,9 @@ class UpdateImageMixin:
 
         if isinstance(image, File):
             instance = self.get_object(request)
-            link = update_photo(instance, image)
+            link = update_image(instance, image)
 
             return Response({self.image_field: link})
 
-        raise InvalidData400("File not provided",
-                             {self.image_field: ["File not provided"]})
+        raise BadRequest400("File not provided",
+                            {self.image_field: ["File not provided"]})

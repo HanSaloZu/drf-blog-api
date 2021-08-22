@@ -1,33 +1,40 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT
 
 from utils.views import LoginRequiredAPIView
-from users.mixins import UsersListAPIViewMixin
+from utils.exceptions import NotFound404, BadRequest400
+from users.mixins import ListUsersAPIViewMixin
 from profiles.selectors import get_profile_by_user_login_or_404
 
-from .selectors import get_user_followers_ids_list, get_user_followings_ids_list
-from .models import FollowersModel
+from .selectors import (get_user_followers_ids_list,
+                        get_user_followings_ids_list)
+from .services import is_following, follow, unfollow
 
 
-class FollowersListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+class FollowersListAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
     """
     Lists the users following the authenticated user
     """
 
     def filter_queryset(self, queryset, kwargs):
         followers_ids = get_user_followers_ids_list(self.request.user)
-        return super().filter_queryset(queryset.filter(id__in=followers_ids), kwargs)
+        return super().filter_queryset(
+            queryset.filter(id__in=followers_ids),
+            kwargs
+        )
 
 
-class FollowingListAPIView(LoginRequiredAPIView, UsersListAPIViewMixin):
+class FollowingListAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
     """
     Lists the users who the authenticated user follows
     """
 
     def filter_queryset(self, queryset, kwargs):
         followings_ids = get_user_followings_ids_list(self.request.user)
-        return super().filter_queryset(queryset.filter(id__in=followings_ids), kwargs)
+        return super().filter_queryset(
+            queryset.filter(id__in=followings_ids),
+            kwargs
+        )
 
 
 class FollowingAPIView(LoginRequiredAPIView, APIView):
@@ -37,24 +44,33 @@ class FollowingAPIView(LoginRequiredAPIView, APIView):
     Unfollow from the specified user(DELETE)
     """
 
-    model = FollowersModel
-
     def get(self, request, login):
         target = get_profile_by_user_login_or_404(login).user
-        return Response(data={"isFollowed": self.model.is_following(request.user, target)})
+        return Response(data={
+            "isFollowed": is_following(request.user, target)
+        })
 
     def put(self, request, login):
         target = get_profile_by_user_login_or_404(login).user
 
-        if not self.model.is_following(request.user, target) and login != request.user.login:
-            self.model.follow(request.user, target)
+        if login == request.user.login:
+            raise BadRequest400("You cannot follow yourself")
 
-        return Response(status=HTTP_204_NO_CONTENT)
+        if not is_following(request.user, target):
+            follow(request.user, target)
+
+        return Response(data={
+            "isFollowed": is_following(request.user, target)
+        })
 
     def delete(self, request, login):
         target = get_profile_by_user_login_or_404(login).user
 
-        if self.model.is_following(request.user, target):
-            self.model.unfollow(request.user, target)
+        if not is_following(request.user, target):
+            raise NotFound404("You are not yet followed this user")
 
-        return Response(status=HTTP_204_NO_CONTENT)
+        unfollow(request.user, target)
+
+        return Response(data={
+            "isFollowed": is_following(request.user, target)
+        })

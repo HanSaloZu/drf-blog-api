@@ -3,18 +3,34 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.paginator import Paginator
 
-from .exceptions import NotAuthenticated401, InvalidData400, custom_exception_handler
+from .exceptions import (NotAuthenticated401, BadRequest400,
+                         Forbidden403, custom_exception_handler)
+
+
+def get_exception_json_response(exception, messages=[]):
+    response = custom_exception_handler(exception(messages))
+    response.accepted_renderer = JSONRenderer()
+    response.accepted_media_type = "application/json"
+    response.renderer_context = {}
+
+    return response
 
 
 class LoginRequiredAPIView:
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            response = custom_exception_handler(NotAuthenticated401())
-            response.accepted_renderer = JSONRenderer()
-            response.accepted_media_type = "application/json"
-            response.renderer_context = {}
+            return get_exception_json_response(NotAuthenticated401)
 
-            return response
+        return super().dispatch(request, *args, **kwargs)
+
+
+class AdminRequiredAPIView(LoginRequiredAPIView):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and not request.user.is_staff:
+            return get_exception_json_response(
+                Forbidden403,
+                ["You don't have permission to access this resource"]
+            )
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -23,6 +39,9 @@ class ListAPIViewMixin(APIView):
     serializer_class = None
     queryset = None
 
+    def get_queryset(self):
+        return self.queryset
+
     def get(self, request, *args, **kwargs):
         """
         Query parameters:
@@ -30,25 +49,27 @@ class ListAPIViewMixin(APIView):
             q - search string
             limit - number of items per page
             page - page number
+            ordering - list sorting
         """
         kwargs["q"] = request.query_params.get("q", "")
+        kwargs["ordering"] = request.query_params.get("ordering", "")
 
         try:
             kwargs["limit"] = int(request.query_params.get("limit", 10))
         except ValueError:
-            raise InvalidData400("Invalid limit value")
+            raise BadRequest400("Invalid limit value")
 
         if kwargs["limit"] > 100:
-            raise InvalidData400("Maximum page size is 100 items")
-        elif kwargs["limit"] < 0:
-            raise InvalidData400("Minimum page size is 0 items")
+            raise BadRequest400("Maximum page size is 100 items")
+        elif kwargs["limit"] < 1:
+            raise BadRequest400("Minimum page size is 1 item")
 
         try:
             kwargs["page"] = int(request.query_params.get("page", 1))
         except ValueError:
-            raise InvalidData400("Invalid page number value")
+            raise BadRequest400("Invalid page number value")
 
-        queryset = self.filter_queryset(self.queryset, kwargs)
+        queryset = self.filter_queryset(self.get_queryset(), kwargs)
 
         paginator = Paginator(queryset, kwargs["limit"])
         page = paginator.get_page(kwargs["page"])

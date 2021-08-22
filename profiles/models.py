@@ -11,11 +11,12 @@ class Profile(models.Model):
     is_looking_for_a_job = models.BooleanField(default=False)
     professional_skills = models.TextField(blank=True)
 
-    fullname = models.CharField(max_length=150)
+    fullname = models.CharField(max_length=50)
     status = models.CharField(max_length=70, blank=True)
     about_me = models.TextField(blank=True)
     location = models.CharField(max_length=250, blank=True)
     birthday = models.DateField(null=True)
+    theme = models.CharField(max_length=250, blank=True)
 
     class Meta:
         verbose_name = "profile"
@@ -34,19 +35,7 @@ class ProfileRelatedModel(models.Model):
         abstract = True
 
 
-class Preferences(ProfileRelatedModel):
-    theme = models.CharField(max_length=250, blank=True)
-
-    class Meta:
-        verbose_name = "profile preferences"
-        verbose_name_plural = "profiles preferences"
-        db_table = "profiles_preferences"
-
-    def __str__(self):
-        return f"{self.profile.user.login} profile preferences"
-
-
-class ProfileImageModel(ProfileRelatedModel):
+class ImageModel(models.Model):
     file_id = models.CharField(max_length=50, blank=True)
     link = models.URLField(max_length=300, blank=True)
 
@@ -54,7 +43,7 @@ class ProfileImageModel(ProfileRelatedModel):
         abstract = True
 
 
-class Avatar(ProfileImageModel):
+class Avatar(ProfileRelatedModel, ImageModel):
     class Meta:
         verbose_name = "profile avatar"
         verbose_name_plural = "profiles avatars"
@@ -64,7 +53,7 @@ class Avatar(ProfileImageModel):
         return f"{self.profile.user.login} avatar"
 
 
-class Banner(ProfileImageModel):
+class Banner(ProfileRelatedModel, ImageModel):
     class Meta:
         verbose_name = "profile banner"
         verbose_name_plural = "profiles banners"

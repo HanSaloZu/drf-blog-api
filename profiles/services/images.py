@@ -8,7 +8,7 @@ from .google_drive_api import GoogleDriveAPI
 google_drive = GoogleDriveAPI()
 
 
-def upload_photo(file):
+def upload_image(file):
     # Save file temporarily in the media folder
     image = Image.open(file)
     path = settings.MEDIA_ROOT / file.name
@@ -20,11 +20,11 @@ def upload_photo(file):
     return response
 
 
-def update_photo(instance, file):
+def update_image(instance, file):
     if instance.file_id != "":
         google_drive.delete_file(instance.file_id)
 
-    response = upload_photo(file)
+    response = upload_image(file)
     link = "https://drive.google.com/uc?id=" + str(response["id"])
 
     instance.file_id = response["id"]

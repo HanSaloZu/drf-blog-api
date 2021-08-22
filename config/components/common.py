@@ -20,7 +20,10 @@ INSTALLED_APPS = [
     "users",
     "profiles",
     "followers",
-    "authentication"
+    "authentication",
+    "posts",
+    "news",
+    "bans"
 ]
 
 MIDDLEWARE = [
@@ -30,7 +33,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware"
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "config.middleware.ban.BanMiddleware"
 ]
 
 ROOT_URLCONF = "config.urls"

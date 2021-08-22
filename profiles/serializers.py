@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Profile, Contacts, Preferences
+from .models import Profile, Contacts
 
 
 def get_error_messages(field_name):
@@ -66,7 +66,16 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ["id", "isLookingForAJob", "professionalSkills", "isAdmin",
-                  "fullname", "login", "status", "location", "birthday", "aboutMe", "avatar", "banner", "contacts"]
+                  "fullname", "login", "status", "location", "birthday",
+                  "aboutMe", "avatar", "banner", "contacts"]
+
+
+class AuthenticatedUserProfileSerializer(ProfileSerializer):
+    class Meta:
+        model = Profile
+        fields = ["id", "isLookingForAJob", "professionalSkills", "isAdmin",
+                  "fullname", "login", "status", "location", "birthday",
+                  "aboutMe", "theme", "avatar", "banner", "contacts"]
 
 
 class UpdateContactsSerializer(serializers.Serializer):
@@ -114,7 +123,7 @@ class UpdateProfileSerializer(serializers.Serializer):
 
     aboutMe = serializers.CharField(
         required=False,
-        max_length=400,
+        max_length=800,
         allow_blank=False,
         allow_null=False,
         min_length=70,
@@ -136,6 +145,14 @@ class UpdateProfileSerializer(serializers.Serializer):
         error_messages=get_error_messages("location")
     )
 
+    theme = serializers.CharField(
+        required=False,
+        allow_null=False,
+        allow_blank=True,
+        max_length=250,
+        error_messages=get_error_messages("theme")
+    )
+
     contacts = UpdateContactsSerializer(
         required=False,
         allow_null=False,
@@ -148,6 +165,7 @@ class UpdateProfileSerializer(serializers.Serializer):
         instance.status = validated_data.get("status", instance.status)
         instance.location = validated_data.get("location", instance.location)
         instance.birthday = validated_data.get("birthday", instance.birthday)
+        instance.theme = validated_data.get("theme", instance.theme)
         instance.is_looking_for_a_job = validated_data.get(
             "isLookingForAJob", instance.is_looking_for_a_job)
         instance.professional_skills = validated_data.get(
@@ -173,20 +191,6 @@ class UpdateProfileSerializer(serializers.Serializer):
 
         instance.save()
         return instance
-
-
-class PreferencesSerializer(serializers.ModelSerializer):
-    theme = serializers.CharField(
-        required=False,
-        allow_null=False,
-        allow_blank=True,
-        max_length=250,
-        error_messages=get_error_messages("theme")
-    )
-
-    class Meta:
-        model = Preferences
-        fields = ["theme"]
 
 
 class UpdatePasswordSerailizer(serializers.Serializer):

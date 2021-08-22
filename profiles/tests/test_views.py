@@ -2,6 +2,7 @@ from django.utils.crypto import get_random_string
 from django.urls import reverse
 
 from utils.tests import APIViewTestCase
+from posts.models import Post, Like
 
 
 class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
@@ -39,7 +40,8 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
 
     def test_profile_update_without_contacts(self):
         """
-        Profile update without contacts is valid and should return a 200 status code and a profile representation in the response body
+        Profile update without contacts is valid
+        and should return a 200 status code and a profile representation
         """
         payload = {
             "fullname": "New User",
@@ -47,6 +49,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             "isLookingForAJob": True,
             "professionalSkills": "Backend web developer",
             "status": "New status",
+            "theme": "dark",
             "location": "Berlin",
             "birthday": "2000-01-19"
         }
@@ -60,6 +63,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         self.assertEqual(user.profile.fullname, payload["fullname"])
         self.assertEqual(user.profile.about_me, payload["aboutMe"])
         self.assertEqual(user.profile.status, payload["status"])
+        self.assertEqual(user.profile.theme, payload["theme"])
         self.assertEqual(str(user.profile.birthday), payload["birthday"])
         self.assertEqual(user.profile.location, payload["location"])
 
@@ -70,7 +74,8 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
 
     def test_profile_update_with_contacts(self):
         """
-        Valid profile update should return a 200 status code and a profile representation in the response body
+        Valid profile update should return a 200 status code
+        and a profile representation in the response body
         """
         payload = {
             "fullname": "New Fullname",
@@ -100,7 +105,8 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
 
     def test_profile_update_without_payload(self):
         """
-        Profile update without payload is valid and should return a 200 status code and a profile representation in the response body
+        Profile update without payload is valid
+        and should return a 200 status code and a profile representation
         """
         response = self.client.patch(self.url)
 
@@ -114,6 +120,8 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         payload = {
             "fullname": "",
             "location": "a"*290,
+            "aboutMe": "a"*802,
+            "theme": None,
             "contacts": {
                 "github": "123",
             }
@@ -126,9 +134,11 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             messages=[
                 "Fullname field cannot be empty",
                 "Location field value is too long",
-                "Invalid value for github field",
+                "About me field value is too long",
+                "Theme field cannot be null",
+                "Invalid value for github field"
             ],
-            fields_errors_dict_len=3
+            fields_errors_dict_len=5
         )
 
 
@@ -226,65 +236,6 @@ class UpdateBannerAPIViewTestCase(APIViewTestCase):
         )
 
 
-class RetrieveUpdatePreferencesAPIViewTestCase(APIViewTestCase):
-    url = reverse("profile_preferences")
-
-    def setUp(self):
-        credentials = {"email": "new@user.com", "password": "pass"}
-        self.user = self.UserModel.objects.create_user(
-            login="NewUser", **credentials)
-
-        self.user.profile.preferences.theme = "dark"
-        self.user.save()
-
-        self.client.login(**credentials)
-
-    def test_request_by_unauthenticated_client(self):
-        self.client.logout()
-        response = self.client.get(self.url)
-
-        self.unauthorized_client_error_response_test(response)
-
-    # Preferences retrieving tests
-
-    def test_get_preferences(self):
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-        self.assertEqual(response.data["theme"],
-                         self.user.profile.preferences.theme)
-
-     # Preferences update tests
-
-    def test_update_preferences(self):
-        """
-        Valid preferences update should return a 200 status code and a preferences representation in the response body
-        """
-        payload = {"theme": "light"}
-        response = self.client.patch(
-            self.url, payload, content_type="application/json")
-
-        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
-
-        user = self.UserModel.objects.first()
-        self.assertEqual(user.profile.preferences.theme, payload["theme"])
-        self.assertEqual(response.data["theme"], payload["theme"])
-
-    def test_update_preferences_with_invalid_payload(self):
-        """
-        Preferences update with invalid payload should return a 400 error
-        """
-        payload = {"theme": None}
-        response = self.client.patch(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            messages=["Theme field cannot be null"],
-            fields_errors_dict_len=1
-        )
-
-
 class UpdatePasswordAPIViewTestCase(APIViewTestCase):
     url = reverse("update_password")
 
@@ -353,4 +304,120 @@ class UpdatePasswordAPIViewTestCase(APIViewTestCase):
             response,
             messages=["Invalid password"],
             fields_errors_dict_len=1
+        )
+
+
+class RetrieveCreateDestroyLikedPostAPIViewTestCase(APIViewTestCase):
+    def url(self, kwargs):
+        return reverse("liked_posts", kwargs=kwargs)
+
+    def setUp(self):
+        credentials = {"email": "new@user.com", "password": "pass"}
+        self.user = self.UserModel.objects.create_user(
+            login="NewUser", **credentials)
+        self.client.login(**credentials)
+
+        self.first_post = Post.objects.create(
+            author=self.user, title="First post")
+        self.second_post = Post.objects.create(
+            author=self.user, title="Second post")
+
+    def test_request_by_unauthenticated_client(self):
+        self.client.logout()
+        response = self.client.get(self.url({"id": self.first_post.id}))
+
+        self.unauthorized_client_error_response_test(response)
+
+    # Check if is liked
+
+    def test_check_if_post_is_liked(self):
+        """
+        Checking if post is liked should return a 200 status code
+        and isLiked flag
+        """
+        # not liked
+        response = self.client.get(self.url({"id": self.first_post.id}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isLiked"], False)
+
+        # liked
+        Like.objects.create(post=self.second_post, user=self.user)
+
+        response = self.client.get(self.url({"id": self.second_post.id}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isLiked"], True)
+
+    def test_check_if_post_is_liked_with_invalid_id(self):
+        """
+        Checking if post is liked with invalid id
+        should return a 404 status code
+        """
+        response = self.client.get(self.url({"id": 99}))
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages=["Invalid id, post is not found"]
+        )
+
+    # Like post
+
+    def test_like_post(self):
+        """
+        Post liking should return a 200 status code
+        and isLiked: True
+        """
+        response = self.client.put(self.url({"id": self.first_post.id}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isLiked"], True)
+        self.assertTrue(Like.objects.filter(
+            post=self.first_post,
+            user=self.user
+        ).exists())
+
+    def test_like_post_with_invalid_id(self):
+        """
+        Liking post with invalid id should return a 404 status code
+        """
+        response = self.client.put(self.url({"id": 99}))
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages=["Invalid id, post is not found"]
+        )
+
+    # Unlike post
+
+    def test_unlike_post(self):
+        """
+        Post unliking should return a 200 status code
+        and isLiked: False
+        """
+        Like.objects.create(post=self.second_post, user=self.user)
+        response = self.client.delete(self.url({"id": self.second_post.id}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+        self.assertIs(response.data["isLiked"], False)
+        self.assertFalse(Like.objects.filter(
+            post=self.second_post,
+            user=self.user
+        ).exists())
+
+    def test_unlike_post_with_invalid_id(self):
+        """
+        Unliking post with invalid id should return a 404 status code
+        """
+        response = self.client.delete(self.url({"id": 99}))
+
+        self.client_error_response_test(
+            response,
+            code="notFound",
+            status=self.http_status.HTTP_404_NOT_FOUND,
+            messages=["Invalid id, post is not found"]
         )

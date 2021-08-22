@@ -3,8 +3,9 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from django.contrib.auth import authenticate, login, logout
 
+from bans.services import is_banned
 from profiles.serializers import ProfileSerializer
-from utils.exceptions import InvalidData400, InactiveProfile403, Forbidden403
+from utils.exceptions import BadRequest400, Forbidden403
 from utils.shortcuts import raise_400_based_on_serializer
 
 from .services.email import send_profile_activation_email
@@ -45,13 +46,16 @@ class AuthenticationAPIView(APIView):
                 password=validated_data["password"]
             )
 
-            if user and user.is_active:
+            if user:
+                if is_banned(user):
+                    raise Forbidden403("You are banned")
+                if not user.is_active:
+                    raise Forbidden403("Your profile is not activated")
+
                 login(request, user)
                 return Response(ProfileSerializer(user.profile).data)
-            elif user and not user.is_active:
-                raise InactiveProfile403
 
-            raise InvalidData400("Incorrect email or password")
+            raise BadRequest400("Incorrect email or password")
 
         raise_400_based_on_serializer(serializer)
 
@@ -77,4 +81,4 @@ class ProfileActivationAPIView(APIView):
         if user is not None and user.is_active:
             return Response(status=HTTP_204_NO_CONTENT)
 
-        raise InvalidData400("Invalid credentials")
+        raise BadRequest400("Invalid credentials")

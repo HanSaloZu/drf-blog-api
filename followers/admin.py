@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from .models import FollowersModel
+from .models import Follower
 
 
-@admin.register(FollowersModel)
+@admin.register(Follower)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ("follower_user", "following_user")
     list_display_links = ("follower_user", "following_user")

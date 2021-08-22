@@ -22,7 +22,8 @@ class LoginSerializerTestCase(TestCase):
 
     def test_serializer_without_data(self):
         """
-        The serializer without data should be invalid because it has 2 required fields
+        The serializer without data should be invalid
+        because it has 2 required fields
         """
         serializer = self.serializer_class(data={})
 
@@ -77,7 +78,7 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
             "login": "New:;.!?@User",
             "email": None,
             "password1": "s",
-            "aboutMe": "",
+            "aboutMe": "a"*805,
             "location": "",
             "birthday": "21-08-1997"
         }
@@ -88,11 +89,14 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertEqual(len(errors), 7)
         self.assertIn(
-            "Login can only contain letters, numbers, underscores and hyphens", errors)
+            ("Login can only contain English letters, numbers, " +
+                "underscores and hyphens"),
+            errors
+        )
         self.assertIn("Email is required", errors)
         self.assertIn("Password must be at least 4 characters", errors)
         self.assertIn("You should repeat your password", errors)
-        self.assertIn("About me can't be empty", errors)
+        self.assertIn("About me must be up to 800 characters long", errors)
         self.assertIn("Location can't be empty", errors)
         self.assertIn("Invalid birthday value", errors)
 

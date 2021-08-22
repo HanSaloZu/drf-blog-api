@@ -1,11 +1,12 @@
 from urllib.parse import urlencode
 from django.urls import reverse
+from django.utils.crypto import get_random_string
 
-from followers.models import FollowersModel
+from followers.services import follow
 from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
 
-class UsersListAPIViewTestCase(ListAPIViewTestCase):
+class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
     def url(self, parameters={}):
         url = reverse("users_list")
         if parameters:
@@ -15,7 +16,7 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
 
     def setUp(self):
         credentials = {"email": "first@gmail.com", "password": "pass"}
-        self.first_user = self.UserModel.objects.create_user(
+        self.first_user = self.UserModel.objects.create_superuser(
             login="FirstUser", **credentials)
         self.client.login(**credentials)
 
@@ -29,6 +30,8 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
         response = self.client.get(self.url())
 
         self.unauthorized_client_error_response_test(response)
+
+    # List user
 
     def test_users_list_without_parameters(self):
         response = self.client.get(self.url())
@@ -67,13 +70,13 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
 
     def test_users_list_with_negative_limit_parameter(self):
         """
-        When the value of the limit parameter is less than 0, error 400 is returned
+        When the value of the limit parameter is less than 1, error 400 is returned
         """
         response = self.client.get(self.url({"limit": -5}))
 
         self.client_error_response_test(
             response,
-            messages=["Minimum page size is 0 items"]
+            messages=["Minimum page size is 1 item"]
         )
 
     def test_users_list_with_large_limit_parameter(self):
@@ -118,6 +121,87 @@ class UsersListAPIViewTestCase(ListAPIViewTestCase):
             messages=["Invalid limit value"]
         )
 
+    # Create user
+
+    def test_user_creation_by_common_user(self):
+        """
+        A request to create a user from a non-administrator
+        should return a 403 status code
+        """
+        self.client.logout()
+        credentials = {"email": "common@user.com", "password": "pass"}
+        self.first_user = self.UserModel.objects.create_user(
+            login="CommonUser", **credentials)
+        self.client.login(**credentials)
+
+        payload = {
+            "login": "NewUser",
+            "email": "test@test.com",
+            "password1": "pass",
+            "password2": "pass",
+            "aboutMe": get_random_string(length=80),
+            "location": "London",
+            "birthday": "1997-08-21"
+        }
+        response = self.client.post(self.url(), payload)
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.data["messages"][0],
+                         "You don't have permission to access this resource")
+
+    def test_valid_user_creation(self):
+        """
+        Valid user creation should return a 201 status code
+        and and a user representation
+        """
+        payload = {
+            "login": "NewUser",
+            "email": "test@test.com",
+            "password1": "pass",
+            "password2": "pass",
+            "aboutMe": get_random_string(length=80),
+            "location": "London",
+            "birthday": "1997-08-21"
+        }
+        response = self.client.post(self.url(), payload)
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data), 13)
+        self.assertEqual(response.data["login"], payload["login"])
+        self.assertEqual(response.data["aboutMe"], payload["aboutMe"])
+        self.assertFalse(response.data["isAdmin"])
+
+        user = self.UserModel.objects.get(login=payload["login"])
+        self.assertTrue(user.is_active)
+
+    def test_invalid_user_creation(self):
+        """
+        Invalid user creation should return a 400 status code
+        """
+        payload = {
+            "login": "",
+            "password1": "1",
+            "password2": "1",
+            "aboutMe": get_random_string(length=68),
+            "location": "London",
+            "birthday": "21-08-1997"
+        }
+        response = self.client.post(self.url(), payload)
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "Login can't be empty",
+                "Email field is required",
+                "Password must be at least 4 characters",
+                "About me must be at least 70 characters",
+                "Invalid birthday value"
+            ],
+            fields_errors_dict_len=5
+        )
+
 
 class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
     def url(self, kwargs):
@@ -145,21 +229,25 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
 
     def test_user_profile_detail(self):
         """
-        Profile detail with valid login should return a 200 status code and a profile representation in the response body
+        Profile detail with valid login should return a 200 status code
+        and a profile representation in the response body
         """
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.second_user.id)
+        self.assertNotIn("theme", response.data)
 
     def test_self_profile_detail(self):
         """
-        Profile detail with login equals authenticated user login should return a 200 status code and a profile representation in the response body
+        Profile detail with login equals authenticated user login
+        should return a 200 status code and a profile representation
         """
         response = self.client.get(self.url({"login": self.first_user.login}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.first_user.id)
+        self.assertNotIn("theme", response.data)
 
     def test_user_profile_detail_with_invalid_user_login(self):
         """
@@ -175,7 +263,7 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
             messages=["Invalid login, user is not found"])
 
 
-class UserFollowersListAPIViewTestCase(ListAPIViewTestCase):
+class ListUserFollowersAPIViewTestCase(ListAPIViewTestCase):
     def url(self, kwargs={}, parameters={}):
         url = reverse("user_followers_list", kwargs=kwargs)
         if parameters:
@@ -194,11 +282,11 @@ class UserFollowersListAPIViewTestCase(ListAPIViewTestCase):
         self.third_user = self.UserModel.objects.create_user(
             login="ThirdUser", email="third@gmail.com", password="pass")
 
-        FollowersModel.follow(self.second_user, self.first_user)
-        FollowersModel.follow(self.third_user, self.first_user)
+        follow(self.second_user, self.first_user)
+        follow(self.third_user, self.first_user)
 
-        FollowersModel.follow(self.first_user, self.second_user)
-        FollowersModel.follow(self.second_user, self.third_user)
+        follow(self.first_user, self.second_user)
+        follow(self.second_user, self.third_user)
 
     def test_request_by_unauthenticated_client(self):
         self.client.logout()
@@ -237,7 +325,7 @@ class UserFollowersListAPIViewTestCase(ListAPIViewTestCase):
         )
 
 
-class UserFollowingListAPIViewTestCase(ListAPIViewTestCase):
+class ListUserFollowingAPIViewTestCase(ListAPIViewTestCase):
     def url(self, kwargs={}, parameters={}):
         url = reverse("user_following_list", kwargs=kwargs)
         if parameters:
@@ -256,11 +344,11 @@ class UserFollowingListAPIViewTestCase(ListAPIViewTestCase):
         self.third_user = self.UserModel.objects.create_user(
             login="ThirdUser", email="third@gmail.com", password="pass")
 
-        FollowersModel.follow(self.first_user, self.second_user)
-        FollowersModel.follow(self.first_user, self.third_user)
+        follow(self.first_user, self.second_user)
+        follow(self.first_user, self.third_user)
 
-        FollowersModel.follow(self.third_user, self.second_user)
-        FollowersModel.follow(self.second_user, self.third_user)
+        follow(self.third_user, self.second_user)
+        follow(self.second_user, self.third_user)
 
     def test_request_by_unauthenticated_client(self):
         self.client.logout()

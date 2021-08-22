@@ -1,3 +1,5 @@
+from django.db import IntegrityError, transaction, Error
+
 from utils.tests import ExtendedTestCase
 
 
@@ -29,3 +31,23 @@ class UserModelTestCase(ExtendedTestCase):
         self.assertIs(superuser.is_superuser, True)
         self.assertIs(superuser.is_staff, True)
         self.assertIs(superuser.is_active, True)
+
+    def test_non_unique_login(self):
+        user_login = "NewUser"
+        self.UserModel.objects.create_user(
+            login=user_login, email="new@user.com", password="pass")
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                self.UserModel.objects.create_user(
+                    login=user_login, email="unique@email.com", password="pass")
+
+    def test_non_unique_email(self):
+        user_email = "new@user.com"
+        self.UserModel.objects.create_user(
+            login="NewUser", email=user_email, password="pass")
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                self.UserModel.objects.create_user(
+                    login="UniqueLogin", email=user_email, password="pass")

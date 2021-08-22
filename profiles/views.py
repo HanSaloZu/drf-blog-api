@@ -1,13 +1,16 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
+from rest_framework.generics import ListAPIView
 
 from utils.views import LoginRequiredAPIView
 from utils.shortcuts import raise_400_based_on_serializer
+from posts.mixins import ListPostsWithOrderingAPIViewMixin
+from posts.selectors import get_liked_posts, get_post_by_id_or_404
 
 from .mixins import UpdateImageMixin
-from .serializers import (UpdateProfileSerializer, ProfileSerializer,
-                          PreferencesSerializer, UpdatePasswordSerailizer)
+from .serializers import (UpdateProfileSerializer, UpdatePasswordSerailizer,
+                          AuthenticatedUserProfileSerializer)
 
 
 class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
@@ -16,7 +19,7 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
     """
 
     def get(self, request):
-        serializer = ProfileSerializer(request.user.profile)
+        serializer = AuthenticatedUserProfileSerializer(request.user.profile)
         return Response(serializer.data)
 
     def patch(self, request):
@@ -25,7 +28,7 @@ class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):
 
         if serializer.is_valid():
             instance = serializer.save()
-            return Response(ProfileSerializer(instance).data)
+            return Response(AuthenticatedUserProfileSerializer(instance).data)
 
         raise_400_based_on_serializer(serializer)
 
@@ -50,26 +53,6 @@ class UpdateBannerAPIView(LoginRequiredAPIView, UpdateImageMixin, APIView):
         return request.user.profile.banner
 
 
-class RetrieveUpdatePreferencesAPIView(LoginRequiredAPIView, APIView):
-    """
-    Retrieves and updates the authenticated user preferences
-    """
-
-    def get(self, request):
-        serializer = PreferencesSerializer(request.user.profile.preferences)
-        return Response(serializer.data)
-
-    def patch(self, request):
-        instance = request.user.profile.preferences
-        serializer = PreferencesSerializer(instance, data=request.data)
-
-        if serializer.is_valid():
-            instance = serializer.save()
-            return Response(PreferencesSerializer(instance).data)
-
-        raise_400_based_on_serializer(serializer)
-
-
 class UpdatePasswordAPIView(LoginRequiredAPIView, APIView):
     """
     Updates the password of the authenticated user
@@ -85,3 +68,60 @@ class UpdatePasswordAPIView(LoginRequiredAPIView, APIView):
             return Response(status=HTTP_204_NO_CONTENT)
 
         raise_400_based_on_serializer(serializer)
+
+
+class ListPostsAPIView(LoginRequiredAPIView,
+                       ListPostsWithOrderingAPIViewMixin):
+    """
+    Lists the posts of the authenticated user
+    """
+
+    def filter_queryset(self, queryset, kwargs):
+        posts = queryset.filter(author=self.request.user)
+        return super().filter_queryset(posts, kwargs)
+
+
+class ListLikedPostsAPIView(LoginRequiredAPIView,
+                            ListPostsWithOrderingAPIViewMixin):
+    """
+    Lists liked posts
+    """
+
+    def get_queryset(self):
+        return get_liked_posts(self.request.user)
+
+
+class RetrieveCreateDestroyLikedPostAPIView(LoginRequiredAPIView, APIView):
+    """
+    Retrieves, creates, and destroys liked post
+    """
+
+    def get(self, request, id):
+        post = get_post_by_id_or_404(id)
+        is_liked = request.user.like_set.all().filter(post_id=post.id).exists()
+
+        return Response(data={
+            "isLiked": is_liked
+        })
+
+    def put(self, request, id):
+        post = get_post_by_id_or_404(id)
+        is_liked = request.user.like_set.all().filter(post_id=post.id).exists()
+
+        if not is_liked:
+            request.user.like_set.create(post=post, user=request.user)
+
+        return Response(data={
+            "isLiked": True
+        })
+
+    def delete(self, request, id):
+        post = get_post_by_id_or_404(id)
+        like_object = request.user.like_set.all().filter(post_id=post.id)
+
+        if like_object.exists():
+            like_object.delete()
+
+        return Response(data={
+            "isLiked": False
+        })
