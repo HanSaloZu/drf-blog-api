@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 
 from bans.services import is_banned
 from profiles.serializers import ProfileSerializer
-from utils.exceptions import BadRequest400, InactiveProfile403, Forbidden403
+from utils.exceptions import BadRequest400, Forbidden403
 from utils.shortcuts import raise_400_based_on_serializer
 
 from .services.email import send_profile_activation_email
@@ -50,7 +50,7 @@ class AuthenticationAPIView(APIView):
                 if is_banned(user):
                     raise Forbidden403("You are banned")
                 if not user.is_active:
-                    raise InactiveProfile403
+                    raise Forbidden403("Your profile is not activated")
 
                 login(request, user)
                 return Response(ProfileSerializer(user.profile).data)
