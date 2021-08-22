@@ -12,7 +12,7 @@ from profiles.serializers import ProfileSerializer
 from profiles.selectors import get_profile_by_user_login_or_404
 from followers.selectors import (get_user_followers_ids_list,
                                  get_user_followings_ids_list)
-from posts.mixins import ListPostsAPIViewMixin
+from posts.mixins import ListPostsWithOrderingAPIViewMixin
 
 from .mixins import ListUsersAPIViewMixin
 
@@ -84,7 +84,8 @@ class RetrieveUserProfileAPIView(LoginRequiredAPIView, RetrieveAPIView):
         return Response(serializer.data)
 
 
-class ListUserPostsAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):
+class ListUserPostsAPIView(LoginRequiredAPIView,
+                           ListPostsWithOrderingAPIViewMixin):
     """
     Lists the posts of the specified user
     """

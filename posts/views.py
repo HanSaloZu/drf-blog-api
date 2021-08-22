@@ -10,10 +10,11 @@ from utils.shortcuts import raise_400_based_on_serializer
 from .serializers import PostSerializer, CreateUpdatePostSerializer
 from .selectors import get_post_by_id_or_404
 from .services import delete_post
-from .mixins import ListPostsAPIViewMixin
+from .mixins import ListPostsWithOrderingAPIViewMixin
 
 
-class ListCreatePostAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):
+class ListCreatePostAPIView(LoginRequiredAPIView,
+                            ListPostsWithOrderingAPIViewMixin):
     """
     Lists all posts or creates one
     """

@@ -270,9 +270,18 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
             login="User", **credentials)
         self.client.login(**credentials)
 
-        Post.objects.create(author=self.user, title="First post", body="Body")
-        Post.objects.create(author=self.user, title="Second post", body="")
+        second_user = self.UserModel.objects.create_user(
+            login="SecondUser", email="second_user@gmail.com", password="pass")
+
+        first_post = Post.objects.create(
+            author=self.user, title="First post", body="Body")
+        second_post = Post.objects.create(
+            author=self.user, title="Second post", body="")
         Post.objects.create(author=self.user, title="Last post", body="1")
+
+        Like.objects.create(user=self.user, post=second_post)
+        Like.objects.create(user=second_user, post=second_post)
+        Like.objects.create(user=self.user, post=first_post)
 
     def test_request_by_unauthenticated_client(self):
         self.client.logout()
@@ -343,6 +352,50 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
         )
 
         self.assertEqual(response.data["items"][0]["title"], "Last post")
+
+    def test_posts_list_with_ordering_by_likes(self):
+        response = self.client.get(self.url({"ordering": "-likes"}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+        self.assertEqual(response.data["items"][0]["title"], "Second post")
+        self.assertEqual(response.data["items"][0]["likes"], 2)
+
+        self.assertEqual(response.data["items"][1]["title"], "First post")
+        self.assertEqual(response.data["items"][1]["likes"], 1)
+
+        self.assertEqual(response.data["items"][2]["title"], "Last post")
+        self.assertEqual(response.data["items"][2]["likes"], 0)
+
+        response = self.client.get(self.url({"ordering": "likes"}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+        self.assertEqual(response.data["items"][0]["title"], "Last post")
+        self.assertEqual(response.data["items"][0]["likes"], 0)
+
+        self.assertEqual(response.data["items"][1]["title"], "First post")
+        self.assertEqual(response.data["items"][1]["likes"], 1)
+
+        self.assertEqual(response.data["items"][2]["title"], "Second post")
+        self.assertEqual(response.data["items"][2]["likes"], 2)
+
+    def test_posts_list_with_ordering_by_creation_date(self):
+        response = self.client.get(self.url({"ordering": "-createdAt"}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+        self.assertEqual(response.data["items"][0]["title"], "Last post")
+        self.assertEqual(response.data["items"][1]["title"], "Second post")
+        self.assertEqual(response.data["items"][2]["title"], "First post")
+
+        response = self.client.get(self.url({"ordering": "createdAt"}))
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+        self.assertEqual(response.data["items"][0]["title"], "First post")
+        self.assertEqual(response.data["items"][1]["title"], "Second post")
+        self.assertEqual(response.data["items"][2]["title"], "Last post")
 
     # Create post
 

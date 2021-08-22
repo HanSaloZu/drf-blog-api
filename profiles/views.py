@@ -5,7 +5,7 @@ from rest_framework.generics import ListAPIView
 
 from utils.views import LoginRequiredAPIView
 from utils.shortcuts import raise_400_based_on_serializer
-from posts.mixins import ListPostsAPIViewMixin
+from posts.mixins import ListPostsWithOrderingAPIViewMixin
 from posts.selectors import get_liked_posts, get_post_by_id_or_404
 
 from .mixins import UpdateImageMixin
@@ -70,7 +70,8 @@ class UpdatePasswordAPIView(LoginRequiredAPIView, APIView):
         raise_400_based_on_serializer(serializer)
 
 
-class ListPostsAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):
+class ListPostsAPIView(LoginRequiredAPIView,
+                       ListPostsWithOrderingAPIViewMixin):
     """
     Lists the posts of the authenticated user
     """
@@ -80,7 +81,8 @@ class ListPostsAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):
         return super().filter_queryset(posts, kwargs)
 
 
-class ListLikedPostsAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):
+class ListLikedPostsAPIView(LoginRequiredAPIView,
+                            ListPostsWithOrderingAPIViewMixin):
     """
     Lists liked posts
     """

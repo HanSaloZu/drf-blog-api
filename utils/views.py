@@ -49,8 +49,10 @@ class ListAPIViewMixin(APIView):
             q - search string
             limit - number of items per page
             page - page number
+            ordering - list sorting
         """
         kwargs["q"] = request.query_params.get("q", "")
+        kwargs["ordering"] = request.query_params.get("ordering", "")
 
         try:
             kwargs["limit"] = int(request.query_params.get("limit", 10))
