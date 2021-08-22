@@ -6,6 +6,8 @@ from utils.tests import APIViewTestCase
 from ..services.activation import generate_uidb64
 from ..tokens import confirmation_token
 
+from bans.services import ban
+
 
 class AuthenticationAPIViewTestCase(APIViewTestCase):
     url = reverse("authentication")
@@ -14,18 +16,27 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
         self.credentials = {"email": "new@user.com", "password": "pass"}
         self.inactive_user_credentials = {
             "email": "inactive@user.com", "password": "pass"}
+        self.banned_user_credentials = {
+            "email": "banned@user.com", "password": "pass"}
 
         self.user = self.UserModel.objects.create_user(
             login="NewUser", **self.credentials)
         self.inactive_user = self.UserModel.objects.create_user(
             login="InactiveUser", **self.inactive_user_credentials, is_active=False
         )
+        self.banned_user = self.UserModel.objects.create_user(
+            login="BannedUser", **self.banned_user_credentials)
+
+        admin = self.UserModel.objects.create_superuser(
+            login="Admin", email="admin@user.com", password="pass")
+        ban(receiver=self.banned_user, creator=admin)
 
     # Authentication test
 
     def test_valid_authentication(self):
         """
-        Valid authentication should return a 200 status code and a profile representation in the response body
+        Valid authentication should return a 200 status code
+        and a profile representation in the response body
         """
         response = self.client.put(
             self.url, self.credentials, content_type="application/json")
@@ -45,6 +56,20 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             code="inactiveProfile",
             status=self.http_status.HTTP_403_FORBIDDEN,
             messages=["Your profile is not activated"]
+        )
+
+    def test_banned_user_authentication(self):
+        """
+        Authentication of banned users should return a 403 error
+        """
+        response = self.client.put(self.url, self.banned_user_credentials,
+                                   content_type="application/json")
+
+        self.client_error_response_test(
+            response,
+            code="forbidden",
+            status=self.http_status.HTTP_403_FORBIDDEN,
+            messages=["You are banned"]
         )
 
     def test_authentication_with_invalid_password(self):
