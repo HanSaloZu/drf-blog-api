@@ -1,3 +1,4 @@
+from django.contrib.auth import update_session_auth_hash
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
@@ -64,7 +65,8 @@ class UpdatePasswordAPIView(LoginRequiredAPIView, APIView):
             instance, data=request.data, context={"request": request})
 
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
+            update_session_auth_hash(request, user)
             return Response(status=HTTP_204_NO_CONTENT)
 
         raise_400_based_on_serializer(serializer)
