@@ -168,7 +168,7 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_201_CREATED)
-        self.assertEqual(len(response.data), 13)
+        self.assertEqual(len(response.data), 14)
         self.assertEqual(response.data["login"], payload["login"])
         self.assertEqual(response.data["aboutMe"], payload["aboutMe"])
         self.assertFalse(response.data["isAdmin"])

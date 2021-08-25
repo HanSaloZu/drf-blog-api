@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from bans.services import is_banned
+
 from .models import Profile, Contacts
 
 
@@ -34,6 +36,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     isLookingForAJob = serializers.SerializerMethodField()
     professionalSkills = serializers.SerializerMethodField()
     isAdmin = serializers.SerializerMethodField()
+    isBanned = serializers.SerializerMethodField()
     aboutMe = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
     banner = serializers.SerializerMethodField()
@@ -54,6 +57,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_isAdmin(self, obj):
         return obj.user.is_staff
 
+    def get_isBanned(self, obj):
+        return is_banned(obj.user)
+
     def get_aboutMe(self, obj):
         return obj.about_me
 
@@ -67,7 +73,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ["id", "isLookingForAJob", "professionalSkills", "isAdmin",
                   "fullname", "login", "status", "location", "birthday",
-                  "aboutMe", "avatar", "banner", "contacts"]
+                  "isBanned", "aboutMe", "avatar", "banner", "contacts"]
 
 
 class AuthenticatedUserProfileSerializer(ProfileSerializer):
