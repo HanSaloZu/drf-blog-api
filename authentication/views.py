@@ -4,7 +4,7 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 from django.contrib.auth import authenticate, login, logout
 
 from bans.services import is_banned
-from profiles.serializers import ProfileSerializer
+from profiles.serializers import AuthenticatedUserProfileSerializer
 from utils.exceptions import BadRequest400, Forbidden403
 from utils.shortcuts import raise_400_based_on_serializer
 
@@ -53,7 +53,9 @@ class AuthenticationAPIView(APIView):
                     raise Forbidden403("Your profile is not activated")
 
                 login(request, user)
-                return Response(ProfileSerializer(user.profile).data)
+                return Response(
+                    AuthenticatedUserProfileSerializer(user.profile).data
+                )
 
             raise BadRequest400("Incorrect email or password")
 
