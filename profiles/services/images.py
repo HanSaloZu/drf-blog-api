@@ -12,7 +12,12 @@ def upload_image(file):
     # Save file temporarily in the media folder
     image = Image.open(file)
     path = settings.MEDIA_ROOT / file.name
-    image.save(path, quality="web_maximum", subsampling=0)
+
+    # reduce image size by 20%
+    image = image.resize(
+        tuple(map(lambda value: value // 100 * 80, image.size)))
+
+    image.save(path, optimize=True, quality=70)
 
     response = google_drive.upload_file(path)
     remove(path)  # Remove file from media folder
