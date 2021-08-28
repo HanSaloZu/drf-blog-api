@@ -25,12 +25,15 @@ class CustomAPIException(Exception):
     code = "clientError"
     status_code = status.HTTP_400_BAD_REQUEST
 
-    def __init__(self, messages=[], fields_errors={}):
+    def __init__(self, messages=[], fields_errors={}, code=""):
         if not hasattr(self, "messages"):
             if isinstance(messages, (list, tuple)):
                 self.messages = messages
             else:
                 self.messages = [messages]
+
+        if code:
+            self.code = code
 
         self.fields_errors = fields_errors
 
