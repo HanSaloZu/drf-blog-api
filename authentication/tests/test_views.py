@@ -53,7 +53,7 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
 
         self.client_error_response_test(
             response,
-            code="forbidden",
+            code="inactiveProfile",
             status=self.http_status.HTTP_403_FORBIDDEN,
             messages=["Your profile is not activated"]
         )

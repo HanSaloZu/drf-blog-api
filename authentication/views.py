@@ -50,7 +50,8 @@ class AuthenticationAPIView(APIView):
                 if is_banned(user):
                     raise Forbidden403("You are banned")
                 if not user.is_active:
-                    raise Forbidden403("Your profile is not activated")
+                    raise Forbidden403("Your profile is not activated",
+                                       code="inactiveProfile")
 
                 login(request, user)
                 return Response(
