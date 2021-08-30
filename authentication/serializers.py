@@ -50,11 +50,12 @@ class RegistrationSerializer(serializers.Serializer):
         allow_blank=False,
         allow_null=False,
         required=True,
-        error_messages=get_error_messages_for_registration_serializer("login", {
-            "max_length": "Login must be up to 150 characters long",
-            "invalid": ("Login can only contain English letters, numbers, " +
-                        "underscores and hyphens")
-        })
+        error_messages=get_error_messages_for_registration_serializer(
+            "login", {
+                "max_length": "Login must be up to 150 characters long",
+                "invalid": ("Login can only contain English letters, numbers, " +
+                            "underscores and hyphens")
+            })
     )
 
     email = serializers.EmailField(
@@ -62,10 +63,11 @@ class RegistrationSerializer(serializers.Serializer):
         allow_blank=False,
         allow_null=False,
         required=True,
-        error_messages=get_error_messages_for_registration_serializer("email", {
-            "invalid": "Enter a valid email",
-            "max_length": "Email must be up to 254 characters long",
-        })
+        error_messages=get_error_messages_for_registration_serializer(
+            "email", {
+                "invalid": "Enter a valid email",
+                "max_length": "Email must be up to 254 characters long",
+            })
     )
 
     password1 = serializers.CharField(
@@ -74,10 +76,11 @@ class RegistrationSerializer(serializers.Serializer):
         required=True,
         min_length=4,
         max_length=128,
-        error_messages=get_error_messages_for_registration_serializer("password", {
-            "min_length": "Password must be at least 4 characters",
-            "max_length": "Password must be up to 128 characters long"
-        })
+        error_messages=get_error_messages_for_registration_serializer(
+            "password", {
+                "min_length": "Password must be at least 4 characters",
+                "max_length": "Password must be up to 128 characters long"
+            })
     )
 
     password2 = serializers.CharField(
@@ -85,39 +88,6 @@ class RegistrationSerializer(serializers.Serializer):
         error_messages={
             "required": "You should repeat your password"
         })
-
-    aboutMe = serializers.CharField(
-        allow_blank=False,
-        allow_null=False,
-        required=True,
-        min_length=70,
-        max_length=800,
-        error_messages=get_error_messages_for_registration_serializer("about me", {
-            "min_length": "About me must be at least 70 characters",
-            "max_length": "About me must be up to 800 characters long"
-        })
-    )
-
-    birthday = serializers.DateField(
-        format="YYYY-MM-DD",
-        allow_null=False,
-        required=True,
-        error_messages=get_error_messages_for_registration_serializer(
-            "birthday", {
-                "invalid": "Invalid birthday value"
-            })
-    )
-
-    location = serializers.CharField(
-        allow_null=False,
-        allow_blank=False,
-        required=True,
-        max_length=250,
-        error_messages=get_error_messages_for_registration_serializer(
-            "location", {
-                "max_length": "Location must be up to 250 characters long",
-            })
-    )
 
     def validate(self, data):
         if User.objects.all().filter(login=data["login"]).exists():
@@ -141,9 +111,5 @@ class RegistrationSerializer(serializers.Serializer):
             password=validated_data["password1"],
             is_active=False
         )
-        instance.profile.about_me = validated_data["aboutMe"]
-        instance.profile.birthday = validated_data["birthday"]
-        instance.profile.location = validated_data["location"]
-        instance.save()
 
         return instance

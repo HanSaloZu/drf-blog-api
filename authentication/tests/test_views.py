@@ -135,10 +135,7 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             "login": "NewUser",
             "email": "test@test.com",
             "password1": "pass",
-            "password2": "pass",
-            "aboutMe": get_random_string(length=80),
-            "location": "London",
-            "birthday": "1997-08-21"
+            "password2": "pass"
         }
         response = self.client.post(
             self.url, payload, content_type="application/json")
@@ -158,10 +155,7 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             "login": "Test-",
             "email": self.credentials["email"],
             "password1": "pass",
-            "password2": "pass",
-            "aboutMe": get_random_string(length=80),
-            "location": "London",
-            "birthday": "1997-08-21"
+            "password2": "pass"
         }
         response = self.client.post(
             self.url, payload, content_type="application/json")
@@ -180,10 +174,7 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             "login": "Test_",
             "email": "test@test.com",
             "password1": "pass",
-            "password2": "different password",
-            "aboutMe": get_random_string(length=80),
-            "location": "London",
-            "birthday": "1997-08-21"
+            "password2": "different password"
         }
         response = self.client.post(
             self.url, payload, content_type="application/json")
@@ -202,10 +193,7 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
             "login": "Test",
             "email": "test@test.com",
             "password1": "pass",
-            "password2": "pass",
-            "aboutMe": get_random_string(length=80),
-            "location": "London",
-            "birthday": "1997-08-21"
+            "password2": "pass"
         }
         response = self.client.post(
             self.url, payload, content_type="application/json")
@@ -215,10 +203,7 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
 
         user = self.UserModel.objects.all().get(login="Test")
         self.assertIs(user.is_active, False)
-        self.assertEqual(user.profile.about_me, payload["aboutMe"])
-        self.assertEqual(user.profile.location, payload["location"])
-        self.assertEqual(str(user.profile.birthday), payload["birthday"])
-        self.assertIs(user.check_password(payload["password1"]), True)
+        self.assertTrue(user.check_password(payload["password1"]))
 
 
 class ProfileActivationAPIViewTestCase(APIViewTestCase):

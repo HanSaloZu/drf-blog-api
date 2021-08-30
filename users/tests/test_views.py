@@ -1,6 +1,5 @@
 from urllib.parse import urlencode
 from django.urls import reverse
-from django.utils.crypto import get_random_string
 
 from followers.services import follow
 from utils.tests import ListAPIViewTestCase, APIViewTestCase
@@ -138,10 +137,7 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
             "login": "NewUser",
             "email": "test@test.com",
             "password1": "pass",
-            "password2": "pass",
-            "aboutMe": get_random_string(length=80),
-            "location": "London",
-            "birthday": "1997-08-21"
+            "password2": "pass"
         }
         response = self.client.post(self.url(), payload)
 
@@ -159,10 +155,7 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
             "login": "NewUser",
             "email": "test@test.com",
             "password1": "pass",
-            "password2": "pass",
-            "aboutMe": get_random_string(length=80),
-            "location": "London",
-            "birthday": "1997-08-21"
+            "password2": "pass"
         }
         response = self.client.post(self.url(), payload)
 
@@ -170,11 +163,10 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
                          self.http_status.HTTP_201_CREATED)
         self.assertEqual(len(response.data), 14)
         self.assertEqual(response.data["login"], payload["login"])
-        self.assertEqual(response.data["aboutMe"], payload["aboutMe"])
-        self.assertFalse(response.data["isAdmin"])
+        self.assertIs(response.data["isAdmin"], False)
 
         user = self.UserModel.objects.get(login=payload["login"])
-        self.assertTrue(user.is_active)
+        self.assertIs(user.is_active, True)
 
     def test_invalid_user_creation(self):
         """
@@ -183,10 +175,7 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
         payload = {
             "login": "",
             "password1": "1",
-            "password2": "1",
-            "aboutMe": get_random_string(length=68),
-            "location": "London",
-            "birthday": "21-08-1997"
+            "password2": "1"
         }
         response = self.client.post(self.url(), payload)
 
@@ -195,11 +184,9 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
             messages=[
                 "Login can't be empty",
                 "Email field is required",
-                "Password must be at least 4 characters",
-                "About me must be at least 70 characters",
-                "Invalid birthday value"
+                "Password must be at least 4 characters"
             ],
-            fields_errors_dict_len=5
+            fields_errors_dict_len=3
         )
 
 

@@ -1,5 +1,4 @@
 from django.test import TestCase
-from django.utils.crypto import get_random_string
 
 from utils.shortcuts import generate_messages_list_by_serializer_errors
 from utils.tests import ExtendedTestCase
@@ -60,34 +59,26 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
             "login": "NewUser",
             "email": "new@user.com",
             "password1": "strongpassword",
-            "password2": "strongpassword",
-            "aboutMe": get_random_string(length=80),
-            "location": "London",
-            "birthday": "1997-08-21"
+            "password2": "strongpassword"
         }
         serializer = self.serializer_class(data=data)
 
         self.assertIs(serializer.is_valid(), True)
         validated_data = dict(serializer.validated_data)
-        self.assertEqual(data.pop("birthday"),
-                         str(validated_data.pop("birthday")))
         self.assertEqual(data, validated_data)
 
     def test_invalid_serializer(self):
         data = {
             "login": "New:;.!?@User",
             "email": None,
-            "password1": "s",
-            "aboutMe": "a"*805,
-            "location": "",
-            "birthday": "21-08-1997"
+            "password1": "s"
         }
         serializer = self.serializer_class(data=data)
 
         self.assertIs(serializer.is_valid(), False)
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
-        self.assertEqual(len(errors), 7)
+        self.assertEqual(len(errors), 4)
         self.assertIn(
             ("Login can only contain English letters, numbers, " +
                 "underscores and hyphens"),
@@ -96,9 +87,6 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
         self.assertIn("Email is required", errors)
         self.assertIn("Password must be at least 4 characters", errors)
         self.assertIn("You should repeat your password", errors)
-        self.assertIn("About me must be up to 800 characters long", errors)
-        self.assertIn("Location can't be empty", errors)
-        self.assertIn("Invalid birthday value", errors)
 
     def test_serializer_with_non_unique_login(self):
         """
@@ -108,10 +96,7 @@ class RegistrationSerializerTestCase(ExtendedTestCase):
             "login": "User",
             "email": "new@user.com",
             "password1": "strongpassword",
-            "password2": "strongpassword",
-            "aboutMe": get_random_string(length=80),
-            "location": "London",
-            "birthday": "1997-08-21"
+            "password2": "strongpassword"
         }
         serializer = self.serializer_class(data=data)
 
