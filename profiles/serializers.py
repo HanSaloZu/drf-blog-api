@@ -130,22 +130,21 @@ class UpdateProfileSerializer(serializers.Serializer):
     aboutMe = serializers.CharField(
         required=False,
         max_length=800,
-        allow_blank=False,
+        allow_blank=True,
         allow_null=False,
-        min_length=70,
         error_messages=get_error_messages("about me")
     )
 
     birthday = serializers.DateField(
         format="YYYY-MM-DD",
-        allow_null=False,
+        allow_null=True,
         required=False,
         error_messages=get_error_messages("birthday")
     )
 
     location = serializers.CharField(
         allow_null=False,
-        allow_blank=False,
+        allow_blank=True,
         required=False,
         max_length=250,
         error_messages=get_error_messages("location")

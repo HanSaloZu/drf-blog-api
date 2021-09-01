@@ -1,4 +1,3 @@
-from django.utils.crypto import get_random_string
 from django.urls import reverse
 
 from utils.tests import APIViewTestCase
@@ -45,7 +44,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         """
         payload = {
             "fullname": "New User",
-            "aboutMe": get_random_string(length=70),
+            "aboutMe": "",
             "isLookingForAJob": True,
             "professionalSkills": "Backend web developer",
             "status": "New status",

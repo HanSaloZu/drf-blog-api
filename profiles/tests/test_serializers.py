@@ -78,12 +78,12 @@ class UpdateProfileSerializerTestCase(TestCase):
     def test_valid_serializer(self):
         data = {
             "fullname": "New User",
-            "aboutMe": get_random_string(length=70),
+            "aboutMe": get_random_string(length=50),
             "isLookingForAJob": True,
             "professionalSkills": "Backend web developer",
             "status": "New status",
             "theme": "dark",
-            "location": "London"
+            "location": ""
         }
         serializer = self.serializer_class(data=data)
 
@@ -93,7 +93,6 @@ class UpdateProfileSerializerTestCase(TestCase):
     def test_invalid_serializer(self):
         data = {
             "fullname": "",
-            "aboutMe": get_random_string(length=69),
             "status": get_random_string(length=100),
             "professionalSkills": None,
             "isLookingForAJob": "invalid",
@@ -106,13 +105,12 @@ class UpdateProfileSerializerTestCase(TestCase):
 
         errors = generate_messages_list_by_serializer_errors(serializer.errors)
         self.assertIn("Fullname field cannot be empty", errors)
-        self.assertIn("About me field value is too short", errors)
         self.assertIn("Status field value is too long", errors)
         self.assertIn("Professional skills field cannot be null", errors)
         self.assertIn("Invalid value for is looking for a job field", errors)
         self.assertIn("Invalid value for birthday field", errors)
         self.assertIn("Contacts field cannot be null", errors)
-        self.assertEqual(len(errors), 7)
+        self.assertEqual(len(errors), 6)
 
     def test_serializer_without_data(self):
         """
