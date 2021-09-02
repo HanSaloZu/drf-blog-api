@@ -2,10 +2,6 @@ from django.urls import reverse
 from django.utils.crypto import get_random_string
 
 from utils.tests import APIViewTestCase
-
-from ..services.activation import generate_uidb64
-from ..tokens import confirmation_token
-
 from bans.services import ban
 
 
@@ -204,67 +200,3 @@ class AuthenticationAPIViewTestCase(APIViewTestCase):
         user = self.UserModel.objects.all().get(login="Test")
         self.assertIs(user.is_active, False)
         self.assertTrue(user.check_password(payload["password1"]))
-
-
-class ProfileActivationAPIViewTestCase(APIViewTestCase):
-    url = reverse("profile_activation")
-
-    def setUp(self):
-        self.user = self.UserModel.objects.create_user(
-            login="NewUser", email="new@user.com", password="pass", is_active=False)
-
-    def test_profile_activation_request_by_authenticated_client(self):
-        """
-        A profile activation request from an authenticated client should return a 403 error
-        """
-        credentials = {"email": "active@user.com", "password": "pass"}
-        self.UserModel.objects.create_user(login="ActiveUser", **credentials)
-        self.client.login(**credentials)
-
-        payload = {
-            "token": confirmation_token.make_token(self.user),
-            "uidb64": generate_uidb64(self.user)
-        }
-        response = self.client.post(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            code="forbidden",
-            status=self.http_status.HTTP_403_FORBIDDEN,
-            messages=["You are already authenticated"]
-        )
-
-    def test_valid_profile_activation(self):
-        """
-        Valid profile activation should return a 204 status code
-        """
-        payload = {
-            "token": confirmation_token.make_token(self.user),
-            "uidb64": generate_uidb64(self.user)
-        }
-        response = self.client.post(
-            self.url, payload, content_type="application/json")
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_204_NO_CONTENT)
-
-        user = self.UserModel.objects.get(id=self.user.id)
-        self.assertIs(self.user.is_active, False)
-        self.assertIs(user.is_active, True)
-
-    def test_profile_activation_with_invalid_payload(self):
-        """
-        Profile activation with invalid credentials should return a 400 error
-        """
-        payload = {
-            "token": "invalid",
-            "uidb64": "invalid"
-        }
-        response = self.client.post(
-            self.url, payload, content_type="application/json")
-
-        self.client_error_response_test(
-            response,
-            messages=["Invalid credentials"]
-        )

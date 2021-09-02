@@ -9,7 +9,6 @@ from utils.exceptions import BadRequest400, Forbidden403
 from utils.shortcuts import raise_400_based_on_serializer
 
 from .services.email import send_profile_activation_email
-from .services.activation import activate_user_profile
 from .serializers import LoginSerializer, RegistrationSerializer
 
 
@@ -65,23 +64,3 @@ class AuthenticationAPIView(APIView):
     def delete(self, request):
         logout(request)
         return Response(status=HTTP_204_NO_CONTENT)
-
-
-class ProfileActivationAPIView(APIView):
-    """
-    Activates the user profile using the credentials sent by email after registration
-    """
-
-    def post(self, request):
-        if request.user.is_authenticated:
-            raise Forbidden403("You are already authenticated")
-
-        credentials = {
-            "uidb64": request.data.get("uidb64", ""),
-            "token": request.data.get("token", "")
-        }
-        user = activate_user_profile(credentials)
-        if user is not None and user.is_active:
-            return Response(status=HTTP_204_NO_CONTENT)
-
-        raise BadRequest400("Invalid credentials")
