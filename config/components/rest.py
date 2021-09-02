@@ -4,8 +4,7 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.BrowsableAPIRenderer"
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "utils.authentication.CsrfExemptSessionAuthentication",
-        "rest_framework.authentication.BasicAuthentication"
+        "rest_framework_simplejwt.authentication.JWTAuthentication"
     ],
     "EXCEPTION_HANDLER": "utils.exceptions.custom_exception_handler"
 }
