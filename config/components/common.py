@@ -23,7 +23,8 @@ INSTALLED_APPS = [
     "authentication",
     "posts",
     "news",
-    "bans"
+    "bans",
+    "verification"
 ]
 
 MIDDLEWARE = [
