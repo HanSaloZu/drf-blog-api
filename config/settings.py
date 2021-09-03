@@ -12,7 +12,8 @@ base_settings = [
     "components/cookies.py",
     "components/google_drive.py",
     "components/rest.py",
-    "components/email.py"
+    "components/email.py",
+    "components/jwt.py"
 ]
 
 include(*base_settings)
