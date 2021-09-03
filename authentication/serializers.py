@@ -1,10 +1,8 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
-def get_error_messages_for_login_serializer(field_name):
+def get_error_messages(field_name):
     return {
         "required": f"Enter your {field_name}",
         "blank": f"Enter your {field_name}",
@@ -13,21 +11,24 @@ def get_error_messages_for_login_serializer(field_name):
     }
 
 
-class LoginSerializer(serializers.ModelSerializer):
+class CustomTokenObtainPairSerializer(serializers.Serializer):
     email = serializers.EmailField(
         required=True,
         allow_blank=False,
         allow_null=False,
-        error_messages=get_error_messages_for_login_serializer("email")
+        error_messages=get_error_messages("email")
     )
 
     password = serializers.CharField(
         required=True,
         allow_null=False,
         allow_blank=False,
-        error_messages=get_error_messages_for_login_serializer("password")
+        error_messages=get_error_messages("password")
     )
 
+    @classmethod
+    def get_token(cls, user):
+        return RefreshToken.for_user(user)
+
     class Meta:
-        model = User
         fields = ["email", "password"]

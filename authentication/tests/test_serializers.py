@@ -1,13 +1,12 @@
 from django.test import TestCase
 
 from utils.shortcuts import generate_messages_list_by_serializer_errors
-from utils.tests import ExtendedTestCase
 
-from ..serializers import LoginSerializer, RegistrationSerializer
+from ..serializers import CustomTokenObtainPairSerializer
 
 
-class LoginSerializerTestCase(TestCase):
-    serializer_class = LoginSerializer
+class CustomTokenObtainPairSerializerTestCase(TestCase):
+    serializer_class = CustomTokenObtainPairSerializer
 
     def test_valid_serializer(self):
         data = {
