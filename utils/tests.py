@@ -1,15 +1,13 @@
-from django.test import TestCase
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
 
 
-class ExtendedTestCase(TestCase):
+class ExtendedTestCase(APITestCase):
     UserModel = get_user_model()
 
 
 class APIViewTestCase(ExtendedTestCase):
-    client = APIClient()
     http_status = status
 
     def client_error_response_test(self, response,
