@@ -12,8 +12,8 @@ class VerificationCode(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "verification_code"
-        verbose_name_plural = "verification_codes"
+        verbose_name = "verification code"
+        verbose_name_plural = "verification codes"
         db_table = "verification_codes"
 
     def __str__(self):
