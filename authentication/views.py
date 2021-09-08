@@ -1,9 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.exceptions import TokenError
 
 from bans.services import is_banned
-from utils.exceptions import BadRequest400, Forbidden403
+from utils.exceptions import BadRequest400, Forbidden403, NotAuthenticated401
 from utils.shortcuts import raise_400_based_on_serializer
 
 from .serializers import CustomTokenObtainPairSerializer
@@ -38,3 +40,18 @@ class CustomObtainTokenPairAPIView(APIView):
             raise BadRequest400("Incorrect email or password")
 
         raise_400_based_on_serializer(serializer)
+
+
+class CustomTokenRefreshAPIView(APIView):
+    """
+    Takes a refresh JSON web token and returns an access JSON web token
+    """
+
+    def post(self, request):
+        serializer = TokenRefreshSerializer(data=request.data)
+
+        try:
+            if serializer.is_valid(raise_exception=True):
+                return Response(serializer.validated_data)
+        except TokenError:
+            raise NotAuthenticated401(code="invalidToken")
