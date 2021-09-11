@@ -45,8 +45,8 @@ class Attachment(ImageModel):
             post=self.post
         ).count()
 
-        if attachments_count >= 10:
-            raise Error("Maximum 10 attachments per post")
+        if attachments_count >= 5:
+            raise Error("Maximum 5 attachments per post")
 
         super(Attachment, self).save(*args, **kwargs)
 

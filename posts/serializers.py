@@ -77,7 +77,7 @@ class CreateUpdatePostSerializer(serializers.Serializer):
             }
         ),
         allow_empty=True,
-        max_length=10,
+        max_length=5,
         error_messages=get_error_messages("attachments")
     )
 

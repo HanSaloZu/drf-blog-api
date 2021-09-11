@@ -73,10 +73,10 @@ class AttachmentModelTestCase(ExtendedTestCase):
 
     def test_create_attachments_over_limit(self):
         """
-        The maximum number of attachments for a post is 10.
+        The maximum number of attachments for a post is 5.
         When creating attachments over the limit, an error should be raised
         """
-        for i in range(10):
+        for i in range(5):
             self.model.objects.create(
                 post=self.post, file_id=f"{i}", link=f"http://localhost:8000/{i}")
 
@@ -84,6 +84,6 @@ class AttachmentModelTestCase(ExtendedTestCase):
             with transaction.atomic():
                 self.model.objects.create(
                     post=self.post,
-                    file_id="10",
-                    link=f"http://localhost:8000/10"
+                    file_id="5",
+                    link=f"http://localhost:8000/5"
                 )
