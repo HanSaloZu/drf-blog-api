@@ -51,7 +51,9 @@ class CustomTokenRefreshAPIView(APIView):
         serializer = TokenRefreshSerializer(data=request.data)
 
         try:
-            if serializer.is_valid(raise_exception=True):
+            if serializer.is_valid():
                 return Response(serializer.validated_data)
+
+            raise_400_based_on_serializer(serializer)
         except TokenError:
             raise NotAuthenticated401(code="invalidToken")
