@@ -1,14 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import TokenError
 
 from bans.services import is_banned
 from utils.exceptions import BadRequest400, Forbidden403, NotAuthenticated401
 from utils.shortcuts import raise_400_based_on_serializer
 
-from .serializers import CustomTokenObtainPairSerializer
+from .serializers import (CustomTokenObtainPairSerializer,
+                          CustomTokenRefreshSerializer)
 
 
 class CustomObtainTokenPairAPIView(APIView):
@@ -48,7 +48,7 @@ class CustomTokenRefreshAPIView(APIView):
     """
 
     def post(self, request):
-        serializer = TokenRefreshSerializer(data=request.data)
+        serializer = CustomTokenRefreshSerializer(data=request.data)
 
         try:
             if serializer.is_valid():

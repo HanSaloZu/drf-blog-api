@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
 
 def get_error_messages(field_name):
@@ -32,3 +33,11 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
 
     class Meta:
         fields = ["email", "password"]
+
+
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    def __init__(self, *args, **kwargs):
+        super(CustomTokenRefreshSerializer, self).__init__(*args, **kwargs)
+
+        refresh_field = self.fields["refresh"]
+        refresh_field.error_messages["required"] = "Refresh token is required"
