@@ -3,10 +3,11 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.exceptions import TokenError
 
-from bans.services import is_banned
-from utils.exceptions import BadRequest400, Forbidden403, NotAuthenticated401
+from utils.exceptions import BadRequest400, NotAuthenticated401
 from utils.shortcuts import raise_400_based_on_serializer
 
+from .services import (raise_403_if_user_is_banned,
+                       raise_403_if_user_is_inactive)
 from .serializers import (CustomTokenObtainPairSerializer,
                           CustomTokenRefreshSerializer)
 
@@ -25,16 +26,13 @@ class CustomObtainTokenPairAPIView(APIView):
             user = authenticate(**validated_data)
 
             if user:
-                if is_banned(user):
-                    raise Forbidden403("You are banned")
-                if not user.is_active:
-                    raise Forbidden403("Your profile is not activated",
-                                       code="inactiveProfile")
+                raise_403_if_user_is_banned(user)
+                raise_403_if_user_is_inactive(user)
 
-                refresh = serializer.get_token(user)
+                token = serializer.get_token(user)
                 return Response({
-                    "refresh": str(refresh),
-                    "access": str(refresh.access_token)
+                    "refresh": str(token),
+                    "access": str(token.access_token)
                 })
 
             raise BadRequest400("Incorrect email or password")
