@@ -14,21 +14,53 @@ def get_exception_json_response(exception, messages=[]):
 
 
 def custom_exception_handler(exc, context=None):
-    if isinstance(exc, CustomAPIException):
-        data = {
-            "code": exc.code,
-            "messages": exc.messages,
-            "fieldsErrors": exc.fields_errors
-        }
+    default_response_data = {
+        "code": "unhandledError",
+        "messages": "Something went wrong",
+        "fieldsErrors": {}
+    }
 
-        return Response(data, status=exc.status_code,  content_type="application/json")
+    if isinstance(exc, CustomAPIException):
+        return Response(
+            data={
+                "code": exc.code,
+                "messages": exc.messages,
+                "fieldsErrors": exc.fields_errors
+            },
+            status=exc.status_code,
+            content_type="application/json"
+        )
 
     response = exception_handler(exc, context)
-
     if response is not None:
-        response.data['status_code'] = response.status_code
+        response.data = default_response_data | {
+            "code": get_exception_code(exc),
+            "messages": normalize_exception_detail(response.data["detail"])
+        }
 
     return response
+
+
+def get_exception_code(exc):
+    if not hasattr(exc, "default_code"):
+        return "error"
+
+    return normalize_default_exception_code(exc.default_code)
+
+
+def normalize_default_exception_code(default_code):
+    normalized_code = ''.join(
+        word.title() for word in default_code.split('_')
+    )
+
+    normalized_code = normalized_code[0].lower() + normalized_code[1::]
+    return normalized_code
+
+
+def normalize_exception_detail(exc_detail):
+    if exc_detail.endswith("."):
+        return exc_detail[0:-1:]
+    return exc_detail
 
 
 class CustomAPIException(Exception):
