@@ -9,7 +9,6 @@ base_settings = [
     "components/common.py",
     "components/database.py",
     "components/cors.py",
-    "components/cookies.py",
     "components/google_drive.py",
     "components/rest.py",
     "components/email.py",
