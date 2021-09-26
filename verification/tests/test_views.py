@@ -1,5 +1,4 @@
 from django.urls import reverse
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from utils.tests import APIViewTestCase
 
@@ -26,8 +25,9 @@ class EmailVerificationAPIViewTestCase(APIViewTestCase):
         """
         new_user = self.UserModel.objects.create_user(
             login="NewUser", email="new_user@gmail.com", password="pass")
-        token = RefreshToken.for_user(new_user).access_token
-        self.client.credentials(HTTP_AUTHORIZATION="JWT {0}".format(token))
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(new_user)
+        )
 
         payload = {
             "code": self.verification_code

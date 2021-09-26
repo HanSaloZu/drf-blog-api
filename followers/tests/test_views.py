@@ -1,8 +1,6 @@
 from django.urls import reverse
 from urllib.parse import urlencode
 
-from rest_framework.status import HTTP_404_NOT_FOUND
-
 from utils.tests import ListAPIViewTestCase, APIViewTestCase
 
 from ..services import follow, is_following, unfollow
@@ -17,10 +15,11 @@ class FollowersListAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
@@ -31,7 +30,7 @@ class FollowersListAPIViewTestCase(ListAPIViewTestCase):
         follow(self.third_user, self.first_user)
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url())
 
         self.unauthorized_client_error_response_test(response)
@@ -61,17 +60,18 @@ class FollowingListAPIViewTestCase(ListAPIViewTestCase):
     url = reverse("following_list")
 
     def setUp(self):
-        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
         follow(self.first_user, self.second_user)
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url)
 
         self.unauthorized_client_error_response_test(response)
@@ -93,18 +93,17 @@ class FollowingAPIViewTestCase(APIViewTestCase):
         return reverse("following", kwargs=kwargs)
 
     def setUp(self):
-        credentials = {
-            "email": "first_user_@gmail.com", "password": "pass"}
-
         self.first_user = self.UserModel.objects.create_user(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first_user_@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second_user_@gmail.com", password="pass")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.unauthorized_client_error_response_test(response)
@@ -188,7 +187,8 @@ class FollowingAPIViewTestCase(APIViewTestCase):
 
     def test_is_following(self):
         """
-        If the user is being followed, isFollowed should be True, otherwise False
+        If the user is being followed, isFollowed should be True,
+        otherwise False
         """
         response = self.client.get(self.url({"login": self.second_user.login}))
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)

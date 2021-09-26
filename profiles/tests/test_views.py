@@ -8,9 +8,8 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
     url = reverse("profile")
 
     def setUp(self):
-        credentials = {"email": "new@user.com", "password": "pass"}
         user = self.UserModel.objects.create_user(
-            login="NewUser", **credentials)
+            login="NewUser", email="new@user.com", password="pass")
 
         user.profile.is_looking_for_a_job = True
         user.profile.professional_skills = "Test"
@@ -19,10 +18,12 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
         user.save()
 
         self.user = user
-        self.client.login(**credentials)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(user)
+        )
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url)
 
         self.unauthorized_client_error_response_test(response)
@@ -145,13 +146,15 @@ class UpdateAvatarAPIViewTestCase(APIViewTestCase):
     url = reverse("profile_avatar_update")
 
     def setUp(self):
-        credentials = {"email": "new@user.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="NewUser", **credentials)
-        self.client.login(**credentials)
+            login="NewUser", email="new@user.com", password="pass")
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.put(self.url)
 
         self.unauthorized_client_error_response_test(response)
@@ -192,13 +195,15 @@ class UpdateBannerAPIViewTestCase(APIViewTestCase):
     url = reverse("profile_banner_update")
 
     def setUp(self):
-        credentials = {"email": "new@user.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="NewUser", **credentials)
-        self.client.login(**credentials)
+            login="NewUser", email="new@user.com", password="pass")
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.put(self.url)
 
         self.unauthorized_client_error_response_test(response)
@@ -239,14 +244,15 @@ class UpdatePasswordAPIViewTestCase(APIViewTestCase):
     url = reverse("update_password")
 
     def setUp(self):
-        credentials = {"email": "new@user.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="NewUser", **credentials)
+            login="NewUser", email="new@user.com", password="pass")
 
-        self.client.login(**credentials)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.put(self.url)
 
         self.unauthorized_client_error_response_test(response)
@@ -311,10 +317,12 @@ class RetrieveCreateDestroyLikedPostAPIViewTestCase(APIViewTestCase):
         return reverse("liked_posts", kwargs=kwargs)
 
     def setUp(self):
-        credentials = {"email": "new@user.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="NewUser", **credentials)
-        self.client.login(**credentials)
+            login="NewUser", email="new@user.com", password="pass")
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
 
         self.first_post = Post.objects.create(
             author=self.user, title="First post")
@@ -322,7 +330,7 @@ class RetrieveCreateDestroyLikedPostAPIViewTestCase(APIViewTestCase):
             author=self.user, title="Second post")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"id": self.first_post.id}))
 
         self.unauthorized_client_error_response_test(response)

@@ -12,13 +12,13 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         return reverse("post", kwargs=kwargs)
 
     def setUp(self):
-        credentials = {"email": "user@gmail.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="User", **credentials)
-        self.client.login(**credentials)
+            login="User", email="user@gmail.com", password="pass")
 
-        self.first_post = Post.objects.create(
-            author=self.user, title="First post", body="Body")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
+
         Like.objects.create(user=self.user, post=self.first_post)
         Attachment.objects.create(
             post=self.first_post, file_id="1", link="http://localhost:8000/1")
@@ -32,7 +32,7 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             author=self.second_user, title="Second post", body="")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"id": 1}))
 
         self.unauthorized_client_error_response_test(response)
@@ -123,10 +123,11 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         Admin users can delete any posts.
         Valid post deleting should return a 204 status code
         """
-        self.client.logout()
-        credentials = {"email": "admin@user.com", "password": "admin"}
-        self.UserModel.objects.create_superuser(login="Admin", **credentials)
-        self.client.login(**credentials)
+        admin = self.UserModel.objects.create_superuser(
+            login="Admin", email="admin@user.com", password="admin")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(admin)
+        )
 
         response = self.client.delete(self.url({"id": 1}))
 
@@ -220,11 +221,11 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         Valid post updating should return a 200 status code
         and an updated post representation
         """
-        self.client.logout()
-        credentials = {"email": "admin@gmail.com", "password": "admin"}
         admin = self.UserModel.objects.create_superuser(
-            login="Admin", **credentials)
-        self.client.login(**credentials)
+            login="Admin", email="admin@gmail.com", password="admin")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(admin)
+        )
 
         payload = {
             "title": "New title",
@@ -265,10 +266,11 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        credentials = {"email": "user@gmail.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="User", **credentials)
-        self.client.login(**credentials)
+            login="User", email="user@gmail.com", password="pass")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
 
         second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second_user@gmail.com", password="pass")
@@ -284,7 +286,7 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
         Like.objects.create(user=self.user, post=first_post)
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url())
 
         self.unauthorized_client_error_response_test(response)

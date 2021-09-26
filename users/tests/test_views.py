@@ -14,10 +14,11 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_superuser(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
@@ -25,7 +26,7 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
             login="ThirdUser", email="third@gmail.com", password="pass")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url())
 
         self.unauthorized_client_error_response_test(response)
@@ -127,11 +128,11 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
         A request to create a user from a non-administrator
         should return a 403 status code
         """
-        self.client.logout()
-        credentials = {"email": "common@user.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="CommonUser", **credentials)
-        self.client.login(**credentials)
+            login="CommonUser", email="common@user.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         payload = {
             "login": "NewUser",
@@ -149,7 +150,6 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
     def test_valid_user_creation(self):
         """
         Valid user creation should return a 201 status code
-        and and a user representation
         """
         payload = {
             "login": "NewUser",
@@ -195,10 +195,11 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
         return reverse("user_profile_detail", kwargs=kwargs)
 
     def setUp(self):
-        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
@@ -209,7 +210,7 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
         self.second_user.save()
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.unauthorized_client_error_response_test(response)
@@ -259,10 +260,11 @@ class ListUserFollowersAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
@@ -276,7 +278,7 @@ class ListUserFollowersAPIViewTestCase(ListAPIViewTestCase):
         follow(self.second_user, self.third_user)
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.unauthorized_client_error_response_test(response)
@@ -321,10 +323,11 @@ class ListUserFollowingAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
@@ -338,7 +341,7 @@ class ListUserFollowingAPIViewTestCase(ListAPIViewTestCase):
         follow(self.second_user, self.third_user)
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.unauthorized_client_error_response_test(response)

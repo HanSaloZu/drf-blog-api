@@ -17,15 +17,15 @@ class ListBannedUsersAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        admin_credentials = {"email": "admin@gmail.com", "password": "pass"}
         self.admin = self.UserModel.objects.create_superuser(
-            login="Admin", **admin_credentials)
-        self.client.login(**admin_credentials)
+            login="Admin", email="admin@gmail.com", password="pass")
 
-        self.common_user_credentials = {
-            "email": "user@gmail.com", "password": "pass"}
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.admin)
+        )
+
         self.user = self.UserModel.objects.create_user(
-            login="User", **self.common_user_credentials)
+            login="User", email="user@gmail.com", password="pass")
 
         first_banned_user = self.UserModel.objects.create_user(
             login="BannedUser1", email="buser1@gmail.com", password="pass")
@@ -37,7 +37,7 @@ class ListBannedUsersAPIViewTestCase(ListAPIViewTestCase):
                               creator=self.admin, reason="Second ban")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url())
 
         self.unauthorized_client_error_response_test(response)
@@ -47,8 +47,9 @@ class ListBannedUsersAPIViewTestCase(ListAPIViewTestCase):
         Only administrators can access this resource.
         A request from a common user should return a 403 statuts code
         """
-        self.client.logout()
-        self.client.login(**self.common_user_credentials)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
         response = self.client.get(self.url())
 
         self.client_error_response_test(
@@ -135,25 +136,25 @@ class BanAPIViewTestCase(APIViewTestCase):
         return reverse("ban", kwargs=kwargs)
 
     def setUp(self):
-        admin_credentials = {"email": "admin@gmail.com", "password": "pass"}
         self.admin = self.UserModel.objects.create_superuser(
-            login="Admin", **admin_credentials)
-        self.client.login(**admin_credentials)
+            login="Admin", email="admin@gmail.com", password="pass")
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.admin)
+        )
 
         self.second_admin = self.UserModel.objects.create_superuser(
             login="SecondAdmin", email="second_admin@gmail.com", password="pass")
 
-        self.common_user_credentials = {
-            "email": "user@gmail.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="User", **self.common_user_credentials)
+            login="User", email="user@gmail.com", password="pass")
 
         self.banned_user = self.UserModel.objects.create_user(
             login="BannedUser", email="buser@gmail.com", password="pass")
         ban(receiver=self.banned_user, creator=self.admin, reason="Ban")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"login": self.banned_user.login}))
 
         self.unauthorized_client_error_response_test(response)
@@ -163,8 +164,9 @@ class BanAPIViewTestCase(APIViewTestCase):
         Only administrators can access this resource.
         A request from a common user should return a 403 statuts code
         """
-        self.client.logout()
-        self.client.login(**self.common_user_credentials)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
         response = self.client.get(self.url({"login": self.banned_user.login}))
 
         self.client_error_response_test(
