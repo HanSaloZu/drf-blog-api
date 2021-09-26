@@ -6,5 +6,6 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication"
     ],
-    "EXCEPTION_HANDLER": "utils.exceptions.custom_exception_handler"
+    "EXCEPTION_HANDLER": "utils.exceptions.custom_exception_handler",
+    "TEST_REQUEST_DEFAULT_FORMAT": "json"
 }
