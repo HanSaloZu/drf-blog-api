@@ -121,11 +121,11 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
             messages=["Invalid limit value"]
         )
 
-    # Create user
+    # Registration
 
-    def test_user_creation_by_common_user(self):
+    def test_registration_request_from_authenticated_user(self):
         """
-        A request to create a user from a non-administrator
+        A registration request from an authenticated user
         should return a 403 status code
         """
         self.first_user = self.UserModel.objects.create_user(
@@ -145,33 +145,13 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.data["messages"][0],
-                         "You don't have permission to access this resource")
+                         "You are already authenticated")
 
-    def test_valid_user_creation(self):
+    def test_invalid_registration(self):
         """
-        Valid user creation should return a 201 status code
+        Invalid registration request should return a 400 status code
         """
-        payload = {
-            "login": "NewUser",
-            "email": "test@test.com",
-            "password1": "pass",
-            "password2": "pass"
-        }
-        response = self.client.post(self.url(), payload)
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_201_CREATED)
-        self.assertEqual(len(response.data), 14)
-        self.assertEqual(response.data["login"], payload["login"])
-        self.assertIs(response.data["isAdmin"], False)
-
-        user = self.UserModel.objects.get(login=payload["login"])
-        self.assertIs(user.is_active, True)
-
-    def test_invalid_user_creation(self):
-        """
-        Invalid user creation should return a 400 status code
-        """
+        self.client.credentials()
         payload = {
             "login": "",
             "password1": "1",
@@ -188,6 +168,67 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
             ],
             fields_errors_dict_len=3
         )
+
+    def test_registration_with_used_email(self):
+        """
+        Registration with the used email should return a 400 error
+        """
+        self.client.credentials()
+        payload = {
+            "login": "Test-",
+            "email": self.first_user.email,
+            "password1": "pass",
+            "password2": "pass"
+        }
+
+        response = self.client.post(self.url(), payload)
+
+        self.client_error_response_test(
+            response,
+            fields_errors_dict_len=1,
+            messages=["This email is already in use"]
+        )
+
+    def test_registration_with_different_passwords(self):
+        """
+        Registration with different passwords should return a 400 error
+        """
+        self.client.credentials()
+        payload = {
+            "login": "Test_",
+            "email": "test@test.com",
+            "password1": "pass",
+            "password2": "different password"
+        }
+
+        response = self.client.post(self.url(), payload)
+
+        self.client_error_response_test(
+            response,
+            fields_errors_dict_len=1,
+            messages=["Passwords do not match"]
+        )
+
+    def test_valid_registration(self):
+        """
+        Valid registration should return a 204 status code
+        """
+        self.client.credentials()
+        payload = {
+            "login": "Test",
+            "email": "test@test.com",
+            "password1": "pass",
+            "password2": "pass"
+        }
+
+        response = self.client.post(self.url(), payload)
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
+
+        user = self.UserModel.objects.all().get(login="Test")
+        self.assertIs(user.is_active, False)
+        self.assertTrue(user.check_password(payload["password1"]))
 
 
 class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
