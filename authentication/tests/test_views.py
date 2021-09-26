@@ -63,7 +63,7 @@ class CustomObtainTokenPairAPIViewTestCase(BaseTestCase, APIViewTestCase):
 
         self.client_error_response_test(
             response,
-            code="forbidden",
+            code="bannedUser",
             status=self.http_status.HTTP_403_FORBIDDEN,
             messages=["You are banned"]
         )
