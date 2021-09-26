@@ -214,8 +214,8 @@ class BanAPIViewTestCase(APIViewTestCase):
         payload = {
             "reason": "Ban"
         }
-        response = self.client.put(self.url({"login": self.user.login}),
-                                   payload, content_type="application/json")
+        response = self.client.put(
+            self.url({"login": self.user.login}), payload)
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_201_CREATED)
@@ -231,8 +231,8 @@ class BanAPIViewTestCase(APIViewTestCase):
         payload = {
             "reason": "Ban"
         }
-        response = self.client.put(self.url({"login": self.second_admin.login}),
-                                   payload, content_type="application/json")
+        response = self.client.put(
+            self.url({"login": self.second_admin.login}), payload)
 
         self.client_error_response_test(
             response,
@@ -262,8 +262,8 @@ class BanAPIViewTestCase(APIViewTestCase):
         payload = {
             "reason": None
         }
-        response = self.client.put(self.url({"login": self.user.login}),
-                                   payload, content_type="application/json")
+        response = self.client.put(
+            self.url({"login": self.user.login}), payload)
 
         self.client_error_response_test(
             response,
@@ -281,8 +281,8 @@ class BanAPIViewTestCase(APIViewTestCase):
         payload = {
             "reason": "Updated ban reason"
         }
-        response = self.client.put(self.url({"login": self.banned_user.login}),
-                                   payload, content_type="application/json")
+        response = self.client.put(
+            self.url({"login": self.banned_user.login}), payload)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(response.data["reason"], payload["reason"])
@@ -300,8 +300,8 @@ class BanAPIViewTestCase(APIViewTestCase):
         payload = {
             "reason": get_random_string(length=300)
         }
-        response = self.client.put(self.url({"login": self.banned_user.login}),
-                                   payload, content_type="application/json")
+        response = self.client.put(
+            self.url({"login": self.banned_user.login}), payload)
 
         self.client_error_response_test(
             response,

@@ -164,8 +164,7 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         payload = {
             "body": "New body"
         }
-        response = self.client.patch(
-            self.url({"id": 1}), payload, content_type="application/json")
+        response = self.client.patch(self.url({"id": 1}), payload)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
@@ -186,8 +185,7 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             "body": None,
             "attachments": True
         }
-        response = self.client.patch(
-            self.url({"id": 1}), payload, content_type="application/json")
+        response = self.client.patch(self.url({"id": 1}), payload)
 
         self.client_error_response_test(
             response,
@@ -231,8 +229,7 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             "title": "New title",
             "body": "New body"
         }
-        response = self.client.patch(
-            self.url({"id": 1}), payload, content_type="application/json")
+        response = self.client.patch(self.url({"id": 1}), payload)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
@@ -410,8 +407,7 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
             "title": "New post",
             "body": "Body"
         }
-        response = self.client.post(
-            self.url(), payload, content_type="application/json")
+        response = self.client.post(self.url(), payload)
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_201_CREATED)
@@ -440,8 +436,7 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
             "body": get_random_string(length=2001),
             "attachments": False
         }
-        response = self.client.post(
-            self.url(), payload, content_type="application/json")
+        response = self.client.post(self.url(), payload)
 
         self.client_error_response_test(
             response,

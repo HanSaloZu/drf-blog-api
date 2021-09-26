@@ -53,8 +53,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
             "location": "Berlin",
             "birthday": "2000-01-19"
         }
-        response = self.client.patch(
-            self.url, payload, content_type="application/json")
+        response = self.client.patch(self.url, payload)
         user = self.UserModel.objects.all().first()
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
@@ -86,8 +85,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
                 "twitter": ""
             }
         }
-        response = self.client.patch(
-            self.url, payload, content_type="application/json")
+        response = self.client.patch(self.url, payload)
         user = self.UserModel.objects.all().first()
         contacts = user.profile.contacts
 
@@ -126,8 +124,7 @@ class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):
                 "github": "123",
             }
         }
-        response = self.client.patch(
-            self.url, payload, content_type="application/json")
+        response = self.client.patch(self.url, payload)
 
         self.client_error_response_test(
             response,
@@ -266,8 +263,7 @@ class UpdatePasswordAPIViewTestCase(APIViewTestCase):
             "newPassword1": "newpassword",
             "newPassword2": "newpassword"
         }
-        response = self.client.put(
-            self.url, payload, content_type="application/json")
+        response = self.client.put(self.url, payload)
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_204_NO_CONTENT)
@@ -284,8 +280,7 @@ class UpdatePasswordAPIViewTestCase(APIViewTestCase):
             "newPassword1": "invalid",
             "newPassword2": "newpassword"
         }
-        response = self.client.put(
-            self.url, payload, content_type="application/json")
+        response = self.client.put(self.url, payload)
 
         self.client_error_response_test(
             response,
@@ -302,8 +297,7 @@ class UpdatePasswordAPIViewTestCase(APIViewTestCase):
             "newPassword1": "newpassword",
             "newPassword2": "newpassword"
         }
-        response = self.client.put(
-            self.url, payload, content_type="application/json")
+        response = self.client.put(self.url, payload)
 
         self.client_error_response_test(
             response,
