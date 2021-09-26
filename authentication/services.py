@@ -1,7 +1,15 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 
-from utils.exceptions import NotAuthenticated401
+from utils.exceptions import Forbidden403, NotAuthenticated401
+
+
+def raise_403_if_user_is_inactive(user):
+    if not user.is_active:
+        raise Forbidden403(
+            messages=["Your profile is not activated"],
+            code="inactiveProfile"
+        )
 
 
 def get_user_from_access_token_or_401(access_token):
