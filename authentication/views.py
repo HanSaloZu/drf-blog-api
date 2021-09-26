@@ -7,7 +7,8 @@ from utils.exceptions import BadRequest400, NotAuthenticated401
 from utils.shortcuts import raise_400_based_on_serializer
 
 from .services import (raise_403_if_user_is_banned,
-                       raise_403_if_user_is_inactive)
+                       raise_403_if_user_is_inactive,
+                       get_user_from_access_token_or_401)
 from .serializers import (CustomTokenObtainPairSerializer,
                           CustomTokenRefreshSerializer)
 
@@ -50,8 +51,14 @@ class CustomTokenRefreshAPIView(APIView):
 
         try:
             if serializer.is_valid():
+                user = get_user_from_access_token_or_401(
+                    serializer.validated_data["access"]
+                )
+                raise_403_if_user_is_inactive(user)
+                raise_403_if_user_is_banned(user)
+
                 return Response(serializer.validated_data)
 
             raise_400_based_on_serializer(serializer)
         except TokenError:
-            raise NotAuthenticated401(code="invalidToken")
+            raise NotAuthenticated401
