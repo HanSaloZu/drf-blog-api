@@ -1,6 +1,16 @@
 from rest_framework.views import exception_handler
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.renderers import JSONRenderer
+
+
+def get_exception_json_response(exception, messages=[]):
+    response = custom_exception_handler(exception(messages))
+    response.accepted_renderer = JSONRenderer()
+    response.accepted_media_type = "application/json"
+    response.renderer_context = {}
+
+    return response
 
 
 def custom_exception_handler(exc, context=None):
