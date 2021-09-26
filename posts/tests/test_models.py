@@ -12,13 +12,11 @@ class PostModelTestCase(ExtendedTestCase):
     def test_post_model(self):
         user = self.UserModel.objects.create_user(
             login="FirstUser", email="first@user.com", password="pass")
-        post = self.model.objects.create(
-            author=user, title="Test post", body="Body")
+        post = self.model.objects.create(author=user, body="Body")
 
         self.assertIsInstance(post, self.model)
 
         self.assertEqual(post.author, user)
-        self.assertEqual(post.title, "Test post")
         self.assertEqual(post.body, "Body")
         self.assertIsInstance(post.created_at, datetime)
         self.assertIsInstance(post.updated_at, datetime)
@@ -30,8 +28,7 @@ class LikeModelTestCase(ExtendedTestCase):
     def setUp(self):
         self.user = self.UserModel.objects.create_user(
             login="FirstUser", email="first@user.com", password="pass")
-        self.post = Post.objects.create(
-            author=self.user, title="Test post", body="Body")
+        self.post = Post.objects.create(author=self.user, body="Body")
 
     def test_valid_like(self):
         self.model.objects.create(user=self.user, post=self.post)
@@ -58,8 +55,7 @@ class AttachmentModelTestCase(ExtendedTestCase):
     def setUp(self):
         self.user = self.UserModel.objects.create_user(
             login="FirstUser", email="first@user.com", password="pass")
-        self.post = Post.objects.create(
-            author=self.user, title="Test post", body="Body")
+        self.post = Post.objects.create(author=self.user, body="Body")
 
     def test_create_attachment(self):
         self.model.objects.create(

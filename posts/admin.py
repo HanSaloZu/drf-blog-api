@@ -7,13 +7,13 @@ from .models import Post, Like, Attachment
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ("id", "author", "title", "created_at")
-    list_display_links = ("id", "author", "title")
-    search_fields = ("id", "author__login", "title")
+    list_display = ("id", "author", "created_at")
+    list_display_links = ("id", "author")
+    search_fields = ("id", "author__login")
     readonly_fields = ("created_at", "updated_at")
     fieldsets = (
         (None, {
-            "fields": ("author", "title", "body", "created_at", "updated_at")
+            "fields": ("author", "body", "created_at", "updated_at")
         }),
     )
     ordering = ("-created_at",)
@@ -23,11 +23,11 @@ class PostAdmin(admin.ModelAdmin):
 class LikeAdmin(admin.ModelAdmin):
     list_display = ("user", "post")
     list_display_links = ("user", "post")
-    search_fields = ("user__login", "post__id", "post__title")
+    search_fields = ("user__login", "post__id")
 
 
 @admin.register(Attachment)
 class AttachmentAdmin(NoAddPermissionAdminModel, NoChangePermissionAdminModel):
     list_display = ("post", "link")
     list_display_links = ("post",)
-    search_fields = ("post__title", "post__body", "post__author__login")
+    search_fields = ("post__body", "post__author__login")

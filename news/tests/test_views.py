@@ -28,12 +28,12 @@ class NewsAPIViewTestCase(ListAPIViewTestCase):
             login="ThirdUser", email="thirduser@gmail.com", password="pass")
         follow(self.user, self.second_user)
 
-        Post.objects.create(author=self.user, title="post #1 by user")
+        Post.objects.create(author=self.user, body="post #1 by user")
         self.first_news_post = Post.objects.create(
-            author=self.second_user, title="post #1 by second user")
+            author=self.second_user, body="post #1 by second user")
         self.second_news_post = Post.objects.create(
-            author=self.second_user, title="post #2 by second user")
-        Post.objects.create(author=third_user, title="post #1 by third user")
+            author=self.second_user, body="post #2 by second user")
+        Post.objects.create(author=third_user, body="post #1 by third user")
 
     def test_request_by_unauthenticated_client(self):
         self.client.credentials()

@@ -11,11 +11,7 @@ class ListPostsAPIViewMixin(ListAPIViewMixin):
     serializer_class = PostSerializer
 
     def filter_queryset(self, queryset, kwargs):
-        return queryset.filter(
-            title__icontains=kwargs["q"]
-        ) | queryset.filter(
-            body__icontains=kwargs["q"]
-        )
+        return queryset.filter(body__icontains=kwargs["q"])
 
 
 class ListPostsWithOrderingAPIViewMixin(ListPostsAPIViewMixin):

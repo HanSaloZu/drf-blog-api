@@ -318,10 +318,8 @@ class RetrieveCreateDestroyLikedPostAPIViewTestCase(APIViewTestCase):
             HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
         )
 
-        self.first_post = Post.objects.create(
-            author=self.user, title="First post")
-        self.second_post = Post.objects.create(
-            author=self.user, title="Second post")
+        self.first_post = Post.objects.create(author=self.user, body="1")
+        self.second_post = Post.objects.create(author=self.user, body="2")
 
     def test_request_by_unauthenticated_client(self):
         self.client.credentials()

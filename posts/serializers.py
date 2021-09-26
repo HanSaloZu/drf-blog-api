@@ -48,19 +48,11 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ["id", "title", "body", "likes", "createdAt",
+        fields = ["id", "body", "likes", "createdAt",
                   "updatedAt", "isLiked", "attachments", "author"]
 
 
 class CreateUpdatePostSerializer(serializers.Serializer):
-    title = serializers.CharField(
-        required=True,
-        max_length=70,
-        allow_blank=False,
-        allow_null=False,
-        error_messages=get_error_messages("title")
-    )
-
     body = serializers.CharField(
         required=True,
         max_length=2000,
@@ -78,12 +70,14 @@ class CreateUpdatePostSerializer(serializers.Serializer):
         ),
         allow_empty=True,
         max_length=5,
-        error_messages=get_error_messages("attachments")
+        error_messages=get_error_messages("attachments") | {
+            "invalid": "The submitted data was not a file"
+        }
     )
 
     class Meta:
         model = Post
-        fields = ["title", "body", "attachments"]
+        fields = ["body", "attachments"]
 
     def to_internal_value(self, data):
         # Handling the case when {attachments: ['']} or {attachments: ''}
@@ -104,7 +98,6 @@ class CreateUpdatePostSerializer(serializers.Serializer):
     def create(self, validated_data):
         instance = Post.objects.create(
             author=self.context.get("request").user,
-            title=validated_data["title"],
             body=validated_data.get("body", "")
         )
 
@@ -114,7 +107,6 @@ class CreateUpdatePostSerializer(serializers.Serializer):
         return instance
 
     def update(self, instance, validated_data):
-        instance.title = validated_data.get("title", instance.title)
         instance.body = validated_data.get("body", instance.body)
 
         if "attachments" in validated_data:
