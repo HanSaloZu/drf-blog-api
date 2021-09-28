@@ -1,11 +1,12 @@
-from django.urls import reverse
 from urllib.parse import urlencode
+
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 
-from utils.tests import ListAPIViewTestCase, APIViewTestCase
+from utils.tests import APIViewTestCase, ListAPIViewTestCase
 
 from ..models import Ban
-from ..services import ban
+from ..services import ban_user
 
 
 class ListBannedUsersAPIViewTestCase(ListAPIViewTestCase):
@@ -31,10 +32,10 @@ class ListBannedUsersAPIViewTestCase(ListAPIViewTestCase):
             login="BannedUser1", email="buser1@gmail.com", password="pass")
         second_banned_user = self.UserModel.objects.create_user(
             login="BannedUser2", email="buser2@gmail.com", password="pass")
-        self.first_ban = ban(receiver=first_banned_user,
-                             creator=self.admin, reason="First ban")
-        self.second_ban = ban(receiver=second_banned_user,
-                              creator=self.admin, reason="Second ban")
+        self.first_ban = ban_user(receiver=first_banned_user,
+                                  creator=self.admin, reason="First ban")
+        self.second_ban = ban_user(receiver=second_banned_user,
+                                   creator=self.admin, reason="Second ban")
 
     def test_request_by_unauthenticated_client(self):
         self.client.credentials()
@@ -151,7 +152,7 @@ class BanAPIViewTestCase(APIViewTestCase):
 
         self.banned_user = self.UserModel.objects.create_user(
             login="BannedUser", email="buser@gmail.com", password="pass")
-        ban(receiver=self.banned_user, creator=self.admin, reason="Ban")
+        ban_user(receiver=self.banned_user, creator=self.admin, reason="Ban")
 
     def test_request_by_unauthenticated_client(self):
         self.client.credentials()

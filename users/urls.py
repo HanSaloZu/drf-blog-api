@@ -1,8 +1,8 @@
 from django.urls import path
 
-from .views import (ListCreateUsersAPIView, RetrieveUserProfileAPIView,
-                    ListUserFollowersAPIView, ListUserFollowingAPIView,
-                    ListUserPostsAPIView)
+from .views import (ListCreateUsersAPIView, ListUserFollowersAPIView,
+                    ListUserFollowingAPIView, ListUserPostsAPIView,
+                    RetrieveUserProfileAPIView)
 
 urlpatterns = [
     path("", ListCreateUsersAPIView.as_view(), name="users_list"),

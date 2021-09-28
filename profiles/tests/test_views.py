@@ -1,7 +1,7 @@
 from django.urls import reverse
 
+from posts.models import Like, Post
 from utils.tests import APIViewTestCase
-from posts.models import Post, Like
 
 
 class RetrieveUpdateProfileAPIViewTestCase(APIViewTestCase):

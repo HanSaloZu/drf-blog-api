@@ -1,12 +1,11 @@
+import enum
+
 from django.conf import settings
 from django.utils.crypto import get_random_string
-
 from google.oauth2 import service_account
-from googleapiclient.http import MediaFileUpload
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-
-import enum
+from googleapiclient.http import MediaFileUpload
 
 
 class GoogleDrivePermissionType(enum.Enum):
@@ -53,7 +52,7 @@ class GoogleDriveFilePermission:
 
 class GoogleDriveAPI:
     def __init__(self):
-        SCOPES = ['https://www.googleapis.com/auth/drive']
+        SCOPES = ("https://www.googleapis.com/auth/drive",)
 
         json_keyfile_path = settings.GOOGLE_DRIVE_STORAGE_JSON_KEY_FILE
         credentials = service_account.Credentials.from_service_account_file(
@@ -68,7 +67,10 @@ class GoogleDriveAPI:
             "name": file_name,
         }
         response = self._drive_service.files().create(
-            body=file_metadata, media_body=media, fields="id, webContentLink").execute()
+            body=file_metadata,
+            media_body=media,
+            fields="id, webContentLink"
+        ).execute()
 
         if not permissions:
             _ANYONE_CAN_READ_PERMISSION_ = GoogleDriveFilePermission(

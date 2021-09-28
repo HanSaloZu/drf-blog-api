@@ -1,8 +1,8 @@
-from utils.tests import ExtendedTestCase
 from utils.shortcuts import generate_messages_list_by_serializer_errors
+from utils.tests import ExtendedTestCase
 
-from ..serializers import VerificationCodeSerializer
 from ..models import VerificationCode
+from ..serializers import VerificationCodeSerializer
 
 
 class VerificationCodeSerializerTestCase(ExtendedTestCase):

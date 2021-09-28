@@ -1,16 +1,16 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from django.contrib.auth import authenticate
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 
 from utils.exceptions import BadRequest400, NotAuthenticated401
 from utils.shortcuts import raise_400_based_on_serializer
 
-from .services import (raise_403_if_user_is_banned,
-                       raise_403_if_user_is_inactive,
-                       get_user_from_access_token_or_401)
 from .serializers import (CustomTokenObtainPairSerializer,
                           CustomTokenRefreshSerializer)
+from .services import (get_user_from_access_token_or_401,
+                       raise_403_if_user_is_banned,
+                       raise_403_if_user_is_inactive)
 
 
 class CustomObtainTokenPairAPIView(APIView):

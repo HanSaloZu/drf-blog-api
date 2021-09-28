@@ -1,9 +1,10 @@
-from django.urls import reverse
 from urllib.parse import urlencode
 
-from utils.tests import ListAPIViewTestCase, APIViewTestCase
+from django.urls import reverse
 
-from ..services import follow, is_following, unfollow
+from utils.tests import APIViewTestCase, ListAPIViewTestCase
+
+from ..services import follow, is_following
 
 
 class FollowersListAPIViewTestCase(ListAPIViewTestCase):

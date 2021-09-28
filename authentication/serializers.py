@@ -1,9 +1,9 @@
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
-def get_error_messages(field_name):
+def generate_error_messages(field_name):
     return {
         "required": f"Enter your {field_name}",
         "blank": f"Enter your {field_name}",
@@ -17,14 +17,14 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
         required=True,
         allow_blank=False,
         allow_null=False,
-        error_messages=get_error_messages("email")
+        error_messages=generate_error_messages("email")
     )
 
     password = serializers.CharField(
         required=True,
         allow_null=False,
         allow_blank=False,
-        error_messages=get_error_messages("password")
+        error_messages=generate_error_messages("password")
     )
 
     @classmethod
@@ -32,7 +32,7 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
         return RefreshToken.for_user(user)
 
     class Meta:
-        fields = ["email", "password"]
+        fields = ("email", "password")
 
 
 class CustomTokenRefreshSerializer(TokenRefreshSerializer):

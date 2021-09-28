@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "login", "avatar", "isAdmin"]
+        fields = ("id", "login", "avatar", "isAdmin")
 
 
 class ExtendedUserSerializer(UserSerializer):
@@ -34,11 +34,11 @@ class ExtendedUserSerializer(UserSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "login", "status",
-                  "avatar", "isAdmin", "isFollowed"]
+        fields = ("id", "login", "status",
+                  "avatar", "isAdmin", "isFollowed")
 
 
-def get_error_messages(field_name, extend):
+def generate_error_messages(field_name, extend):
     capitalized_field_name = field_name.capitalize()
     error_messages = {
         "required": f"{capitalized_field_name} field is required",
@@ -55,11 +55,11 @@ class CreateUserSerializer(serializers.Serializer):
         allow_blank=False,
         allow_null=False,
         required=True,
-        error_messages=get_error_messages(
+        error_messages=generate_error_messages(
             "login", {
                 "max_length": "Login must be up to 150 characters long",
-                "invalid": ("Login can only contain English letters, numbers, " +
-                            "underscores and hyphens")
+                "invalid": ("Login can only contain English letters, " +
+                            "numbers, underscores and hyphens")
             })
     )
 
@@ -68,7 +68,7 @@ class CreateUserSerializer(serializers.Serializer):
         allow_blank=False,
         allow_null=False,
         required=True,
-        error_messages=get_error_messages(
+        error_messages=generate_error_messages(
             "email", {
                 "invalid": "Enter a valid email",
                 "max_length": "Email must be up to 254 characters long",
@@ -81,7 +81,7 @@ class CreateUserSerializer(serializers.Serializer):
         required=True,
         min_length=4,
         max_length=128,
-        error_messages=get_error_messages(
+        error_messages=generate_error_messages(
             "password", {
                 "min_length": "Password must be at least 4 characters",
                 "max_length": "Password must be up to 128 characters long"

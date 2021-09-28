@@ -2,8 +2,8 @@ from django.db.models import Count
 
 from utils.views import ListAPIViewMixin
 
-from .serializers import PostSerializer
 from .models import Post
+from .serializers import PostSerializer
 
 
 class ListPostsAPIViewMixin(ListAPIViewMixin):
@@ -21,7 +21,7 @@ class ListPostsWithOrderingAPIViewMixin(ListPostsAPIViewMixin):
     """
 
     def filter_queryset(self, queryset, kwargs):
-        allowed_ordering_fields = ["likes", "createdAt"]
+        allowed_ordering_fields = ("likes", "createdAt")
         ordering_field = kwargs.get("ordering", None)
 
         if ordering_field:

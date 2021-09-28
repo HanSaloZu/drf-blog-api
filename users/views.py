@@ -1,15 +1,15 @@
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
-from rest_framework.generics import RetrieveAPIView
 
-from utils.views import LoginRequiredAPIView
-from utils.exceptions import Forbidden403, NotAuthenticated401
-from utils.shortcuts import raise_400_based_on_serializer
-from profiles.serializers import ProfileSerializer
-from profiles.selectors import get_profile_by_user_login_or_404
 from followers.selectors import (get_user_followers_ids_list,
                                  get_user_followings_ids_list)
 from posts.mixins import ListPostsWithOrderingAPIViewMixin
+from profiles.selectors import get_profile_by_user_login_or_404
+from profiles.serializers import ProfileSerializer
+from utils.exceptions import Forbidden403, NotAuthenticated401
+from utils.shortcuts import raise_400_based_on_serializer
+from utils.views import LoginRequiredAPIView
 from verification.services.codes import create_verification_code
 from verification.services.email import send_verification_email
 
@@ -52,10 +52,9 @@ class ListUserFollowersAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
     def filter_queryset(self, queryset, kwargs):
         target_user = get_profile_by_user_login_or_404(kwargs["login"]).user
         followers_ids = get_user_followers_ids_list(target_user)
+        queryset_of_followers = queryset.filter(id__in=followers_ids)
 
-        return super().filter_queryset(
-            queryset.filter(id__in=followers_ids), kwargs
-        )
+        return super().filter_queryset(queryset_of_followers, kwargs)
 
 
 class ListUserFollowingAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
@@ -66,10 +65,9 @@ class ListUserFollowingAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
     def filter_queryset(self, queryset, kwargs):
         target_user = get_profile_by_user_login_or_404(kwargs["login"]).user
         followings_ids = get_user_followings_ids_list(target_user)
+        queryset_of_followings = queryset.filter(id__in=followings_ids)
 
-        return super().filter_queryset(
-            queryset.filter(id__in=followings_ids), kwargs
-        )
+        return super().filter_queryset(queryset_of_followings, kwargs)
 
 
 class RetrieveUserProfileAPIView(LoginRequiredAPIView, RetrieveAPIView):

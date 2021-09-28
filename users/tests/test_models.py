@@ -1,4 +1,4 @@
-from django.db import IntegrityError, transaction, Error
+from django.db import Error, IntegrityError, transaction
 
 from utils.tests import ExtendedTestCase
 

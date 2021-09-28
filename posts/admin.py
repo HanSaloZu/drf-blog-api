@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from utils.admin import NoChangePermissionAdminModel, NoAddPermissionAdminModel
 
-from .models import Post, Like, Attachment
+from .models import Attachment, Like, Post
 
 
 @admin.register(Post)

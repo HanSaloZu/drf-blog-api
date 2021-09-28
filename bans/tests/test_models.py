@@ -1,9 +1,9 @@
-from django.db import IntegrityError, transaction, Error
+from django.db import Error, IntegrityError, transaction
 
 from utils.tests import ExtendedTestCase
 
 from ..models import Ban
-from ..services import ban
+from ..services import ban_user
 
 
 class BanModelTestCase(ExtendedTestCase):
@@ -18,7 +18,7 @@ class BanModelTestCase(ExtendedTestCase):
             login="User", email="user@gmail.com", password="pass")
 
     def test_ban(self):
-        ban(receiver=self.user, creator=self.admin, reason="Ban")
+        ban_user(receiver=self.user, creator=self.admin, reason="Ban")
         ban_object = self.model.objects.all().first()
 
         self.assertIsInstance(ban_object, Ban)
@@ -31,11 +31,11 @@ class BanModelTestCase(ExtendedTestCase):
         Double ban should raise an IntegrityError
         """
 
-        ban(receiver=self.user, creator=self.admin)
+        ban_user(receiver=self.user, creator=self.admin)
 
         with self.assertRaises(IntegrityError):
             with transaction.atomic():
-                ban(receiver=self.user, creator=self.admin, reason="Ban")
+                ban_user(receiver=self.user, creator=self.admin, reason="Ban")
 
     def test_self_ban(self):
         """
@@ -44,7 +44,7 @@ class BanModelTestCase(ExtendedTestCase):
 
         with self.assertRaises(Error):
             with transaction.atomic():
-                ban(receiver=self.admin, creator=self.admin)
+                ban_user(receiver=self.admin, creator=self.admin)
 
     def test_ban_with_common_user_as_creator(self):
         """
@@ -54,7 +54,7 @@ class BanModelTestCase(ExtendedTestCase):
 
         with self.assertRaises(Error):
             with transaction.atomic():
-                ban(receiver=self.admin, creator=self.user)
+                ban_user(receiver=self.admin, creator=self.user)
 
     def test_ban_with_admin_as_receiver(self):
         """
@@ -64,4 +64,4 @@ class BanModelTestCase(ExtendedTestCase):
 
         with self.assertRaises(Error):
             with transaction.atomic():
-                ban(receiver=self.admin, creator=self.second_admin)
+                ban_user(receiver=self.admin, creator=self.second_admin)

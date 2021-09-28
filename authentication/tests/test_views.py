@@ -1,11 +1,11 @@
 from django.urls import reverse
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from bans.services import ban_user
 from utils.tests import APIViewTestCase
-from bans.services import ban
 
 
-class BaseTestCase:
+class BaseTestCase(APIViewTestCase):
     def setUp(self):
         self.credentials = {"email": "new@user.com", "password": "pass"}
         self.inactive_user_credentials = {
@@ -25,10 +25,10 @@ class BaseTestCase:
 
         admin = self.UserModel.objects.create_superuser(
             login="Admin", email="admin@user.com", password="pass")
-        ban(receiver=self.banned_user, creator=admin)
+        ban_user(receiver=self.banned_user, creator=admin)
 
 
-class CustomObtainTokenPairAPIViewTestCase(BaseTestCase, APIViewTestCase):
+class CustomObtainTokenPairAPIViewTestCase(BaseTestCase):
     url = reverse("token_create")
 
     def test_valid_token_obtaining(self):
@@ -98,7 +98,7 @@ class CustomObtainTokenPairAPIViewTestCase(BaseTestCase, APIViewTestCase):
         )
 
 
-class CustomTokenRefreshAPIViewTestCase(BaseTestCase, APIViewTestCase):
+class CustomTokenRefreshAPIViewTestCase(BaseTestCase):
     url = reverse("token_refresh")
 
     def test_valid_token_refreshing(self):

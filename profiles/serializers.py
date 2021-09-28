@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
-from bans.services import is_banned
+from bans.services import check_if_user_is_banned
 
-from .models import Profile, Contacts
+from .models import Contacts, Profile
 
 
-def get_error_messages(field_name):
+def generate_error_messages(field_name):
     capitalized_field_name = field_name.capitalize()
 
     return {
@@ -26,8 +26,8 @@ class ContactsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contacts
-        fields = ["github", "vk", "facebook",
-                  "instagram", "twitter", "website", "youtube", "mainLink"]
+        fields = ("github", "vk", "facebook",
+                  "instagram", "twitter", "website", "youtube", "mainLink")
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -58,7 +58,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         return obj.user.is_staff
 
     def get_isBanned(self, obj):
-        return is_banned(obj.user)
+        return check_if_user_is_banned(obj.user)
 
     def get_aboutMe(self, obj):
         return obj.about_me
@@ -71,17 +71,17 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ["id", "isLookingForAJob", "professionalSkills", "isAdmin",
+        fields = ("id", "isLookingForAJob", "professionalSkills", "isAdmin",
                   "fullname", "login", "status", "location", "birthday",
-                  "isBanned", "aboutMe", "avatar", "banner", "contacts"]
+                  "isBanned", "aboutMe", "avatar", "banner", "contacts")
 
 
 class AuthenticatedUserProfileSerializer(ProfileSerializer):
     class Meta:
         model = Profile
-        fields = ["id", "isLookingForAJob", "professionalSkills", "isAdmin",
+        fields = ("id", "isLookingForAJob", "professionalSkills", "isAdmin",
                   "fullname", "login", "status", "location", "birthday",
-                  "aboutMe", "theme", "avatar", "banner", "contacts"]
+                  "aboutMe", "theme", "avatar", "banner", "contacts")
 
 
 class UpdateContactsSerializer(serializers.Serializer):
@@ -90,8 +90,15 @@ class UpdateContactsSerializer(serializers.Serializer):
             max_length=200,
             required=False,
             allow_blank=True,
-            error_messages=get_error_messages(i)) for i in [
-            "github", "vk", "facebook", "instagram", "twitter", "website", "youtube", "mainLink"
+            error_messages=generate_error_messages(field)) for field in [
+            "github",
+            "vk",
+            "facebook",
+            "instagram",
+            "twitter",
+            "website",
+            "youtube",
+            "mainLink"
         ]
     ]
 
@@ -100,7 +107,7 @@ class UpdateProfileSerializer(serializers.Serializer):
     isLookingForAJob = serializers.BooleanField(
         required=False,
         allow_null=False,
-        error_messages=get_error_messages("is looking for a job")
+        error_messages=generate_error_messages("is looking for a job")
     )
 
     professionalSkills = serializers.CharField(
@@ -108,7 +115,7 @@ class UpdateProfileSerializer(serializers.Serializer):
         allow_blank=True,
         max_length=350,
         allow_null=False,
-        error_messages=get_error_messages("professional skills")
+        error_messages=generate_error_messages("professional skills")
     )
 
     fullname = serializers.CharField(
@@ -116,7 +123,7 @@ class UpdateProfileSerializer(serializers.Serializer):
         max_length=150,
         allow_blank=False,
         allow_null=False,
-        error_messages=get_error_messages("fullname")
+        error_messages=generate_error_messages("fullname")
     )
 
     status = serializers.CharField(
@@ -124,7 +131,7 @@ class UpdateProfileSerializer(serializers.Serializer):
         max_length=70,
         allow_null=False,
         allow_blank=True,
-        error_messages=get_error_messages("status")
+        error_messages=generate_error_messages("status")
     )
 
     aboutMe = serializers.CharField(
@@ -132,14 +139,14 @@ class UpdateProfileSerializer(serializers.Serializer):
         max_length=800,
         allow_blank=True,
         allow_null=False,
-        error_messages=get_error_messages("about me")
+        error_messages=generate_error_messages("about me")
     )
 
     birthday = serializers.DateField(
         format="YYYY-MM-DD",
         allow_null=True,
         required=False,
-        error_messages=get_error_messages("birthday")
+        error_messages=generate_error_messages("birthday")
     )
 
     location = serializers.CharField(
@@ -147,7 +154,7 @@ class UpdateProfileSerializer(serializers.Serializer):
         allow_blank=True,
         required=False,
         max_length=250,
-        error_messages=get_error_messages("location")
+        error_messages=generate_error_messages("location")
     )
 
     theme = serializers.CharField(
@@ -155,13 +162,13 @@ class UpdateProfileSerializer(serializers.Serializer):
         allow_null=False,
         allow_blank=True,
         max_length=250,
-        error_messages=get_error_messages("theme")
+        error_messages=generate_error_messages("theme")
     )
 
     contacts = UpdateContactsSerializer(
         required=False,
         allow_null=False,
-        error_messages=get_error_messages("contacts")
+        error_messages=generate_error_messages("contacts")
     )
 
     def update(self, instance, validated_data):
@@ -205,13 +212,15 @@ class UpdatePasswordSerailizer(serializers.Serializer):
             required=True,
             allow_blank=False,
             allow_null=False,
-            error_messages=get_error_messages(i)) for i in [
+            error_messages=generate_error_messages(i)) for i in [
             "old password", "new password", "repeat new password"
         ]
     ]
 
     def validate(self, data):
-        if not self.context["request"].user.check_password(data["oldPassword"]):
+        request = self.context["request"]
+
+        if not request.user.check_password(data["oldPassword"]):
             raise serializers.ValidationError({
                 "oldPassword": "Invalid password"
             })

@@ -1,10 +1,11 @@
+from urllib.parse import urlencode
+
 from django.urls import reverse
 from django.utils.crypto import get_random_string
-from urllib.parse import urlencode
 
 from utils.tests import APIViewTestCase, ListAPIViewTestCase
 
-from ..models import Post, Attachment, Like
+from ..models import Attachment, Like, Post
 
 
 class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):

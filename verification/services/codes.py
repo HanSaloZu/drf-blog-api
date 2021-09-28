@@ -1,13 +1,14 @@
 import datetime
+
 from django.utils.crypto import get_random_string
 
 from ..models import VerificationCode
 
 
-def remove_expired_codes():
-    VerificationCode.objects.all().filter(
-        created_at__lt=datetime.datetime.now() - datetime.timedelta(minutes=15)
-    ).delete()
+def create_verification_code(user):
+    remove_expired_codes()
+    verification_code = generate_verification_code()
+    return VerificationCode.objects.create(user=user, code=verification_code)
 
 
 def generate_verification_code():
@@ -15,14 +16,12 @@ def generate_verification_code():
         code = get_random_string(
             length=6, allowed_chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
 
-        if not VerificationCode.objects.all().filter(code=code).exists():
+        if not check_if_verification_code_exists(code):
             return code
 
 
-def create_verification_code(user):
-    remove_expired_codes()
-    verification_code = generate_verification_code()
-    return VerificationCode.objects.create(user=user, code=verification_code)
+def check_if_verification_code_exists(code):
+    return VerificationCode.objects.all().filter(code=code).exists()
 
 
 def verify_email_by_code(code):
@@ -34,3 +33,9 @@ def verify_email_by_code(code):
 
     verification_code_object.delete()
     remove_expired_codes()
+
+
+def remove_expired_codes():
+    VerificationCode.objects.all().filter(
+        created_at__lt=datetime.datetime.now() - datetime.timedelta(minutes=15)
+    ).delete()

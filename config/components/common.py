@@ -1,13 +1,12 @@
 from os import environ
 
-
 SECRET_KEY = environ["SECRET_KEY"]
 
 DEBUG = bool(int(environ["DEBUG"]))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ()
 
-INSTALLED_APPS = [
+INSTALLED_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -25,9 +24,9 @@ INSTALLED_APPS = [
     "news",
     "bans",
     "verification"
-]
+)
 
-MIDDLEWARE = [
+MIDDLEWARE = (
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -37,25 +36,25 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "config.middleware.authentication.AuthenticationMiddlewareJWT",
     "config.middleware.ban.BanMiddleware"
-]
+)
 
 ROOT_URLCONF = "config.urls"
 
-TEMPLATES = [
+TEMPLATES = (
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["templates"],
+        "DIRS": ("templates",),
         "APP_DIRS": True,
         "OPTIONS": {
-            "context_processors": [
+            "context_processors": (
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-            ],
+            ),
         },
     },
-]
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -63,18 +62,18 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 AUTH_USER_MODEL = "users.User"
 
-AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.AllowAllUsersModelBackend"
-]
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.AllowAllUsersModelBackend",
+)
 
-AUTH_PASSWORD_VALIDATORS = [
+AUTH_PASSWORD_VALIDATORS = (
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
         "OPTIONS": {
             "min_length": 4,
         }
     },
-]
+)
 
 LANGUAGE_CODE = "en-us"
 

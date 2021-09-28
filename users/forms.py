@@ -7,13 +7,13 @@ from .models import User
 class UserCreationForm(forms.ModelForm):
     login = forms.SlugField(label="Login")
     password1 = forms.CharField(
-        label='Password', min_length=4, widget=forms.PasswordInput)
+        label="Password", min_length=4, widget=forms.PasswordInput)
     password2 = forms.CharField(
-        label='Password confirmation', widget=forms.PasswordInput)
+        label="Password confirmation", widget=forms.PasswordInput)
 
     class Meta:
         model = User
-        fields = ["email", "login", "password1", "password2"]
+        fields = ("email", "login", "password1", "password2")
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
@@ -35,7 +35,7 @@ class UserChangeForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["email", "login", "password", "is_staff", "is_superuser"]
+        fields = ("email", "login", "password", "is_staff", "is_superuser")
 
     def clean_password(self):
         return self.initial["password"]

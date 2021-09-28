@@ -1,5 +1,5 @@
-from django.db import models, Error
 from django.contrib.auth import get_user_model
+from django.db import Error, models
 
 User = get_user_model()
 
@@ -17,7 +17,7 @@ class Ban(models.Model):
         verbose_name = "ban"
         verbose_name_plural = "bans"
         db_table = "bans"
-        ordering = ["-banned_at"]
+        ordering = ("-banned_at",)
 
     def __str__(self):
         return f"{self.receiver.login} banned by {self.creator.login}"

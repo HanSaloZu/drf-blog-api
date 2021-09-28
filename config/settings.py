@@ -1,11 +1,11 @@
-from split_settings.tools import optional, include
 from os import environ
 from pathlib import Path
 
+from split_settings.tools import include
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-base_settings = [
+base_settings = (
     "components/common.py",
     "components/database.py",
     "components/cors.py",
@@ -13,6 +13,6 @@ base_settings = [
     "components/rest.py",
     "components/email.py",
     "components/jwt.py"
-]
+)
 
 include(*base_settings)

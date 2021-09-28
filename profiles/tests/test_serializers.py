@@ -1,12 +1,12 @@
-from django.utils.crypto import get_random_string
 from django.test import TestCase
+from django.utils.crypto import get_random_string
 
 from utils.shortcuts import generate_messages_list_by_serializer_errors
 from utils.tests import ExtendedTestCase
 
-from ..serializers import (UpdateProfileSerializer, UpdateContactsSerializer,
-                           UpdatePasswordSerailizer, ProfileSerializer,
-                           AuthenticatedUserProfileSerializer)
+from ..serializers import (AuthenticatedUserProfileSerializer,
+                           ProfileSerializer, UpdateContactsSerializer,
+                           UpdatePasswordSerailizer, UpdateProfileSerializer)
 
 
 class ProfileSerializerTestCase(ExtendedTestCase):

@@ -1,8 +1,8 @@
-from utils.tests import ExtendedTestCase
 from utils.shortcuts import generate_messages_list_by_serializer_errors
+from utils.tests import ExtendedTestCase
 
 from ..serializers import BannedUserSerializer, BanSerializer
-from ..services import ban
+from ..services import ban_user
 
 
 class BannedUserSerializerTestCase(ExtendedTestCase):
@@ -13,7 +13,7 @@ class BannedUserSerializerTestCase(ExtendedTestCase):
             login="User", email="user@gmail.com", password="pass")
         admin = self.UserModel.objects.create_superuser(
             login="Admin", email="admin@gmail.com", password="pass")
-        ban_object = ban(receiver=user, creator=admin, reason="Ban")
+        ban_object = ban_user(receiver=user, creator=admin, reason="Ban")
         serializer = self.serializer_class(ban_object)
         data = serializer.data
 

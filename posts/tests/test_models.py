@@ -1,9 +1,10 @@
 from datetime import datetime
-from django.db import IntegrityError, transaction, Error
+
+from django.db import Error, IntegrityError, transaction
 
 from utils.tests import ExtendedTestCase
 
-from ..models import Post, Like, Attachment
+from ..models import Attachment, Like, Post
 
 
 class PostModelTestCase(ExtendedTestCase):

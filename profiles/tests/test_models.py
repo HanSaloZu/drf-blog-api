@@ -1,6 +1,5 @@
+from profiles.models import Avatar, Banner, Contacts, Profile
 from utils.tests import ExtendedTestCase
-
-from profiles.models import Profile, Contacts, Avatar, Banner
 
 
 class ProfileModelTestCase(ExtendedTestCase):

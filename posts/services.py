@@ -3,7 +3,6 @@ from profiles.services.images import update_image
 
 from .models import Attachment
 
-
 google_drive = GoogleDriveAPI()
 
 

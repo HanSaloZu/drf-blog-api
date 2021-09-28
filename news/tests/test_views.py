@@ -1,9 +1,10 @@
-from django.urls import reverse
 from urllib.parse import urlencode
 
-from utils.tests import ListAPIViewTestCase
-from posts.models import Post
+from django.urls import reverse
+
 from followers.services import follow, unfollow
+from posts.models import Post
+from utils.tests import ListAPIViewTestCase
 
 
 class NewsAPIViewTestCase(ListAPIViewTestCase):

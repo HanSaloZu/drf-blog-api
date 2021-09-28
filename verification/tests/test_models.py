@@ -1,5 +1,6 @@
 from datetime import datetime
-from django.db import transaction, Error
+
+from django.db import Error, transaction
 
 from utils.tests import ExtendedTestCase
 

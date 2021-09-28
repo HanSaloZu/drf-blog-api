@@ -1,16 +1,16 @@
 from django.contrib.auth import update_session_auth_hash
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
+from rest_framework.views import APIView
 
-from utils.views import LoginRequiredAPIView
-from utils.shortcuts import raise_400_based_on_serializer
 from posts.mixins import ListPostsWithOrderingAPIViewMixin
 from posts.selectors import get_liked_posts, get_post_by_id_or_404
+from utils.shortcuts import raise_400_based_on_serializer
+from utils.views import LoginRequiredAPIView
 
 from .mixins import UpdateImageMixin
-from .serializers import (UpdateProfileSerializer, UpdatePasswordSerailizer,
-                          AuthenticatedUserProfileSerializer)
+from .serializers import (AuthenticatedUserProfileSerializer,
+                          UpdatePasswordSerailizer, UpdateProfileSerializer)
 
 
 class RetrieveUpdateProfileAPIView(LoginRequiredAPIView, APIView):

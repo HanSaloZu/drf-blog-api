@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from utils.admin import NoAddPermissionAdminModel, NoChangePermissionAdminModel
 
-from .models import Profile, Avatar, Contacts, Banner
+from .models import Avatar, Banner, Contacts, Profile
 
 
 @admin.register(Profile)

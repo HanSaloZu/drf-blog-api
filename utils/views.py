@@ -1,8 +1,8 @@
+from django.core.paginator import Paginator
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.core.paginator import Paginator
 
-from .exceptions import (Forbidden403, BadRequest400, NotAuthenticated401,
+from .exceptions import (BadRequest400, Forbidden403, NotAuthenticated401,
                          get_exception_json_response)
 
 

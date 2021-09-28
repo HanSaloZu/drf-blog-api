@@ -20,7 +20,7 @@ class BanSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ban
-        fields = ["reason"]
+        fields = ("reason",)
 
 
 class BannedUserSerializer(serializers.ModelSerializer):
@@ -33,4 +33,4 @@ class BannedUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ban
-        fields = ["receiver", "reason", "bannedAt", "creator"]
+        fields = ("receiver", "reason", "bannedAt", "creator")

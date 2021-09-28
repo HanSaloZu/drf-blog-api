@@ -1,13 +1,13 @@
-from rest_framework import serializers
 from django.http import QueryDict
+from rest_framework import serializers
 
 from users.serializers import UserSerializer
 
-from .models import Attachment, Post, Like
+from .models import Attachment, Like, Post
 from .services import create_post_attachment, delete_post_attachments
 
 
-def get_error_messages(field_name):
+def generate_error_messages(field_name):
     capitalized_field_name = field_name.capitalize()
 
     return {
@@ -48,8 +48,8 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ["id", "body", "likes", "createdAt",
-                  "updatedAt", "isLiked", "attachments", "author"]
+        fields = ("id", "body", "likes", "createdAt",
+                  "updatedAt", "isLiked", "attachments", "author")
 
 
 class CreateUpdatePostSerializer(serializers.Serializer):
@@ -58,7 +58,7 @@ class CreateUpdatePostSerializer(serializers.Serializer):
         max_length=2000,
         allow_blank=True,
         allow_null=False,
-        error_messages=get_error_messages("body")
+        error_messages=generate_error_messages("body")
     )
 
     attachments = serializers.ListField(
@@ -70,14 +70,14 @@ class CreateUpdatePostSerializer(serializers.Serializer):
         ),
         allow_empty=True,
         max_length=5,
-        error_messages=get_error_messages("attachments") | {
+        error_messages=generate_error_messages("attachments") | {
             "invalid": "The submitted data was not a file"
         }
     )
 
     class Meta:
         model = Post
-        fields = ["body", "attachments"]
+        fields = ("body", "attachments")
 
     def to_internal_value(self, data):
         # Handling the case when {attachments: ['']} or {attachments: ''}

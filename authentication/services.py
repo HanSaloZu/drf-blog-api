@@ -1,12 +1,12 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 
-from bans.services import is_banned
+from bans.services import check_if_user_is_banned
 from utils.exceptions import Forbidden403, NotAuthenticated401
 
 
 def raise_403_if_user_is_banned(user):
-    if is_banned(user):
+    if check_if_user_is_banned(user):
         raise Forbidden403(
             messages=["You are banned"],
             code="bannedUser"
