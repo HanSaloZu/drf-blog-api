@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
-from .services.codes import (check_if_verification_code_exists,
-                             remove_expired_codes)
+from .services.codes import check_if_verification_code_exists
 
 
 class VerificationCodeSerializer(serializers.Serializer):
@@ -18,8 +17,6 @@ class VerificationCodeSerializer(serializers.Serializer):
     )
 
     def validate(self, data):
-        remove_expired_codes()
-
         if not check_if_verification_code_exists(data["code"]):
             raise serializers.ValidationError(
                 {"code": "Verification code is invalid or expired"})
