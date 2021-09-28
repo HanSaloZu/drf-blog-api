@@ -31,7 +31,6 @@ def verify_email_by_code(code):
     user.save()
 
     verification_code_object.delete()
-    remove_expired_codes()
 
 
 def remove_expired_codes():
