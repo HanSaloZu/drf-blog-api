@@ -6,7 +6,6 @@ from ..models import VerificationCode
 
 
 def create_verification_code(user):
-    remove_expired_codes()
     verification_code = generate_verification_code()
     return VerificationCode.objects.create(user=user, code=verification_code)
 
