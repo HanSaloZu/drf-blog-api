@@ -19,7 +19,7 @@ class Post(models.Model):
         ordering = ("-created_at",)
 
     def __str__(self):
-        return self.title
+        return f"Post #{self.id}"
 
 
 class Like(models.Model):
