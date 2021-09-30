@@ -28,7 +28,8 @@ def custom_exception_handler(exc, context=None):
                 "fieldsErrors": exc.fields_errors
             },
             status=exc.status_code,
-            content_type="application/json"
+            content_type="application/json",
+            headers=exc.headers
         )
 
     response = exception_handler(exc, context)
@@ -66,6 +67,7 @@ def normalize_exception_detail(exc_detail):
 class CustomAPIException(Exception):
     code = "clientError"
     status_code = status.HTTP_400_BAD_REQUEST
+    headers = None
 
     def __init__(self, messages=[], fields_errors={}, code=""):
         if not hasattr(self, "messages"):
