@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -13,7 +14,8 @@ class APIViewTestCase(ExtendedTestCase):
 
     def generate_jwt_auth_credentials(self, user):
         token = RefreshToken.for_user(user).access_token
-        return "JWT {0}".format(token)
+        auth_header_type = settings.SIMPLE_JWT["AUTH_HEADER_TYPES"][0]
+        return f"{auth_header_type} {token}"
 
     def client_error_response_test(self, response,
                                    code="invalid",
