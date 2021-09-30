@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from utils.admin import NoChangePermissionAdminModel, NoAddPermissionAdminModel
+from utils.admin import NoAddPermissionAdminModel, NoChangePermissionAdminModel
 
 from .models import Attachment, Like, Post
 
@@ -9,7 +9,7 @@ from .models import Attachment, Like, Post
 class PostAdmin(admin.ModelAdmin):
     list_display = ("id", "author", "created_at")
     list_display_links = ("id", "author")
-    search_fields = ("id", "author__login")
+    search_fields = ("id", "author__login", "body")
     readonly_fields = ("created_at", "updated_at")
     fieldsets = (
         (None, {
