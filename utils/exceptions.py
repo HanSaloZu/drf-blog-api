@@ -1,7 +1,9 @@
+from django.conf import settings
 from rest_framework import status
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 def get_exception_json_response(exception, messages=[]):
@@ -89,6 +91,12 @@ class NotAuthenticated401(CustomAPIException):
     code = "notAuthenticated"
     status_code = status.HTTP_401_UNAUTHORIZED
     messages = ["You are not authenticated"]
+    headers = {
+        "WWW-Authenticate": "{0} realm=\"{1}\"".format(
+            settings.SIMPLE_JWT["AUTH_HEADER_TYPES"][0],
+            JWTAuthentication.www_authenticate_realm
+        )
+    }
 
 
 class NotFound404(CustomAPIException):
