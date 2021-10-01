@@ -23,3 +23,9 @@ def create_post_attachment(post, file):
 def delete_post(post):
     delete_post_attachments(post)
     post.delete()
+
+
+def get_post_attachments_list(post):
+    return list(Attachment.objects.all().filter(
+        post=post
+    ).values_list("link", flat=True))

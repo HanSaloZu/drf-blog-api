@@ -3,8 +3,9 @@ from rest_framework import serializers
 
 from users.serializers import UserSerializer
 
-from .models import Attachment, Like, Post
-from .services import create_post_attachment, delete_post_attachments
+from .models import Like, Post
+from .services import (create_post_attachment, delete_post_attachments,
+                       get_post_attachments_list)
 
 
 def generate_error_messages(field_name):
@@ -42,9 +43,7 @@ class PostSerializer(serializers.ModelSerializer):
         return Like.objects.all().filter(post=obj, user=user).exists()
 
     def get_attachments(self, obj):
-        return list(Attachment.objects.all().filter(
-            post=obj
-        ).values_list("link", flat=True))
+        return get_post_attachments_list(obj)
 
     class Meta:
         model = Post
