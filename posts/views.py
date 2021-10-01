@@ -9,7 +9,8 @@ from utils.views import LoginRequiredAPIView
 
 from .mixins import ListPostsWithOrderingAPIViewMixin
 from .selectors import get_post_by_id_or_404
-from .serializers import CreateUpdatePostSerializer, PostSerializer
+from .serializers import (CreatePostSerializer, PostSerializer,
+                          UpdatePostSerializer)
 from .services import delete_post
 
 
@@ -20,7 +21,7 @@ class ListCreatePostAPIView(LoginRequiredAPIView,
     """
 
     def post(self, request):
-        serializer = CreateUpdatePostSerializer(
+        serializer = CreatePostSerializer(
             data=request.data, context={"request": request})
 
         if serializer.is_valid():
@@ -55,8 +56,7 @@ class RetrieveUpdateDestroyPostAPIView(LoginRequiredAPIView, APIView):
         instance = get_post_by_id_or_404(id)
 
         if request.user.is_staff or instance.author == request.user:
-            serializer = CreateUpdatePostSerializer(
-                instance, request.data, partial=True)
+            serializer = UpdatePostSerializer(instance, request.data)
 
             if serializer.is_valid():
                 instance = serializer.save()

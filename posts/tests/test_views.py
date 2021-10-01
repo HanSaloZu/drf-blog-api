@@ -1,3 +1,4 @@
+import re
 from urllib.parse import urlencode
 
 from django.urls import reverse
@@ -20,7 +21,7 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
         )
 
-        self.first_post = Post.objects.create(author=self.user, body="Body")
+        self.first_post = Post.objects.create(author=self.user, body="1")
         Like.objects.create(user=self.user, post=self.first_post)
         Attachment.objects.create(
             post=self.first_post, file_id="1", link="http://localhost:8000/1")
@@ -28,10 +29,10 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             post=self.first_post, file_id="2", link="http://localhost:8000/2")
 
         self.second_user = self.UserModel.objects.create_user(
-            login="SecondUser", email="seconds_user@gmail.com", password="pass")
+            login="SecondUser", email="second_user@gmail.com", password="pass")
 
         self.second_post = Post.objects.create(
-            author=self.second_user, body="")
+            author=self.second_user, body="2")
 
     def test_request_by_unauthenticated_client(self):
         self.client.credentials()
@@ -195,6 +196,51 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             fields_errors_dict_len=2
         )
 
+    def test_set_empty_body_for_post(self):
+        """
+        Post cannot have both fields(body, attachments) empty.
+        Post #1 has a list of attachments, so a request
+        to set an empty body for a post should return a 200 status code
+        """
+        payload = {
+            "body": ""
+        }
+        response = self.client.patch(self.url({"id": 1}), payload)
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+    def test_set_empty_attachments_for_post(self):
+        """
+        Post cannot have both fields(body, attachments) empty.
+        Post #1 has a body, so a request to set an empty list of attachments
+        for post should return a 200 status code
+        """
+        payload = {
+            "attachments": []
+        }
+        response = self.client.patch(self.url({"id": 1}), payload)
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+    def test_set_empty_fields_for_post(self):
+        """
+        Post cannot have both fields(body, attachments) empty,
+        so a request should return a 400 status code
+        """
+        payload = {
+            "body": "",
+            "attachments": []
+        }
+        response = self.client.patch(self.url({"id": 1}), payload)
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "One of the two fields (body, attachments) cannot be empty"
+            ],
+            fields_errors_dict_len=1
+        )
+
     def test_update_foreign_post(self):
         """
         Updating foreign post should return a 403 status code
@@ -235,7 +281,7 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         self.assertEqual(response.data["body"], post.body)
         self.assertNotEqual(post.author, admin)
 
-    def test_update_post_with_invalid_id(self):
+    def test_update_post_with_invalid_id_in_request(self):
         """
         Updating a post with an invalid id should return a 404 status code
         """
@@ -418,4 +464,19 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
                 "Attachments should be a list of items"
             ],
             fields_errors_dict_len=2
+        )
+
+    def test_post_creation_with_empty_fields(self):
+        payload = {
+            "body": "",
+            "attachments": []
+        }
+        response = self.client.post(self.url(), payload)
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "One of the two fields (body, attachments) cannot be empty"
+            ],
+            fields_errors_dict_len=1
         )

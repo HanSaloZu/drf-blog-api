@@ -51,9 +51,9 @@ class PostSerializer(serializers.ModelSerializer):
                   "updatedAt", "isLiked", "attachments", "author")
 
 
-class CreateUpdatePostSerializer(serializers.Serializer):
+class BaseCreateUpdatePostSerializer(serializers.Serializer):
     body = serializers.CharField(
-        required=True,
+        required=False,
         max_length=2000,
         allow_blank=True,
         allow_null=False,
@@ -61,22 +61,18 @@ class CreateUpdatePostSerializer(serializers.Serializer):
     )
 
     attachments = serializers.ListField(
-        required=False,
         child=serializers.ImageField(
             error_messages={
                 "invalid_image": "Invalid image in attached files"
             }
         ),
+        required=False,
         allow_empty=True,
         max_length=5,
         error_messages=generate_error_messages("attachments") | {
             "invalid": "The submitted data was not a file"
         }
     )
-
-    class Meta:
-        model = Post
-        fields = ("body", "attachments")
 
     def to_internal_value(self, data):
         # Handling the case when {attachments: ['']} or {attachments: ''}
@@ -94,6 +90,21 @@ class CreateUpdatePostSerializer(serializers.Serializer):
 
         return super().to_internal_value(data)
 
+
+class CreatePostSerializer(BaseCreateUpdatePostSerializer):
+    class Meta:
+        fields = ("body", "attachments")
+
+    def validate(self, data):
+        data["body"] = data.get("body", "")
+        data["attachments"] = data.get("attachments", [])
+
+        if len(data["body"]) == 0 and len(data["attachments"]) == 0:
+            msg = "One of the two fields (body, attachments) cannot be empty"
+            raise serializers.ValidationError({"body": msg})
+
+        return data
+
     def create(self, validated_data):
         instance = Post.objects.create(
             author=self.context.get("request").user,
@@ -104,6 +115,25 @@ class CreateUpdatePostSerializer(serializers.Serializer):
             create_post_attachment(instance, attachment)
 
         return instance
+
+
+class UpdatePostSerializer(BaseCreateUpdatePostSerializer):
+    class Meta:
+        fields = ("body", "attachments")
+
+    def validate(self, data):
+        if not data:
+            return data
+
+        post_body = data.get("body", self.instance.body)
+        post_attachments = data.get(
+            "attachments", get_post_attachments_list(self.instance))
+
+        if len(post_body) == 0 and len(post_attachments) == 0:
+            msg = "One of the two fields (body, attachments) cannot be empty"
+            raise serializers.ValidationError({"body": msg})
+
+        return data
 
     def update(self, instance, validated_data):
         instance.body = validated_data.get("body", instance.body)
