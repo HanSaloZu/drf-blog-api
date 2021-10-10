@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.utils.crypto import get_random_string
 
 from ..models import VerificationCode
@@ -34,6 +35,8 @@ def verify_email_by_code(code):
 
 
 def remove_expired_codes():
+    code_lifetime = settings.EMAIL_VERIFICATION_CODE_LIFETIME
+
     VerificationCode.objects.all().filter(
-        created_at__lt=datetime.datetime.now() - datetime.timedelta(minutes=15)
+        created_at__lt=datetime.datetime.now() - code_lifetime
     ).delete()

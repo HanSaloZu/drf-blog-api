@@ -1,5 +1,3 @@
-from os import environ
-
 SECRET_KEY = environ["SECRET_KEY"]
 
 DEBUG = bool(int(environ["DEBUG"]))
