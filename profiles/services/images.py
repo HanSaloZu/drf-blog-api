@@ -1,6 +1,7 @@
 from os import remove
 
 from django.conf import settings
+from django.core.files.storage import default_storage
 from PIL import Image
 
 from .google_drive_api import GoogleDriveAPI
@@ -35,9 +36,14 @@ def save_image_in_media_folder(file):
     path = settings.MEDIA_ROOT / file.name
 
     if file.content_type == "image/gif":
-        image.save(path, optimize=True, quality=45,
-                   loop=0, save_all=True, disposal=2)
+        save_gif(file, path)
     else:
         image.save(path, optimize=True, quality=45)
 
     return path
+
+
+def save_gif(file, path):
+    with default_storage.open(path, "wb+") as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
