@@ -33,6 +33,11 @@ def upload_image(file):
 def save_image_in_media_folder(file):
     image = Image.open(file)
     path = settings.MEDIA_ROOT / file.name
-    image.save(path, optimize=True, quality=45)
+
+    if file.content_type == "image/gif":
+        image.save(path, optimize=True, quality=45,
+                   loop=0, save_all=True, disposal=2)
+    else:
+        image.save(path, optimize=True, quality=45)
 
     return path
