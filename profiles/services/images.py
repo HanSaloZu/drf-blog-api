@@ -8,7 +8,7 @@ from .google_drive_api import GoogleDriveAPI
 google_drive = GoogleDriveAPI()
 
 
-def update_image(instance, file):
+def update_instance_image(instance, file):
     if instance.file_id != "":
         google_drive.delete_file(instance.file_id)
 

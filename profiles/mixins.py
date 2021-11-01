@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 from utils.exceptions import BadRequest400
 
-from .services.images import update_image
+from .services.images import update_instance_image
 
 
 class UpdateImageMixin:
@@ -14,9 +14,9 @@ class UpdateImageMixin:
 
         if isinstance(image, File):
             instance = self.get_object(request)
-            link = update_image(instance, image)
+            link_to_image = update_instance_image(instance, image)
 
-            return Response({self.image_field: link})
+            return Response({self.image_field: link_to_image})
 
         raise BadRequest400("File not provided",
                             {self.image_field: ["File not provided"]})
