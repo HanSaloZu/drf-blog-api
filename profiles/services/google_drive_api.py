@@ -51,6 +51,8 @@ class GoogleDriveFilePermission:
 
 
 class GoogleDriveAPI:
+    COMMON_LINK_TO_FILE = "https://drive.google.com/uc?id="
+
     def __init__(self):
         SCOPES = ("https://www.googleapis.com/auth/drive",)
 
@@ -86,7 +88,8 @@ class GoogleDriveAPI:
             self._drive_service.permissions().create(fileId=response["id"],
                                                      body={**p.raw}).execute()
 
-        return response
+        link_to_image = self.COMMON_LINK_TO_FILE + str(response["id"])
+        return response["id"], link_to_image
 
     def delete_file(self, file_id):
         try:

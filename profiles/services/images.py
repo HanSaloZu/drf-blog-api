@@ -12,10 +12,9 @@ def update_image(instance, file):
     if instance.file_id != "":
         google_drive.delete_file(instance.file_id)
 
-    response = upload_image(file)
-    link = "https://drive.google.com/uc?id=" + str(response["id"])
+    file_id, link = upload_image(file)
 
-    instance.file_id = response["id"]
+    instance.file_id = file_id
     instance.link = link
     instance.save()
 
@@ -23,17 +22,17 @@ def update_image(instance, file):
 
 
 def upload_image(file):
-    # Save file temporarily in the media folder
+    path = save_image_in_media_folder(file)
+
+    file_id, link = google_drive.upload_file(path)
+    remove(path)
+
+    return file_id, link
+
+
+def save_image_in_media_folder(file):
     image = Image.open(file)
     path = settings.MEDIA_ROOT / file.name
+    image.save(path, optimize=True, quality=45)
 
-    # reduce image size by 20%
-    image = image.resize(
-        tuple(map(lambda value: value // 100 * 80, image.size)))
-
-    image.save(path, optimize=True, quality=70)
-
-    response = google_drive.upload_file(path)
-    remove(path)  # Remove file from media folder
-
-    return response
+    return path
