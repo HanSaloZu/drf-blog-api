@@ -12,11 +12,11 @@ class UpdateImageMixin:
     def put(self, request):
         image = request.data.get(self.image_field)
 
-        if isinstance(image, File):
+        if image.content_type.split("/")[0] == "image":
             instance = self.get_object(request)
             link_to_image = update_instance_image(instance, image)
 
             return Response({self.image_field: link_to_image})
 
-        raise BadRequest400("File not provided",
-                            {self.image_field: ["File not provided"]})
+        raise BadRequest400("Image not provided",
+                            {self.image_field: ["Image not provided"]})
