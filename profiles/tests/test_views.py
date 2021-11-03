@@ -165,7 +165,7 @@ class UpdateAvatarAPIViewTestCase(APIViewTestCase):
         self.client_error_response_test(
             response,
             messages=[
-                "File not provided",
+                "Image not provided",
             ],
             fields_errors_dict_len=1
         )
@@ -182,7 +182,7 @@ class UpdateAvatarAPIViewTestCase(APIViewTestCase):
         self.client_error_response_test(
             response,
             messages=[
-                "File not provided",
+                "Image not provided",
             ],
             fields_errors_dict_len=1
         )
@@ -214,7 +214,7 @@ class UpdateBannerAPIViewTestCase(APIViewTestCase):
         self.client_error_response_test(
             response,
             messages=[
-                "File not provided",
+                "Image not provided",
             ],
             fields_errors_dict_len=1
         )
@@ -231,7 +231,7 @@ class UpdateBannerAPIViewTestCase(APIViewTestCase):
         self.client_error_response_test(
             response,
             messages=[
-                "File not provided",
+                "Image not provided",
             ],
             fields_errors_dict_len=1
         )
