@@ -1,0 +1,20 @@
+[run]
+command_line = manage.py test
+source = .
+omit =
+    manage.py
+    */tests/*
+    */config/*
+    */migrations/*
+    */urls.py
+
+[report]
+precision = 1
+exclude_lines =
+    def __str__
+
+show_missing = true
+skip_empty = true
+
+[html]
+skip_empty = true
