@@ -1,5 +1,5 @@
-from django.db import models, Error
 from django.contrib.auth import get_user_model
+from django.db import Error, models
 
 from profiles.models import ImageModel
 
@@ -8,7 +8,6 @@ User = get_user_model()
 
 class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=70, db_index=True)
     body = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -17,10 +16,10 @@ class Post(models.Model):
         verbose_name = "post"
         verbose_name_plural = "posts"
         db_table = "posts"
-        ordering = ["-created_at"]
+        ordering = ("-created_at",)
 
     def __str__(self):
-        return self.title
+        return f"Post #{self.id}"
 
 
 class Like(models.Model):
@@ -28,7 +27,7 @@ class Like(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ["user", "post"]
+        unique_together = ("user", "post")
         verbose_name = "like"
         verbose_name_plural = "likes"
         db_table = "likes"
@@ -45,8 +44,8 @@ class Attachment(ImageModel):
             post=self.post
         ).count()
 
-        if attachments_count >= 10:
-            raise Error("Maximum 10 attachments per post")
+        if attachments_count >= 5:
+            raise Error("Maximum 5 attachments per post")
 
         super(Attachment, self).save(*args, **kwargs)
 

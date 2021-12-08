@@ -1,16 +1,21 @@
-from django.test import TestCase
-from rest_framework import status
-from rest_framework.test import APIClient
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
-class ExtendedTestCase(TestCase):
+class ExtendedTestCase(APITestCase):
     UserModel = get_user_model()
 
 
 class APIViewTestCase(ExtendedTestCase):
-    client = APIClient()
     http_status = status
+
+    def generate_jwt_auth_credentials(self, user):
+        token = RefreshToken.for_user(user).access_token
+        auth_header_type = settings.SIMPLE_JWT["AUTH_HEADER_TYPES"][0]
+        return f"{auth_header_type} {token}"
 
     def client_error_response_test(self, response,
                                    code="invalid",
@@ -23,13 +28,15 @@ class APIViewTestCase(ExtendedTestCase):
             counter = len(fields_errors)
 
             for field in fields_errors:
-                # If the field error value is dict, then this is a group of fields
+                # If the field error value is dict, then
+                # it is a group of fields
 
                 if isinstance(fields_errors[field], dict):
-                    # Groups of fields are not counted in the counter, so 1 is subtracted from the counter
-
+                    # Groups of fields are not counted in the counter,
+                    # so 1 is subtracted from the counter
                     counter += calc_number_of_fields_errors(
-                        fields_errors[field]) - 1
+                        fields_errors[field]
+                    ) - 1
 
             return counter
 

@@ -1,10 +1,9 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
-User = get_user_model()
 
-
-def get_error_messages_for_login_serializer(field_name):
+def generate_error_messages(field_name):
     return {
         "required": f"Enter your {field_name}",
         "blank": f"Enter your {field_name}",
@@ -13,137 +12,32 @@ def get_error_messages_for_login_serializer(field_name):
     }
 
 
-class LoginSerializer(serializers.ModelSerializer):
+class CustomTokenObtainPairSerializer(serializers.Serializer):
     email = serializers.EmailField(
         required=True,
         allow_blank=False,
         allow_null=False,
-        error_messages=get_error_messages_for_login_serializer("email")
+        error_messages=generate_error_messages("email")
     )
 
     password = serializers.CharField(
         required=True,
         allow_null=False,
         allow_blank=False,
-        error_messages=get_error_messages_for_login_serializer("password")
+        error_messages=generate_error_messages("password")
     )
+
+    @classmethod
+    def get_token(cls, user):
+        return RefreshToken.for_user(user)
 
     class Meta:
-        model = User
-        fields = ["email", "password"]
+        fields = ("email", "password")
 
 
-def get_error_messages_for_registration_serializer(field_name, extend):
-    capitalized_field_name = field_name.capitalize()
-    error_messages = {
-        "required": f"{capitalized_field_name} field is required",
-        "blank": f"{capitalized_field_name} can't be empty",
-        "null": f"{capitalized_field_name} is required",
-    }
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    def __init__(self, *args, **kwargs):
+        super(CustomTokenRefreshSerializer, self).__init__(*args, **kwargs)
 
-    return error_messages | extend
-
-
-class RegistrationSerializer(serializers.Serializer):
-    login = serializers.SlugField(
-        max_length=50,
-        allow_blank=False,
-        allow_null=False,
-        required=True,
-        error_messages=get_error_messages_for_registration_serializer("login", {
-            "max_length": "Login must be up to 150 characters long",
-            "invalid": ("Login can only contain English letters, numbers, " +
-                        "underscores and hyphens")
-        })
-    )
-
-    email = serializers.EmailField(
-        max_length=254,
-        allow_blank=False,
-        allow_null=False,
-        required=True,
-        error_messages=get_error_messages_for_registration_serializer("email", {
-            "invalid": "Enter a valid email",
-            "max_length": "Email must be up to 254 characters long",
-        })
-    )
-
-    password1 = serializers.CharField(
-        allow_blank=False,
-        allow_null=False,
-        required=True,
-        min_length=4,
-        max_length=128,
-        error_messages=get_error_messages_for_registration_serializer("password", {
-            "min_length": "Password must be at least 4 characters",
-            "max_length": "Password must be up to 128 characters long"
-        })
-    )
-
-    password2 = serializers.CharField(
-        required=True,
-        error_messages={
-            "required": "You should repeat your password"
-        })
-
-    aboutMe = serializers.CharField(
-        allow_blank=False,
-        allow_null=False,
-        required=True,
-        min_length=70,
-        max_length=800,
-        error_messages=get_error_messages_for_registration_serializer("about me", {
-            "min_length": "About me must be at least 70 characters",
-            "max_length": "About me must be up to 800 characters long"
-        })
-    )
-
-    birthday = serializers.DateField(
-        format="YYYY-MM-DD",
-        allow_null=False,
-        required=True,
-        error_messages=get_error_messages_for_registration_serializer(
-            "birthday", {
-                "invalid": "Invalid birthday value"
-            })
-    )
-
-    location = serializers.CharField(
-        allow_null=False,
-        allow_blank=False,
-        required=True,
-        max_length=250,
-        error_messages=get_error_messages_for_registration_serializer(
-            "location", {
-                "max_length": "Location must be up to 250 characters long",
-            })
-    )
-
-    def validate(self, data):
-        if User.objects.all().filter(login=data["login"]).exists():
-            raise serializers.ValidationError(
-                {"login": "This login is already in use"})
-
-        if User.objects.all().filter(email=data["email"]).exists():
-            raise serializers.ValidationError(
-                {"email": "This email is already in use"})
-
-        if data["password1"] != data["password2"]:
-            raise serializers.ValidationError(
-                {"password2": "Passwords do not match"})
-
-        return data
-
-    def create(self, validated_data):
-        instance = User.objects.create_user(
-            login=validated_data["login"],
-            email=validated_data["email"],
-            password=validated_data["password1"],
-            is_active=False
-        )
-        instance.profile.about_me = validated_data["aboutMe"]
-        instance.profile.birthday = validated_data["birthday"]
-        instance.profile.location = validated_data["location"]
-        instance.save()
-
-        return instance
+        refresh_field = self.fields["refresh"]
+        refresh_field.error_messages["required"] = "Refresh token is required"

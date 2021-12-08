@@ -12,10 +12,13 @@ django-split-settings = "*"
 google-api-python-client = "*"
 six = "*"
 psycopg2-binary = "*"
+djangorestframework-simplejwt = "*"
 
 [dev-packages]
 autopep8 = "*"
 pylint = "*"
+isort = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.9"

@@ -1,14 +1,14 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from utils.views import LoginRequiredAPIView
-from utils.exceptions import NotFound404, BadRequest400
-from users.mixins import ListUsersAPIViewMixin
 from profiles.selectors import get_profile_by_user_login_or_404
+from users.mixins import ListUsersAPIViewMixin
+from utils.exceptions import BadRequest400, NotFound404
+from utils.views import LoginRequiredAPIView
 
 from .selectors import (get_user_followers_ids_list,
                         get_user_followings_ids_list)
-from .services import is_following, follow, unfollow
+from .services import follow, is_following, unfollow
 
 
 class FollowersListAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
@@ -18,10 +18,9 @@ class FollowersListAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
 
     def filter_queryset(self, queryset, kwargs):
         followers_ids = get_user_followers_ids_list(self.request.user)
-        return super().filter_queryset(
-            queryset.filter(id__in=followers_ids),
-            kwargs
-        )
+        queryset_of_followers = queryset.filter(id__in=followers_ids)
+
+        return super().filter_queryset(queryset_of_followers, kwargs)
 
 
 class FollowingListAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
@@ -31,10 +30,9 @@ class FollowingListAPIView(LoginRequiredAPIView, ListUsersAPIViewMixin):
 
     def filter_queryset(self, queryset, kwargs):
         followings_ids = get_user_followings_ids_list(self.request.user)
-        return super().filter_queryset(
-            queryset.filter(id__in=followings_ids),
-            kwargs
-        )
+        queryset_of_followings = queryset.filter(id__in=followings_ids)
+
+        return super().filter_queryset(queryset_of_followings, kwargs)
 
 
 class FollowingAPIView(LoginRequiredAPIView, APIView):

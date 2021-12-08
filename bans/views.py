@@ -1,16 +1,16 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_201_CREATED
+from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
+from rest_framework.views import APIView
 
-from utils.views import ListAPIViewMixin, AdminRequiredAPIView
-from utils.shortcuts import raise_400_based_on_serializer
-from utils.exceptions import Forbidden403, BadRequest400
 from profiles.selectors import get_profile_by_user_login_or_404
+from utils.exceptions import Forbidden403
+from utils.shortcuts import raise_400_based_on_serializer
+from utils.views import AdminRequiredAPIView, ListAPIViewMixin
 
-from .serializers import BanSerializer, BannedUserSerializer
 from .models import Ban
-from .services import unban, is_banned, ban
 from .selectors import get_ban_object_by_login_or_404
+from .serializers import BannedUserSerializer, BanSerializer
+from .services import ban_user, check_if_user_is_banned, unban_user
 
 
 class ListBannedUsersAPIView(AdminRequiredAPIView, ListAPIViewMixin):
@@ -43,7 +43,7 @@ class BanAPIView(AdminRequiredAPIView, APIView):
     def put(self, request, login):
         receiver = get_profile_by_user_login_or_404(login).user
 
-        if is_banned(receiver):
+        if check_if_user_is_banned(receiver):
             instance = get_ban_object_by_login_or_404(login)
             serializer = BanSerializer(instance, request.data)
 
@@ -58,8 +58,8 @@ class BanAPIView(AdminRequiredAPIView, APIView):
 
         serializer = BanSerializer(data=request.data)
         if serializer.is_valid():
-            ban_object = ban(receiver=receiver, creator=self.request.user,
-                             reason=serializer.validated_data["reason"])
+            ban_object = ban_user(receiver=receiver, creator=self.request.user,
+                                  reason=serializer.validated_data["reason"])
             return Response(BannedUserSerializer(ban_object).data,
                             status=HTTP_201_CREATED)
 
@@ -67,6 +67,6 @@ class BanAPIView(AdminRequiredAPIView, APIView):
 
     def delete(self, request, login):
         instance = get_ban_object_by_login_or_404(login)
-        unban(instance.receiver)
+        unban_user(instance.receiver)
 
         return Response(status=HTTP_204_NO_CONTENT)

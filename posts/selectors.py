@@ -2,7 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from utils.exceptions import NotFound404
 
-from .models import Post, Like
+from .models import Like, Post
 
 
 def get_post_by_id_or_404(id):

@@ -1,9 +1,10 @@
-from django.urls import reverse
 from urllib.parse import urlencode
 
-from utils.tests import ListAPIViewTestCase
-from posts.models import Post
+from django.urls import reverse
+
 from followers.services import follow, unfollow
+from posts.models import Post
+from utils.tests import ListAPIViewTestCase
 
 
 class NewsAPIViewTestCase(ListAPIViewTestCase):
@@ -15,10 +16,12 @@ class NewsAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        credentials = {"email": "user@gmail.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="User", **credentials)
-        self.client.login(**credentials)
+            login="User", email="user@gmail.com", password="pass")
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="seconduser@gmail.com", password="pass")
@@ -26,15 +29,15 @@ class NewsAPIViewTestCase(ListAPIViewTestCase):
             login="ThirdUser", email="thirduser@gmail.com", password="pass")
         follow(self.user, self.second_user)
 
-        Post.objects.create(author=self.user, title="post #1 by user")
+        Post.objects.create(author=self.user, body="post #1 by user")
         self.first_news_post = Post.objects.create(
-            author=self.second_user, title="post #1 by second user")
+            author=self.second_user, body="post #1 by second user")
         self.second_news_post = Post.objects.create(
-            author=self.second_user, title="post #2 by second user")
-        Post.objects.create(author=third_user, title="post #1 by third user")
+            author=self.second_user, body="post #2 by second user")
+        Post.objects.create(author=third_user, body="post #1 by third user")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url())
 
         self.unauthorized_client_error_response_test(response)

@@ -1,16 +1,17 @@
 from django.urls import reverse
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_204_NO_CONTENT, HTTP_201_CREATED
+from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
+from rest_framework.views import APIView
 
-from utils.views import LoginRequiredAPIView
 from utils.exceptions import Forbidden403
 from utils.shortcuts import raise_400_based_on_serializer
+from utils.views import LoginRequiredAPIView
 
-from .serializers import PostSerializer, CreateUpdatePostSerializer
-from .selectors import get_post_by_id_or_404
-from .services import delete_post
 from .mixins import ListPostsWithOrderingAPIViewMixin
+from .selectors import get_post_by_id_or_404
+from .serializers import (CreatePostSerializer, PostSerializer,
+                          UpdatePostSerializer)
+from .services import delete_post
 
 
 class ListCreatePostAPIView(LoginRequiredAPIView,
@@ -20,7 +21,7 @@ class ListCreatePostAPIView(LoginRequiredAPIView,
     """
 
     def post(self, request):
-        serializer = CreateUpdatePostSerializer(
+        serializer = CreatePostSerializer(
             data=request.data, context={"request": request})
 
         if serializer.is_valid():
@@ -55,8 +56,7 @@ class RetrieveUpdateDestroyPostAPIView(LoginRequiredAPIView, APIView):
         instance = get_post_by_id_or_404(id)
 
         if request.user.is_staff or instance.author == request.user:
-            serializer = CreateUpdatePostSerializer(
-                instance, request.data, partial=True)
+            serializer = UpdatePostSerializer(instance, request.data)
 
             if serializer.is_valid():
                 instance = serializer.save()

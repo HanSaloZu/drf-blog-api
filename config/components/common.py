@@ -1,13 +1,10 @@
-from os import environ
-
-
 SECRET_KEY = environ["SECRET_KEY"]
 
 DEBUG = bool(int(environ["DEBUG"]))
 
 ALLOWED_HOSTS = environ["ALLOWED_HOSTS"].split(" ")
 
-INSTALLED_APPS = [
+INSTALLED_APPS = (
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -23,10 +20,11 @@ INSTALLED_APPS = [
     "authentication",
     "posts",
     "news",
-    "bans"
-]
+    "bans",
+    "verification"
+)
 
-MIDDLEWARE = [
+MIDDLEWARE = (
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -34,44 +32,46 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "config.middleware.authentication.AuthenticationMiddlewareJWT",
     "config.middleware.ban.BanMiddleware"
-]
+)
 
 ROOT_URLCONF = "config.urls"
 
-TEMPLATES = [
+TEMPLATES = (
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["templates"],
+        "DIRS": ("templates",),
         "APP_DIRS": True,
         "OPTIONS": {
-            "context_processors": [
+            "context_processors": (
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-            ],
+            ),
         },
     },
-]
+)
 
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 WSGI_APPLICATION = "config.wsgi.application"
 
 AUTH_USER_MODEL = "users.User"
 
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.AllowAllUsersModelBackend']
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.AllowAllUsersModelBackend",
+)
 
-AUTH_PASSWORD_VALIDATORS = [
+AUTH_PASSWORD_VALIDATORS = (
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {
-            'min_length': 4,
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {
+            "min_length": 4,
         }
     },
-]
+)
 
 LANGUAGE_CODE = "en-us"
 
@@ -81,7 +81,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 STATIC_URL = "/static/"

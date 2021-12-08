@@ -1,13 +1,14 @@
-from rest_framework import serializers
 from django.http import QueryDict
+from rest_framework import serializers
 
 from users.serializers import UserSerializer
 
-from .models import Attachment, Post, Like
-from .services import create_post_attachment, delete_post_attachments
+from .models import Like, Post
+from .services import (create_post_attachment, delete_post_attachments,
+                       get_post_attachments_list)
 
 
-def get_error_messages(field_name):
+def generate_error_messages(field_name):
     capitalized_field_name = field_name.capitalize()
 
     return {
@@ -42,48 +43,36 @@ class PostSerializer(serializers.ModelSerializer):
         return Like.objects.all().filter(post=obj, user=user).exists()
 
     def get_attachments(self, obj):
-        return list(Attachment.objects.all().filter(
-            post=obj
-        ).values_list("link", flat=True))
+        return get_post_attachments_list(obj)
 
     class Meta:
         model = Post
-        fields = ["id", "title", "body", "likes", "createdAt",
-                  "updatedAt", "isLiked", "attachments", "author"]
+        fields = ("id", "body", "likes", "createdAt",
+                  "updatedAt", "isLiked", "attachments", "author")
 
 
-class CreateUpdatePostSerializer(serializers.Serializer):
-    title = serializers.CharField(
-        required=True,
-        max_length=70,
-        allow_blank=False,
-        allow_null=False,
-        error_messages=get_error_messages("title")
-    )
-
+class BaseCreateUpdatePostSerializer(serializers.Serializer):
     body = serializers.CharField(
-        required=True,
+        required=False,
         max_length=2000,
         allow_blank=True,
         allow_null=False,
-        error_messages=get_error_messages("body")
+        error_messages=generate_error_messages("body")
     )
 
     attachments = serializers.ListField(
-        required=False,
         child=serializers.ImageField(
             error_messages={
                 "invalid_image": "Invalid image in attached files"
             }
         ),
+        required=False,
         allow_empty=True,
-        max_length=10,
-        error_messages=get_error_messages("attachments")
+        max_length=5,
+        error_messages=generate_error_messages("attachments") | {
+            "invalid": "The submitted data was not a file"
+        }
     )
-
-    class Meta:
-        model = Post
-        fields = ["title", "body", "attachments"]
 
     def to_internal_value(self, data):
         # Handling the case when {attachments: ['']} or {attachments: ''}
@@ -101,10 +90,24 @@ class CreateUpdatePostSerializer(serializers.Serializer):
 
         return super().to_internal_value(data)
 
+
+class CreatePostSerializer(BaseCreateUpdatePostSerializer):
+    class Meta:
+        fields = ("body", "attachments")
+
+    def validate(self, data):
+        data["body"] = data.get("body", "")
+        data["attachments"] = data.get("attachments", [])
+
+        if len(data["body"]) == 0 and len(data["attachments"]) == 0:
+            msg = "One of the two fields (body, attachments) cannot be empty"
+            raise serializers.ValidationError({"body": msg})
+
+        return data
+
     def create(self, validated_data):
         instance = Post.objects.create(
             author=self.context.get("request").user,
-            title=validated_data["title"],
             body=validated_data.get("body", "")
         )
 
@@ -113,8 +116,26 @@ class CreateUpdatePostSerializer(serializers.Serializer):
 
         return instance
 
+
+class UpdatePostSerializer(BaseCreateUpdatePostSerializer):
+    class Meta:
+        fields = ("body", "attachments")
+
+    def validate(self, data):
+        if not data:
+            return data
+
+        post_body = data.get("body", self.instance.body)
+        post_attachments = data.get(
+            "attachments", get_post_attachments_list(self.instance))
+
+        if len(post_body) == 0 and len(post_attachments) == 0:
+            msg = "One of the two fields (body, attachments) cannot be empty"
+            raise serializers.ValidationError({"body": msg})
+
+        return data
+
     def update(self, instance, validated_data):
-        instance.title = validated_data.get("title", instance.title)
         instance.body = validated_data.get("body", instance.body)
 
         if "attachments" in validated_data:

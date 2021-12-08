@@ -1,11 +1,12 @@
-from django.urls import reverse
 from urllib.parse import urlencode
+
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 
-from utils.tests import ListAPIViewTestCase, APIViewTestCase
+from utils.tests import APIViewTestCase, ListAPIViewTestCase
 
 from ..models import Ban
-from ..services import ban
+from ..services import ban_user
 
 
 class ListBannedUsersAPIViewTestCase(ListAPIViewTestCase):
@@ -17,27 +18,27 @@ class ListBannedUsersAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        admin_credentials = {"email": "admin@gmail.com", "password": "pass"}
         self.admin = self.UserModel.objects.create_superuser(
-            login="Admin", **admin_credentials)
-        self.client.login(**admin_credentials)
+            login="Admin", email="admin@gmail.com", password="pass")
 
-        self.common_user_credentials = {
-            "email": "user@gmail.com", "password": "pass"}
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.admin)
+        )
+
         self.user = self.UserModel.objects.create_user(
-            login="User", **self.common_user_credentials)
+            login="User", email="user@gmail.com", password="pass")
 
         first_banned_user = self.UserModel.objects.create_user(
             login="BannedUser1", email="buser1@gmail.com", password="pass")
         second_banned_user = self.UserModel.objects.create_user(
             login="BannedUser2", email="buser2@gmail.com", password="pass")
-        self.first_ban = ban(receiver=first_banned_user,
-                             creator=self.admin, reason="First ban")
-        self.second_ban = ban(receiver=second_banned_user,
-                              creator=self.admin, reason="Second ban")
+        self.first_ban = ban_user(receiver=first_banned_user,
+                                  creator=self.admin, reason="First ban")
+        self.second_ban = ban_user(receiver=second_banned_user,
+                                   creator=self.admin, reason="Second ban")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url())
 
         self.unauthorized_client_error_response_test(response)
@@ -47,8 +48,9 @@ class ListBannedUsersAPIViewTestCase(ListAPIViewTestCase):
         Only administrators can access this resource.
         A request from a common user should return a 403 statuts code
         """
-        self.client.logout()
-        self.client.login(**self.common_user_credentials)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
         response = self.client.get(self.url())
 
         self.client_error_response_test(
@@ -135,25 +137,25 @@ class BanAPIViewTestCase(APIViewTestCase):
         return reverse("ban", kwargs=kwargs)
 
     def setUp(self):
-        admin_credentials = {"email": "admin@gmail.com", "password": "pass"}
         self.admin = self.UserModel.objects.create_superuser(
-            login="Admin", **admin_credentials)
-        self.client.login(**admin_credentials)
+            login="Admin", email="admin@gmail.com", password="pass")
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.admin)
+        )
 
         self.second_admin = self.UserModel.objects.create_superuser(
             login="SecondAdmin", email="second_admin@gmail.com", password="pass")
 
-        self.common_user_credentials = {
-            "email": "user@gmail.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="User", **self.common_user_credentials)
+            login="User", email="user@gmail.com", password="pass")
 
         self.banned_user = self.UserModel.objects.create_user(
             login="BannedUser", email="buser@gmail.com", password="pass")
-        ban(receiver=self.banned_user, creator=self.admin, reason="Ban")
+        ban_user(receiver=self.banned_user, creator=self.admin, reason="Ban")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"login": self.banned_user.login}))
 
         self.unauthorized_client_error_response_test(response)
@@ -163,8 +165,9 @@ class BanAPIViewTestCase(APIViewTestCase):
         Only administrators can access this resource.
         A request from a common user should return a 403 statuts code
         """
-        self.client.logout()
-        self.client.login(**self.common_user_credentials)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
         response = self.client.get(self.url({"login": self.banned_user.login}))
 
         self.client_error_response_test(
@@ -212,8 +215,8 @@ class BanAPIViewTestCase(APIViewTestCase):
         payload = {
             "reason": "Ban"
         }
-        response = self.client.put(self.url({"login": self.user.login}),
-                                   payload, content_type="application/json")
+        response = self.client.put(
+            self.url({"login": self.user.login}), payload)
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_201_CREATED)
@@ -229,8 +232,8 @@ class BanAPIViewTestCase(APIViewTestCase):
         payload = {
             "reason": "Ban"
         }
-        response = self.client.put(self.url({"login": self.second_admin.login}),
-                                   payload, content_type="application/json")
+        response = self.client.put(
+            self.url({"login": self.second_admin.login}), payload)
 
         self.client_error_response_test(
             response,
@@ -260,8 +263,8 @@ class BanAPIViewTestCase(APIViewTestCase):
         payload = {
             "reason": None
         }
-        response = self.client.put(self.url({"login": self.user.login}),
-                                   payload, content_type="application/json")
+        response = self.client.put(
+            self.url({"login": self.user.login}), payload)
 
         self.client_error_response_test(
             response,
@@ -279,8 +282,8 @@ class BanAPIViewTestCase(APIViewTestCase):
         payload = {
             "reason": "Updated ban reason"
         }
-        response = self.client.put(self.url({"login": self.banned_user.login}),
-                                   payload, content_type="application/json")
+        response = self.client.put(
+            self.url({"login": self.banned_user.login}), payload)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
         self.assertEqual(response.data["reason"], payload["reason"])
@@ -298,8 +301,8 @@ class BanAPIViewTestCase(APIViewTestCase):
         payload = {
             "reason": get_random_string(length=300)
         }
-        response = self.client.put(self.url({"login": self.banned_user.login}),
-                                   payload, content_type="application/json")
+        response = self.client.put(
+            self.url({"login": self.banned_user.login}), payload)
 
         self.client_error_response_test(
             response,

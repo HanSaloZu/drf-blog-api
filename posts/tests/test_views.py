@@ -1,10 +1,12 @@
+import re
+from urllib.parse import urlencode
+
 from django.urls import reverse
 from django.utils.crypto import get_random_string
-from urllib.parse import urlencode
 
 from utils.tests import APIViewTestCase, ListAPIViewTestCase
 
-from ..models import Post, Attachment, Like
+from ..models import Attachment, Like, Post
 
 
 class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
@@ -12,13 +14,14 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         return reverse("post", kwargs=kwargs)
 
     def setUp(self):
-        credentials = {"email": "user@gmail.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="User", **credentials)
-        self.client.login(**credentials)
+            login="User", email="user@gmail.com", password="pass")
 
-        self.first_post = Post.objects.create(
-            author=self.user, title="First post", body="Body")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
+
+        self.first_post = Post.objects.create(author=self.user, body="1")
         Like.objects.create(user=self.user, post=self.first_post)
         Attachment.objects.create(
             post=self.first_post, file_id="1", link="http://localhost:8000/1")
@@ -26,13 +29,13 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
             post=self.first_post, file_id="2", link="http://localhost:8000/2")
 
         self.second_user = self.UserModel.objects.create_user(
-            login="SecondUser", email="seconds_user@gmail.com", password="pass")
+            login="SecondUser", email="second_user@gmail.com", password="pass")
 
         self.second_post = Post.objects.create(
-            author=self.second_user, title="Second post", body="")
+            author=self.second_user, body="2")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"id": 1}))
 
         self.unauthorized_client_error_response_test(response)
@@ -46,7 +49,6 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
         self.assertEqual(response.data["id"], self.first_post.id)
-        self.assertEqual(response.data["title"], self.first_post.title)
         self.assertEqual(response.data["body"], self.first_post.body)
         self.assertEqual(response.data["createdAt"],
                          self.first_post.created_at)
@@ -123,10 +125,11 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         Admin users can delete any posts.
         Valid post deleting should return a 204 status code
         """
-        self.client.logout()
-        credentials = {"email": "admin@user.com", "password": "admin"}
-        self.UserModel.objects.create_superuser(login="Admin", **credentials)
-        self.client.login(**credentials)
+        admin = self.UserModel.objects.create_superuser(
+            login="Admin", email="admin@user.com", password="admin")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(admin)
+        )
 
         response = self.client.delete(self.url({"id": 1}))
 
@@ -163,14 +166,12 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         payload = {
             "body": "New body"
         }
-        response = self.client.patch(
-            self.url({"id": 1}), payload, content_type="application/json")
+        response = self.client.patch(self.url({"id": 1}), payload)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
         post = Post.objects.get(id=1)
         self.assertEqual(payload["body"], response.data["body"])
-        self.assertEqual(response.data["title"], post.title)
         self.assertEqual(response.data["body"], post.body)
         self.assertNotEqual(post.updated_at, self.first_post.updated_at)
         self.assertEqual(post.created_at, self.first_post.created_at)
@@ -181,21 +182,63 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         and a list of errors
         """
         payload = {
-            "title": "",
             "body": None,
             "attachments": True
         }
-        response = self.client.patch(
-            self.url({"id": 1}), payload, content_type="application/json")
+        response = self.client.patch(self.url({"id": 1}), payload)
 
         self.client_error_response_test(
             response,
             messages=[
-                "Title field cannot be empty",
                 "Body field cannot be null",
                 "Attachments should be a list of items"
             ],
-            fields_errors_dict_len=3
+            fields_errors_dict_len=2
+        )
+
+    def test_set_empty_body_for_post(self):
+        """
+        Post cannot have both fields(body, attachments) empty.
+        Post #1 has a list of attachments, so a request
+        to set an empty body for a post should return a 200 status code
+        """
+        payload = {
+            "body": ""
+        }
+        response = self.client.patch(self.url({"id": 1}), payload)
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+    def test_set_empty_attachments_for_post(self):
+        """
+        Post cannot have both fields(body, attachments) empty.
+        Post #1 has a body, so a request to set an empty list of attachments
+        for post should return a 200 status code
+        """
+        payload = {
+            "attachments": []
+        }
+        response = self.client.patch(self.url({"id": 1}), payload)
+
+        self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
+
+    def test_set_empty_fields_for_post(self):
+        """
+        Post cannot have both fields(body, attachments) empty,
+        so a request should return a 400 status code
+        """
+        payload = {
+            "body": "",
+            "attachments": []
+        }
+        response = self.client.patch(self.url({"id": 1}), payload)
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "One of the two fields (body, attachments) cannot be empty"
+            ],
+            fields_errors_dict_len=1
         )
 
     def test_update_foreign_post(self):
@@ -203,7 +246,7 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         Updating foreign post should return a 403 status code
         """
         payload = {
-            "title": "2nd post"
+            "body": "invalid"
         }
         response = self.client.patch(self.url({"id": 2}), payload)
 
@@ -220,29 +263,25 @@ class RetrieveUpdateDestroyPostAPIViewTestCase(APIViewTestCase):
         Valid post updating should return a 200 status code
         and an updated post representation
         """
-        self.client.logout()
-        credentials = {"email": "admin@gmail.com", "password": "admin"}
         admin = self.UserModel.objects.create_superuser(
-            login="Admin", **credentials)
-        self.client.login(**credentials)
+            login="Admin", email="admin@gmail.com", password="admin")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(admin)
+        )
 
         payload = {
-            "title": "New title",
             "body": "New body"
         }
-        response = self.client.patch(
-            self.url({"id": 1}), payload, content_type="application/json")
+        response = self.client.patch(self.url({"id": 1}), payload)
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
         post = Post.objects.get(id=1)
-        self.assertEqual(payload["title"], response.data["title"])
         self.assertEqual(payload["body"], response.data["body"])
-        self.assertEqual(response.data["title"], post.title)
         self.assertEqual(response.data["body"], post.body)
         self.assertNotEqual(post.author, admin)
 
-    def test_update_post_with_invalid_id(self):
+    def test_update_post_with_invalid_id_in_request(self):
         """
         Updating a post with an invalid id should return a 404 status code
         """
@@ -265,26 +304,25 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        credentials = {"email": "user@gmail.com", "password": "pass"}
         self.user = self.UserModel.objects.create_user(
-            login="User", **credentials)
-        self.client.login(**credentials)
+            login="User", email="user@gmail.com", password="pass")
+        self.client.credentials(
+            HTTP_AUTHORIZATION=self.generate_jwt_auth_credentials(self.user)
+        )
 
         second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second_user@gmail.com", password="pass")
 
-        first_post = Post.objects.create(
-            author=self.user, title="First post", body="Body")
-        second_post = Post.objects.create(
-            author=self.user, title="Second post", body="")
-        Post.objects.create(author=self.user, title="Last post", body="1")
+        first_post = Post.objects.create(author=self.user, body="First post")
+        second_post = Post.objects.create(author=self.user, body="Second post")
+        Post.objects.create(author=self.user, body="Last post")
 
         Like.objects.create(user=self.user, post=second_post)
         Like.objects.create(user=second_user, post=second_post)
         Like.objects.create(user=self.user, post=first_post)
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url())
 
         self.unauthorized_client_error_response_test(response)
@@ -303,15 +341,14 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
             page_size=3
         )
 
-        self.assertEqual(response.data["items"][1]["title"], "Second post")
+        self.assertEqual(response.data["items"][1]["body"], "Second post")
 
     def test_posts_list_with_q_parameter(self):
         """
         A posts list request with the q parameter
         should return a list of posts matching the q parameter
         """
-        # Searching by title
-        response = self.client.get(self.url({"q": "Second post"}))
+        response = self.client.get(self.url({"q": "Last post"}))
 
         self.check_common_details_of_list_view_response(
             response,
@@ -320,21 +357,7 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
         )
 
         post = response.data["items"][0]
-        self.assertEqual(post["title"], "Second post")
-        self.assertEqual(len(post["author"]), 4)
-        self.assertEqual(post["author"]["id"], self.user.id)
-
-        # Searching by body
-        response = self.client.get(self.url({"q": "1"}))
-
-        self.check_common_details_of_list_view_response(
-            response,
-            total_items=1,
-            page_size=1
-        )
-
-        post = response.data["items"][0]
-        self.assertEqual(post["title"], "Last post")
+        self.assertEqual(post["body"], "Last post")
 
     def test_posts_list_with_limit_parameter(self):
         """
@@ -351,33 +374,33 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
             page_size=1
         )
 
-        self.assertEqual(response.data["items"][0]["title"], "Last post")
+        self.assertEqual(response.data["items"][0]["body"], "Last post")
 
     def test_posts_list_with_ordering_by_likes(self):
         response = self.client.get(self.url({"ordering": "-likes"}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
-        self.assertEqual(response.data["items"][0]["title"], "Second post")
+        self.assertEqual(response.data["items"][0]["body"], "Second post")
         self.assertEqual(response.data["items"][0]["likes"], 2)
 
-        self.assertEqual(response.data["items"][1]["title"], "First post")
+        self.assertEqual(response.data["items"][1]["body"], "First post")
         self.assertEqual(response.data["items"][1]["likes"], 1)
 
-        self.assertEqual(response.data["items"][2]["title"], "Last post")
+        self.assertEqual(response.data["items"][2]["body"], "Last post")
         self.assertEqual(response.data["items"][2]["likes"], 0)
 
         response = self.client.get(self.url({"ordering": "likes"}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
-        self.assertEqual(response.data["items"][0]["title"], "Last post")
+        self.assertEqual(response.data["items"][0]["body"], "Last post")
         self.assertEqual(response.data["items"][0]["likes"], 0)
 
-        self.assertEqual(response.data["items"][1]["title"], "First post")
+        self.assertEqual(response.data["items"][1]["body"], "First post")
         self.assertEqual(response.data["items"][1]["likes"], 1)
 
-        self.assertEqual(response.data["items"][2]["title"], "Second post")
+        self.assertEqual(response.data["items"][2]["body"], "Second post")
         self.assertEqual(response.data["items"][2]["likes"], 2)
 
     def test_posts_list_with_ordering_by_creation_date(self):
@@ -385,17 +408,17 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
-        self.assertEqual(response.data["items"][0]["title"], "Last post")
-        self.assertEqual(response.data["items"][1]["title"], "Second post")
-        self.assertEqual(response.data["items"][2]["title"], "First post")
+        self.assertEqual(response.data["items"][0]["body"], "Last post")
+        self.assertEqual(response.data["items"][1]["body"], "Second post")
+        self.assertEqual(response.data["items"][2]["body"], "First post")
 
         response = self.client.get(self.url({"ordering": "createdAt"}))
 
         self.assertEqual(response.status_code, self.http_status.HTTP_200_OK)
 
-        self.assertEqual(response.data["items"][0]["title"], "First post")
-        self.assertEqual(response.data["items"][1]["title"], "Second post")
-        self.assertEqual(response.data["items"][2]["title"], "Last post")
+        self.assertEqual(response.data["items"][0]["body"], "First post")
+        self.assertEqual(response.data["items"][1]["body"], "Second post")
+        self.assertEqual(response.data["items"][2]["body"], "Last post")
 
     # Create post
 
@@ -405,20 +428,15 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
         and a post representation
         """
         payload = {
-            "title": "New post",
             "body": "Body"
         }
-        response = self.client.post(
-            self.url(), payload, content_type="application/json")
+        response = self.client.post(self.url(), payload)
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_201_CREATED)
 
-        post = Post.objects.get(title=payload["title"])
-        self.assertEqual(response.data["id"], post.id)
-        self.assertEqual(response.data["title"], payload["title"])
+        post = Post.objects.get(id=response.data["id"])
         self.assertEqual(response.data["body"], payload["body"])
-        self.assertEqual(response.data["title"], post.title)
         self.assertEqual(response.data["body"], post.body)
         self.assertEqual(response.data["createdAt"], post.created_at)
         self.assertEqual(response.data["updatedAt"], post.updated_at)
@@ -434,19 +452,31 @@ class ListCreatePostAPIViewTestCase(ListAPIViewTestCase):
         and a list of errors
         """
         payload = {
-            "title": None,
             "body": get_random_string(length=2001),
             "attachments": False
         }
-        response = self.client.post(
-            self.url(), payload, content_type="application/json")
+        response = self.client.post(self.url(), payload)
 
         self.client_error_response_test(
             response,
             messages=[
-                "Title field cannot be null",
                 "Body field value is too long",
                 "Attachments should be a list of items"
             ],
-            fields_errors_dict_len=3
+            fields_errors_dict_len=2
+        )
+
+    def test_post_creation_with_empty_fields(self):
+        payload = {
+            "body": "",
+            "attachments": []
+        }
+        response = self.client.post(self.url(), payload)
+
+        self.client_error_response_test(
+            response,
+            messages=[
+                "One of the two fields (body, attachments) cannot be empty"
+            ],
+            fields_errors_dict_len=1
         )

@@ -1,5 +1,5 @@
-from django.db import models, Error
 from django.contrib.auth import get_user_model
+from django.db import Error, models
 
 User = get_user_model()
 
@@ -11,7 +11,7 @@ class Follower(models.Model):
         User, related_name="followers", on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ["follower_user", "following_user"]
+        unique_together = ("follower_user", "following_user")
         verbose_name = "follower"
         db_table = "followers"
 

@@ -1,6 +1,6 @@
-from utils.views import LoginRequiredAPIView
-from posts.mixins import ListPostsAPIViewMixin
 from followers.selectors import get_user_followings_ids_list
+from posts.mixins import ListPostsAPIViewMixin
+from utils.views import LoginRequiredAPIView
 
 
 class NewsAPIView(LoginRequiredAPIView, ListPostsAPIViewMixin):

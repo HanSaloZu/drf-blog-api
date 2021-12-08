@@ -1,19 +1,9 @@
-from rest_framework.renderers import JSONRenderer
+from django.core.paginator import Paginator
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.core.paginator import Paginator
 
-from .exceptions import (NotAuthenticated401, BadRequest400,
-                         Forbidden403, custom_exception_handler)
-
-
-def get_exception_json_response(exception, messages=[]):
-    response = custom_exception_handler(exception(messages))
-    response.accepted_renderer = JSONRenderer()
-    response.accepted_media_type = "application/json"
-    response.renderer_context = {}
-
-    return response
+from .exceptions import (BadRequest400, Forbidden403, NotAuthenticated401,
+                         get_exception_json_response)
 
 
 class LoginRequiredAPIView:
@@ -80,8 +70,8 @@ class ListAPIViewMixin(APIView):
 
         return Response({
             "items": serializer.data,
-            "totalItems": paginator.count,  # total number of items, across all pages
-            "totalPages": paginator.num_pages,  # total number of pages
-            "pageSize": page_size,  # number of items on the current page
-            "pageNumber": page.number  # current page number
+            "totalItems": paginator.count,
+            "totalPages": paginator.num_pages,
+            "pageSize": page_size,
+            "pageNumber": page.number
         })

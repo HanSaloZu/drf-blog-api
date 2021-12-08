@@ -1,36 +1,85 @@
-from rest_framework.views import exception_handler
+from django.conf import settings
 from rest_framework import status
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.views import exception_handler
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+
+def get_exception_json_response(exception, messages=[]):
+    response = custom_exception_handler(exception(messages))
+    response.accepted_renderer = JSONRenderer()
+    response.accepted_media_type = "application/json"
+    response.renderer_context = {}
+
+    return response
 
 
 def custom_exception_handler(exc, context=None):
-    if isinstance(exc, CustomAPIException):
-        data = {
-            "code": exc.code,
-            "messages": exc.messages,
-            "fieldsErrors": exc.fields_errors
-        }
+    default_response_data = {
+        "code": "unhandledError",
+        "messages": "Something went wrong",
+        "fieldsErrors": {}
+    }
 
-        return Response(data, status=exc.status_code,  content_type="application/json")
+    if isinstance(exc, CustomAPIException):
+        return Response(
+            data={
+                "code": exc.code,
+                "messages": exc.messages,
+                "fieldsErrors": exc.fields_errors
+            },
+            status=exc.status_code,
+            content_type="application/json",
+            headers=exc.headers
+        )
 
     response = exception_handler(exc, context)
-
     if response is not None:
-        response.data['status_code'] = response.status_code
+        response.data = default_response_data | {
+            "code": get_exception_code(exc),
+            "messages": normalize_exception_detail(response.data["detail"])
+        }
 
     return response
+
+
+def get_exception_code(exc):
+    if not hasattr(exc, "default_code"):
+        return "error"
+
+    return normalize_default_exception_code(exc.default_code)
+
+
+def normalize_default_exception_code(default_code):
+    normalized_code = ''.join(
+        word.title() for word in default_code.split('_')
+    )
+
+    normalized_code = normalized_code[0].lower() + normalized_code[1::]
+    return normalized_code
+
+
+def normalize_exception_detail(exc_detail):
+    if exc_detail.endswith("."):
+        return exc_detail[0:-1:]
+    return exc_detail
 
 
 class CustomAPIException(Exception):
     code = "clientError"
     status_code = status.HTTP_400_BAD_REQUEST
+    headers = None
 
-    def __init__(self, messages=[], fields_errors={}):
+    def __init__(self, messages=[], fields_errors={}, code=""):
         if not hasattr(self, "messages"):
             if isinstance(messages, (list, tuple)):
                 self.messages = messages
             else:
                 self.messages = [messages]
+
+        if code:
+            self.code = code
 
         self.fields_errors = fields_errors
 
@@ -42,6 +91,12 @@ class NotAuthenticated401(CustomAPIException):
     code = "notAuthenticated"
     status_code = status.HTTP_401_UNAUTHORIZED
     messages = ["You are not authenticated"]
+    headers = {
+        "WWW-Authenticate": "{0} realm=\"{1}\"".format(
+            settings.SIMPLE_JWT["AUTH_HEADER_TYPES"][0],
+            JWTAuthentication.www_authenticate_realm
+        )
+    }
 
 
 class NotFound404(CustomAPIException):

@@ -1,9 +1,9 @@
 from urllib.parse import urlencode
+
 from django.urls import reverse
-from django.utils.crypto import get_random_string
 
 from followers.services import follow
-from utils.tests import ListAPIViewTestCase, APIViewTestCase
+from utils.tests import APIViewTestCase, ListAPIViewTestCase
 
 
 class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
@@ -15,10 +15,11 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_superuser(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
@@ -26,7 +27,7 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
             login="ThirdUser", email="third@gmail.com", password="pass")
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url())
 
         self.unauthorized_client_error_response_test(response)
@@ -121,72 +122,41 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
             messages=["Invalid limit value"]
         )
 
-    # Create user
+    # Registration
 
-    def test_user_creation_by_common_user(self):
+    def test_registration_request_from_authenticated_user(self):
         """
-        A request to create a user from a non-administrator
+        A registration request from an authenticated user
         should return a 403 status code
         """
-        self.client.logout()
-        credentials = {"email": "common@user.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="CommonUser", **credentials)
-        self.client.login(**credentials)
+            login="CommonUser", email="common@user.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         payload = {
             "login": "NewUser",
             "email": "test@test.com",
             "password1": "pass",
-            "password2": "pass",
-            "aboutMe": get_random_string(length=80),
-            "location": "London",
-            "birthday": "1997-08-21"
+            "password2": "pass"
         }
         response = self.client.post(self.url(), payload)
 
         self.assertEqual(response.status_code,
                          self.http_status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.data["messages"][0],
-                         "You don't have permission to access this resource")
+                         "You are already authenticated")
 
-    def test_valid_user_creation(self):
+    def test_invalid_registration(self):
         """
-        Valid user creation should return a 201 status code
-        and and a user representation
+        Invalid registration request should return a 400 status code
         """
-        payload = {
-            "login": "NewUser",
-            "email": "test@test.com",
-            "password1": "pass",
-            "password2": "pass",
-            "aboutMe": get_random_string(length=80),
-            "location": "London",
-            "birthday": "1997-08-21"
-        }
-        response = self.client.post(self.url(), payload)
-
-        self.assertEqual(response.status_code,
-                         self.http_status.HTTP_201_CREATED)
-        self.assertEqual(len(response.data), 13)
-        self.assertEqual(response.data["login"], payload["login"])
-        self.assertEqual(response.data["aboutMe"], payload["aboutMe"])
-        self.assertFalse(response.data["isAdmin"])
-
-        user = self.UserModel.objects.get(login=payload["login"])
-        self.assertTrue(user.is_active)
-
-    def test_invalid_user_creation(self):
-        """
-        Invalid user creation should return a 400 status code
-        """
+        self.client.credentials()
         payload = {
             "login": "",
             "password1": "1",
-            "password2": "1",
-            "aboutMe": get_random_string(length=68),
-            "location": "London",
-            "birthday": "21-08-1997"
+            "password2": "1"
         }
         response = self.client.post(self.url(), payload)
 
@@ -195,12 +165,71 @@ class ListCreateUsersAPIViewTestCase(ListAPIViewTestCase):
             messages=[
                 "Login can't be empty",
                 "Email field is required",
-                "Password must be at least 4 characters",
-                "About me must be at least 70 characters",
-                "Invalid birthday value"
+                "Password must be at least 4 characters"
             ],
-            fields_errors_dict_len=5
+            fields_errors_dict_len=3
         )
+
+    def test_registration_with_used_email(self):
+        """
+        Registration with the used email should return a 400 error
+        """
+        self.client.credentials()
+        payload = {
+            "login": "Test-",
+            "email": self.first_user.email,
+            "password1": "pass",
+            "password2": "pass"
+        }
+
+        response = self.client.post(self.url(), payload)
+
+        self.client_error_response_test(
+            response,
+            fields_errors_dict_len=1,
+            messages=["This email is already in use"]
+        )
+
+    def test_registration_with_different_passwords(self):
+        """
+        Registration with different passwords should return a 400 error
+        """
+        self.client.credentials()
+        payload = {
+            "login": "Test_",
+            "email": "test@test.com",
+            "password1": "pass",
+            "password2": "different password"
+        }
+
+        response = self.client.post(self.url(), payload)
+
+        self.client_error_response_test(
+            response,
+            fields_errors_dict_len=1,
+            messages=["Passwords do not match"]
+        )
+
+    def test_valid_registration(self):
+        """
+        Valid registration should return a 204 status code
+        """
+        self.client.credentials()
+        payload = {
+            "login": "Test",
+            "email": "test@test.com",
+            "password1": "pass",
+            "password2": "pass"
+        }
+
+        response = self.client.post(self.url(), payload)
+
+        self.assertEqual(response.status_code,
+                         self.http_status.HTTP_204_NO_CONTENT)
+
+        user = self.UserModel.objects.all().get(login="Test")
+        self.assertIs(user.is_active, False)
+        self.assertTrue(user.check_password(payload["password1"]))
 
 
 class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
@@ -208,10 +237,11 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
         return reverse("user_profile_detail", kwargs=kwargs)
 
     def setUp(self):
-        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
@@ -222,7 +252,7 @@ class RetrieveUserProfileAPIViewTestCase(APIViewTestCase):
         self.second_user.save()
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.unauthorized_client_error_response_test(response)
@@ -272,10 +302,11 @@ class ListUserFollowersAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
@@ -289,7 +320,7 @@ class ListUserFollowersAPIViewTestCase(ListAPIViewTestCase):
         follow(self.second_user, self.third_user)
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.unauthorized_client_error_response_test(response)
@@ -334,10 +365,11 @@ class ListUserFollowingAPIViewTestCase(ListAPIViewTestCase):
         return url
 
     def setUp(self):
-        credentials = {"email": "first@gmail.com", "password": "pass"}
         self.first_user = self.UserModel.objects.create_user(
-            login="FirstUser", **credentials)
-        self.client.login(**credentials)
+            login="FirstUser", email="first@gmail.com", password="pass")
+
+        auth_credentials = self.generate_jwt_auth_credentials(self.first_user)
+        self.client.credentials(HTTP_AUTHORIZATION=auth_credentials)
 
         self.second_user = self.UserModel.objects.create_user(
             login="SecondUser", email="second@gmail.com", password="pass")
@@ -351,7 +383,7 @@ class ListUserFollowingAPIViewTestCase(ListAPIViewTestCase):
         follow(self.second_user, self.third_user)
 
     def test_request_by_unauthenticated_client(self):
-        self.client.logout()
+        self.client.credentials()
         response = self.client.get(self.url({"login": self.second_user.login}))
 
         self.unauthorized_client_error_response_test(response)

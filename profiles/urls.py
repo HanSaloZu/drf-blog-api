@@ -1,9 +1,9 @@
 from django.urls import path
 
-from .views import (RetrieveUpdateProfileAPIView, UpdatePasswordAPIView,
-                    UpdateAvatarAPIView, ListPostsAPIView,
-                    ListLikedPostsAPIView, UpdateBannerAPIView,
-                    RetrieveCreateDestroyLikedPostAPIView)
+from .views import (ListLikedPostsAPIView, ListPostsAPIView,
+                    RetrieveCreateDestroyLikedPostAPIView,
+                    RetrieveUpdateProfileAPIView, UpdateAvatarAPIView,
+                    UpdateBannerAPIView, UpdatePasswordAPIView)
 
 urlpatterns = [
     path("", RetrieveUpdateProfileAPIView.as_view(), name="profile"),
