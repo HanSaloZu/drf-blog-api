@@ -4,7 +4,7 @@ This is a blogging service API developed using Python/Django/Django Rest Framewo
 
 ## Overview
 
-This service provides basic blogging functionality such as posts, comments, likes, and followers.
+This service provides basic blogging functionality such as posts, likes, and followers.
 But all of these functions are only available after authentication, so this API implements registration with email confirmation as well as login/logout.
 Also, each user has his own profile, which he can edit, for example, add contacts(links to social networks), change avatar, change status, etc.
 
@@ -22,32 +22,32 @@ worrying about files integrity.
 
 ```env
 # Common Django settings
-SECRET_KEY= # You can enter any random string here(this is used to provide cryptographic signing)
+SECRET_KEY="" # You can enter any random string here(this is used to provide cryptographic signing)
 DEBUG=1 # 1-True, 0-False
-ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+ALLOWED_HOSTS="localhost 127.0.0.1 [::1]"
 
 # CORS configuration
 # front-end server address(address from which requests will be sent to the api server)
-CORS_ALLOWED_ORIGINS=localhost:3000 [::1]
-CORS_ORIGIN_WHITELIST=localhost:3000 [::1]
+CORS_ALLOWED_ORIGINS="localhost:3000 [::1]"
+CORS_ORIGIN_WHITELIST="localhost:3000 [::1]"
 
-# link that will be sent to the user's email after registration to activate the profile
-EMAIL_CONFIRMATION_URL=
+# JWT
+SIGNING_KEY="" # This key is used to provide cryptographic signatures for JWT tokens(any random string)
 
 # Send mail server configuration
-EMAIL_HOST= # mail server address(e.g smtp.gmail.com)
-EMAIL_HOST_USER= # mail server account(e.g example@gmail.com)
-EMAIL_HOST_PASSWORD= # mail server password
+EMAIL_HOST="" # mail server address(e.g smtp.gmail.com)
+EMAIL_HOST_USER="" # mail server account(e.g example@gmail.com)
+EMAIL_HOST_PASSWORD="" # mail server password
 EMAIL_USE_TLS=1 # whether to use TLS encryption connection(1-True, 0-False)
 EMAIL_PORT= # mail server port
 
 # Database configuration
 # If you will be using docker to start the server use this configuration
-DB_ENGINE=django.db.backends.postgresql # engine
-DB_DATABASE=django_drf_dev_db # database name used in the database
-DB_USER=django_drf_dev # database user name
-DB_PASSWORD=django_drf_dev # database password
-DB_HOST=db # database address
+DB_ENGINE="django.db.backends.postgresql" # engine
+DB_DATABASE="django_drf_dev_db" # database name used in the database
+DB_USER="django_drf_dev" # database user name
+DB_PASSWORD="django_drf_dev" # database password
+DB_HOST="db" # database address
 DB_PORT=5432 # database access port
 ```
 
